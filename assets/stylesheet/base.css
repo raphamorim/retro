@@ -7,8 +7,8 @@ b, u, i, center,
 dl, dt, dd, ol, ul, li,
 fieldset, form, label, legend,
 table, caption, tbody, tfoot, thead, tr, th, td,
-article, aside, canvas, details, embed, 
-figure, figcaption, footer, header, hgroup, 
+article, aside, canvas, details, embed,
+figure, figcaption, footer, header, hgroup,
 menu, nav, output, ruby, section, summary,
 time, mark, audio, video {
 	margin: 0;
@@ -19,7 +19,7 @@ time, mark, audio, video {
 	vertical-align: baseline;
 }
 /* HTML5 display-role reset for older browsers */
-article, aside, details, figcaption, figure, 
+article, aside, details, figcaption, figure,
 footer, header, hgroup, menu, nav, section {
 	display: block;
 }
@@ -44,6 +44,13 @@ table {
 a {
 	text-decoration: none;
 }
+pre {
+ white-space: pre-wrap;       /* css-3 */
+ white-space: -moz-pre-wrap;  /* Mozilla, since 1999 */
+ white-space: -pre-wrap;      /* Opera 4-6 */
+ white-space: -o-pre-wrap;    /* Opera 7 */
+ word-wrap: break-word;       /* Internet Explorer 5.5+ */
+}
 
 body {
 	background: #202224;
@@ -55,8 +62,8 @@ body {
 }
 
 .retro .topbar {
-	background: #080809;
-	height: 32pt;
+	background: #17181a;
+	height: 28pt;
 }
 
 .buttons {
@@ -165,20 +172,22 @@ body {
 	font-size: 14pt;
 	color: white;
 	min-width: 180px;
+  word-break:break-all;
 }
-.retro .text::after {
+.cursor {
 	content: "";
-	position: absolute;
-	top: 0;
 	right: -15px;
 	background-color: #E9C82A;
 	display: inline-block;
 	vertical-align: top;
-	width: 11pt;
-	height: 22pt;  
-	-webkit-animation: blink 1s step-end infinite;
-	animation: blink 1s step-end infinite;
+	width: 10pt;
+	height: 20pt;
 }
+.cursor.animate {
+  -webkit-animation: blink 1s step-end infinite;
+  animation: blink 1s step-end infinite;
+}
+
 @-webkit-keyframes blink {
 	0% {
 		opacity: 1.0;

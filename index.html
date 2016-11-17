@@ -7,32 +7,22 @@
     <title>Retro</title>
     <link rel="stylesheet" href="assets/stylesheet/fonts.css">
     <link rel="stylesheet" href="assets/stylesheet/base.css">
+    <link rel="stylesheet" href="assets/stylesheet/prism.astrofish.css">
+    <script src="assets/javascript/prism.js"></script>
   </head>
   <body>
     <div class="retro">
-      <section role="topbar" class="topbar">
-        <div class="buttons">
-          <div class="close">
-            <a class="closebutton" href="#"><span><strong>x</strong></span></a>
-            <!-- close button link -->
-          </div>
-          <div class="minimize">
-            <a class="minimizebutton" href="#"><span><strong>&ndash;</strong></span></a>
-            <!-- minimize button link -->
-          </div>
-          <div class="zoom">
-            <a class="zoombutton" href="#"><span><strong>+</strong></span></a>
-            <!-- zoom button link -->
-          </div>
-        </div>
-      </section>
+      <section role="topbar" class="topbar"></section>
       <section role="main" class="main">
         <div class="editor">
           <div class="text">
-            Hi, this retro.
+            <textarea spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off" style="height: 1px; opacity: 0; position: absolute; top: -5000px; border: none;" class="mirror-code"></textarea>
+            <pre><code class="code language-javascript"></code><div class="cursor"></div></pre>
           </div>
         </div>
       </section>
     </div>
+    <script src="assets/javascript/keymaster.js"></script>
+    <script src="src/keys.js"></script>
   </body>
 </html>
