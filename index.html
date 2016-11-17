@@ -7,22 +7,59 @@
     <title>Retro</title>
     <link rel="stylesheet" href="assets/stylesheet/fonts.css">
     <link rel="stylesheet" href="assets/stylesheet/base.css">
-    <link rel="stylesheet" href="assets/stylesheet/prism.astrofish.css">
-    <script src="assets/javascript/prism.js"></script>
+    <link rel="stylesheet" href="assets/stylesheet/codemirror.css">
+    <link rel="stylesheet" href="assets/stylesheet/dialog.css">
+    <link rel="stylesheet" href="assets/stylesheet/theme.monokai.css">
+
+    <script src="src/codemirror.js"></script>
+    <script src="src/dialog.js"></script>
+    <script src="src/searchcursor.js"></script>
+    <script src="assets/javascript/syntax.javascript.js"></script>
+    <script src="src/keymap.js"></script>
   </head>
   <body>
+  <style type="text/css">.CodeMirror{height: auto}</style>
     <div class="retro">
       <section role="topbar" class="topbar"></section>
       <section role="main" class="main">
-        <div class="editor">
-          <div class="text">
-            <textarea spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off" style="height: 1px; opacity: 0; position: absolute; top: -5000px; border: none;" class="mirror-code"></textarea>
-            <pre><code class="code language-javascript"></code><div class="cursor"></div></pre>
-          </div>
-        </div>
+        <textarea id="editor" name="editor">
+'use strict';
+
+/* jshint esnext:true */
+
+import component from './component';
+import * as HttpUtils from './http-utils';
+import * as Log from './log';
+
+
+var SWIFT_PUBLIC_URL = (process.env.SWIFT_HTTPS_PUBLIC_URL || process.env.SWIFT_PUBLIC_URL || '');
+var SWIFT_CONTAINER = process.env.SWIFT_CONTAINER;
+const PUBLIC_URL = SWIFT_PUBLIC_URL + (SWIFT_CONTAINER ? `/${SWIFT_CONTAINER}` : '');
+
+let RenderView = {
+    render: (request, response, done) => {
+        response.type('application/json');
+
+        let data = request.body.data;
+
+        let isDataValidArray = (Array.isArray(data) && data.length > 0);
+        if (isDataValidArray === false) {
+            return HttpUtils.emptyDataResponse(response, done);
+        }
+
+        let promises = RenderView._resolveComponents(data);
+        Promise.all(promises)
+            .then(RenderView._assembleResponse)
+            .then(HttpUtils.jsonResponse(response, done))
+            .catch(HttpUtils.error(response, done));
+    }
+};
+
+export default RenderView.render;
+
+        </textarea>
       </section>
     </div>
-    <script src="assets/javascript/keymaster.js"></script>
     <script src="src/keys.js"></script>
   </body>
 </html>
