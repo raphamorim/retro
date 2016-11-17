@@ -51,17 +51,25 @@ pre {
  white-space: -o-pre-wrap;    /* Opera 7 */
  word-wrap: break-word;       /* Internet Explorer 5.5+ */
 }
+html { height: 100%; overflow:auto; }
 
 body {
 	background: #202224;
 	color: #ADB0A2;
 }
+
+
 .retro {
 	font-size: 14pt;
 	font-family: Monaco, Inconsolata, Consolas, Courier, monospace;
 }
 
 .retro .topbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 999;
+  width: 100%;
 	background: #17181a;
 	height: 28pt;
 }
@@ -161,9 +169,9 @@ body {
 
 .retro .main {
 	/*border: 1px solid #FFF;*/
+  margin-top: 40pt;
 	padding: 10px 20px;
 }
-
 
 .retro .text {
 	position: relative;
