@@ -1,18 +1,33 @@
-function Editor() {
-  var content = document.querySelector('.mirror-code')
+var fs = require('fs');
+var editor = new Editor();
 
-  this.update = function(){
+function Editor() {
+  var content = document.querySelector('.mirror-code');
+  var text = document.querySelector('.code');
+
+  this.currentIndent = 0;
+
+  this.update = function() {
+    console.log(this)
     var cursor = document.querySelector('.cursor');
+
     cursor.classList.remove('animate');
 
     content.focus()
-
-    var text = document.querySelector('.code');
-    text.innerHTML = Prism.highlight(content.value, Prism.languages.javascript);
+    var lastLine = content.value.split('\n')
+    if (lastLine && lastLine.length) {
+      lastLine = lastLine[lastLine.length - 1];
+      this.currentIndent = (lastLine.match(/✌️/g) || []).length;
+    }
+    
+    // get config editor
+    var data = content.value.replace(new RegExp('✌️', 'g'), '    ');
+    data = Prism.highlight(data, Prism.languages.javascript);
+    text.innerHTML = data;
 
     setTimeout(function() {
       window.scrollTo(0, text.offsetHeight);
-      setTimeout(function(){
+      setTimeout(function() {
         cursor.classList.add('animate');
       }, 400);
     }, 20);
@@ -23,31 +38,42 @@ function Editor() {
     this.update();
   }
 }
-var editor = new Editor();
 
 // key("a", function() {console.log(1)})
 
 document.addEventListener("DOMContentLoaded", function(event) {
-    var mirror = document.querySelector('.mirror-code');
+  var mirror = document.querySelector('.mirror-code');
 
-    mirror.value = "var a = 'Hi, this retro.'; \n" +
+  mirror.value = "var a = 'Hi, this retro.'; \n" +
     "document.body.addEventListener('keydown', function(event) {\n" +
-    "   var text = document.querySelector('.text');\n" +
-    "   text.textContent = text.textContent + event.key;\n" +
-    "});";
-    mirror.focus()
+    "✌️var text = document.querySelector('.text');\n" +
+    "✌️text.textContent = text.textContent + event.key;"
+  mirror.focus()
 
-
-    function updateScreen() {
-      mirror.focus();
+  document.body.addEventListener('keyup', (e) => {
+    // enter
+    if (e.keyCode == 13) {
+      mirror.value = mirror.value + Array(editor.currentIndent + 1).join("✌️");
     }
 
-    document.body.addEventListener('keyup', () => { updateScreen() })
-    document.body.addEventListener('keydown', () => { updateScreen() })
     editor.update()
-    mirror.addEventListener('input', editor.update.bind(this))
-});
+  })
 
+  document.body.addEventListener('keydown', (e) => {
+    /* 
+      keycodes: css-tricks.com/snippets/javascript/javascript-keycodes/
+    */
+
+    // tab
+    if (e.keyCode == 9)
+      mirror.value = mirror.value + "✌️";
+
+    editor.update()
+  })
+
+  editor.update()
+  mirror.addEventListener('input', (e) => {editor.update.bind(this, e)})
+});
 
 document.ondragover = document.ondrop = (ev) => {
   ev.preventDefault()
@@ -55,9 +81,7 @@ document.ondragover = document.ondrop = (ev) => {
 
 document.body.ondrop = (ev) => {
   var filepath = ev.dataTransfer.files[0].path;
-  var fs = require('fs');
-  console.log(filepath)
-  fs.readFile(filepath, 'utf8', function (err, data) {
+  fs.readFile(filepath, 'utf8', function(err, data) {
     if (err) {
       return console.log(err);
     }
