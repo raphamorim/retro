@@ -18,6 +18,10 @@ function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1200,
     height: 600,
+    minWidth: 400,
+    minHeight: 400,
+    resizable: true,
+    movable: true, 
     center: true,
     titleBarStyle: 'hidden-inset', //macOnly
     title: 'Retro',
@@ -27,6 +31,7 @@ function createWindow() {
     hasShadow: true,
     debug: false,
     darkTheme: true,
+    vibrancy: "ultra-dark",
     acceptFirstMouse: true,
     backgroundColor: '#202224',
     show: false,

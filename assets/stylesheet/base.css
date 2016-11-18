@@ -1,16 +1,4 @@
-html, body, div, span, applet, object, iframe,
-h1, h2, h3, h4, h5, h6, p, blockquote, pre,
-a, abbr, acronym, address, big, cite, code,
-del, dfn, em, img, ins, kbd, q, s, samp,
-small, strike, strong, sub, sup, tt, var,
-b, u, i, center,
-dl, dt, dd, ol, ul, li,
-fieldset, form, label, legend,
-table, caption, tbody, tfoot, thead, tr, th, td,
-article, aside, canvas, details, embed,
-figure, figcaption, footer, header, hgroup,
-menu, nav, output, ruby, section, summary,
-time, mark, audio, video {
+html, body, div, span, applet, object, iframe, h1, h2, h3, h4, h5, h6, p, blockquote, pre, a, abbr, acronym, address, big, cite, code, del, dfn, em, img, ins, kbd, q, s, samp, small, strike, strong, sub, sup, tt, var, b, u, i, center, dl, dt, dd, ol, ul, li, fieldset, form, label, legend, table, caption, tbody, tfoot, thead, tr, th, td, article, aside, canvas, details, embed, figure, figcaption, footer, header, hgroup, menu, nav, output, ruby, section, summary, time, mark, audio, video {
 	margin: 0;
 	padding: 0;
 	border: 0;
@@ -18,9 +6,9 @@ time, mark, audio, video {
 	font: inherit;
 	vertical-align: baseline;
 }
+
 /* HTML5 display-role reset for older browsers */
-article, aside, details, figcaption, figure,
-footer, header, hgroup, menu, nav, section {
+article, aside, details, figcaption, figure, footer, header, hgroup, menu, nav, section {
 	display: block;
 }
 body {
@@ -32,8 +20,7 @@ ol, ul {
 blockquote, q {
 	quotes: none;
 }
-blockquote:before, blockquote:after,
-q:before, q:after {
+blockquote:before, blockquote:after, q:before, q:after {
 	content: '';
 	content: none;
 }
@@ -45,43 +32,40 @@ a {
 	text-decoration: none;
 }
 pre {
- white-space: pre-wrap;       /* css-3 */
- white-space: -moz-pre-wrap;  /* Mozilla, since 1999 */
- white-space: -pre-wrap;      /* Opera 4-6 */
- white-space: -o-pre-wrap;    /* Opera 7 */
- word-wrap: break-word;       /* Internet Explorer 5.5+ */
+	white-space: pre-wrap;       /* css-3 */
+	white-space: -moz-pre-wrap;  /* Mozilla, since 1999 */
+	white-space: -pre-wrap;      /* Opera 4-6 */
+	white-space: -o-pre-wrap;    /* Opera 7 */
+	word-wrap: break-word;       /* Internet Explorer 5.5+ */
 }
-html { height: 100%; overflow:auto; }
-
+html {
+	height: 100%;
+	overflow: auto;
+}
 body {
 	background: #202224;
 	color: #ADB0A2;
 }
-
-
 .retro {
 	font-size: 14pt;
 	font-family: Monaco, Inconsolata, Consolas, Courier, monospace !important;
-  line-height: 18pt !important;
-  letter-spacing: 0.3pt;
+	line-height: 18pt !important;
+	letter-spacing: 0.3pt;
 }
-
 .retro .topbar {
-  position: fixed;
-  top: 0;
-  left: 0;
-  z-index: 999;
-  width: 100%;
+	position: fixed;
+	top: 0;
+	left: 0;
+	z-index: 999;
+	width: 100%;
 	background: #17181a;
 	height: 28pt;
 }
-
 .retro .main {
 	/*border: 1px solid #FFF;*/
-  margin-top: 30pt;
+	margin-top: 30pt;
 	padding: 10px 20px;
 }
-
 .retro .text {
 	position: relative;
 	display: inline-block;
@@ -89,10 +73,37 @@ body {
 	font-size: 14pt;
 	color: white;
 	min-width: 180px;
-  word-break:break-all;
+	word-break: break-all;
 }
 
-.retro .editor {
-  height: 500pt;
+.retro footer {
+	position: fixed;
+	display: flex;
+	bottom: 0;
+	height: 25pt;
+	width: 100%;
+	background: #202224;
+	color: #555;
+	z-index: 2;
 }
 
+.retro footer #editor-mode {
+	font-family: 'Bit-Wonder';
+	padding: 3pt 0 0 15pt;
+	font-size: 8pt;
+}
+.retro footer #editor-mode.insert {
+	color: #409C97;
+}
+.retro footer #editor-mode.visual {
+	color: #f57157;
+}
+.retro footer #editor-mode.normal {
+	color: #555;
+}
+
+.retro footer #editor-syntax {
+	font-family: 'Bit-Wonder';
+	padding: 3pt 0 0 15pt;
+	font-size: 8pt;
+}

@@ -8946,10 +8946,5 @@
       return order;
     };
   })();
-
-  // THE END
-
-  CodeMirror.version = "5.19.0";
-
   return CodeMirror;
 });

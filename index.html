@@ -18,7 +18,7 @@
     <script src="src/keymap.js"></script>
   </head>
   <body>
-  <style type="text/css">.CodeMirror{height: auto}</style>
+  <style type="text/css">.CodeMirror{height: auto; z-index: 1;}</style>
     <div class="retro">
       <section role="topbar" class="topbar"></section>
       <section role="main" class="main">
@@ -59,7 +59,12 @@ export default RenderView.render;
 
         </textarea>
       </section>
+      <footer>
+        <div id="editor-mode" class="normal">NORMAL</div>
+        <div id="editor-syntax" class="normal">JS</div>
+      </footer>
     </div>
+    <script src="assets/javascript/keymaster.js"></script>
     <script src="src/app.js"></script>
   </body>
 </html>

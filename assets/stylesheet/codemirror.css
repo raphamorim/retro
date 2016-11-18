@@ -28,7 +28,7 @@
   white-space: nowrap;
 }
 .CodeMirror-linenumber {
-  padding: 0 15px 0 0px;
+  padding: 0 10px 0 0px;
   min-width: 20px;
   text-align: center;
   white-space: nowrap;
