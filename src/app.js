@@ -1,7 +1,7 @@
 var app = require('electron').remote;
 var dialog = app.dialog;
 var fs = require('fs');
-var Retro = new Retro();
+var retro = new Retro();
 
 function merge(obj1, obj2) {
     var obj3 = {};
@@ -58,6 +58,55 @@ function Retro() {
         singleLineStringErrors: false
       },
       indentUnit: 4
+    },
+    "rb": {
+      mode: "text/x-ruby",
+      indentUnit: 4
+    },
+    "rs": {
+      lineWrapping: true,
+      indentUnit: 4,
+      mode: "rust"
+    },
+    "rpm": {
+      mode: {name: "rpm-spec"},
+      indentUnit: 4
+    },
+    "sh": {
+      mode: 'shell'
+    },
+    "c": {
+      mode: "text/x-csrc"
+    },
+    "cpp": {
+      mode: "text/x-c++src"
+    },
+    "cpp": {
+      mode: "text/x-c++src"
+    },
+    "java": {
+      mode: "text/x-java"
+    },
+    "m": {
+      mode: "text/x-objectivec"
+    },
+    "h": {
+      mode: "text/x-objectivec"
+    },
+    "scala": {
+      mode: "text/x-scala"
+    },
+    "sc": {
+      mode: "text/x-scala"
+    },
+    "kt": {
+      mode: "text/x-kotlin"
+    },
+    "kts": {
+      mode: "text/x-kotlin"
+    },
+    "ceylon": {
+      mode: "text/x-ceylon"
     }
   }
 
@@ -84,17 +133,15 @@ function Retro() {
   //   editorMode.innerHTML = keys;
   // });
 
-  // this.newTab = function() {
-
-  //   },
-
-  function changeSyntax(filepath) {
-    var syntax = filepath.split('.').pop();
-    editorSyntax.textContent = syntax;
-    code = CodeMirror.fromTextArea(editor, merge(def, syntaxes[syntax]));
-  }
+  this.newTab = function() {},
 
   this.setValue = function(file, tab) {
+    function changeSyntax(filepath) {
+      var syntax = filepath.split('.').pop();
+      console.log(syntax)
+      editorSyntax.textContent = syntax;
+      code.setOption(merge(def, syntaxes[syntax]));
+    }
     fs.readFile(file, 'utf8', function(err, data) {
       if (err) {
         return alert(err);
@@ -112,7 +159,7 @@ document.ondragover = document.ondrop = (ev) => {
 
 document.body.ondrop = (ev) => {
   var filepath = ev.dataTransfer.files[0].path;
-  Retro.setValue(filepath);
+  retro.setValue(filepath);
   ev.preventDefault()
 }
 
@@ -120,7 +167,7 @@ key('⌘+o', function(event, handler) {
   // TODO: Multiple files and diretory
   dialog.showOpenDialog(function(fileNames) {
     if (fileNames.length)
-      Retro.setValue(fileNames[0]);
+      retro.setValue(fileNames[0]);
   });
 });
 
