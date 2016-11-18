@@ -3,6 +3,13 @@ var dialog = app.dialog;
 var fs = require('fs');
 var Retro = new Retro();
 
+function merge(obj1, obj2) {
+    var obj3 = {};
+    for (var attrname in obj1) { obj3[attrname] = obj1[attrname]; }
+    for (var attrname in obj2) { obj3[attrname] = obj2[attrname]; }
+    return obj3;
+}
+
 function Retro() {
   // normal, insert, visual
   var modes = {
@@ -11,19 +18,54 @@ function Retro() {
     "V": "VISUAL"
   };
   var currentMode = 0;
-
-  var editor = document.getElementById("editor"),
-    editorMode = document.getElementById('editor-mode'),
-    editorSyntax = document.getElementById('editor-syntax');
-
-  var code = CodeMirror.fromTextArea(editor, {
+  var def = {
     lineNumbers: true,
     mode: "text/javascript",
     keyMap: "vim",
     theme: "monokai",
     matchBrackets: true,
     showCursorWhenSelecting: true
-  });
+  };
+
+  var syntaxes = {
+    "js": {
+      mode: "text/javascript"
+    },
+    "json": {
+      mode: "text/javascript"
+    },
+    "md": {
+      mode: 'markdown',
+    },
+    "markdown": {
+      mode: 'markdown',
+    },
+    "ts": {
+      mode: "text/typescript"
+    },
+    "py": {
+      mode: {
+        name: "python",
+        version: 3,
+        singleLineStringErrors: false
+      },
+      indentUnit: 4
+    },
+    "pyx": {
+      mode: {
+        name: "text/x-cython",
+        version: 2,
+        singleLineStringErrors: false
+      },
+      indentUnit: 4
+    }
+  }
+
+  var editor = document.getElementById("editor"),
+    editorMode = document.getElementById('editor-mode'),
+    editorSyntax = document.getElementById('editor-syntax');
+
+  var code = CodeMirror.fromTextArea(editor, def);
 
   CodeMirror.commands.save = function() {
     alert("Saving");
@@ -49,6 +91,7 @@ function Retro() {
   function changeSyntax(filepath) {
     var syntax = filepath.split('.').pop();
     editorSyntax.textContent = syntax;
+    code = CodeMirror.fromTextArea(editor, merge(def, syntaxes[syntax]));
   }
 
   this.setValue = function(file, tab) {
