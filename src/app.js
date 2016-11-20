@@ -34,7 +34,8 @@ function Retro() {
     keyMap: "vim",
     theme: "monokai",
     matchBrackets: true,
-    showCursorWhenSelecting: true
+    showCursorWhenSelecting: true,
+    styleActiveLine: true
   };
 
   var syntaxes = {

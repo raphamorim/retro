@@ -34,3 +34,13 @@
   text-decoration: underline;
   color: white !important;
 }
+
+.cm-s-monokai .CodeMirror-activeline-background {
+    background-color: #2c2f32;
+}
+.cm-s-monokai .CodeMirror-activeline .CodeMirror-linenumber {
+    background-color: #2c2f32;
+}
+.cm-s-monokai .CodeMirror-focused .CodeMirror-activeline .CodeMirror-gutter-elt {
+    background: #2c2f32;
+}
