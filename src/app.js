@@ -14,10 +14,14 @@ function toggleTabs() {
 }
 
 function merge(obj1, obj2) {
-    var obj3 = {};
-    for (var attrname in obj1) { obj3[attrname] = obj1[attrname]; }
-    for (var attrname in obj2) { obj3[attrname] = obj2[attrname]; }
-    return obj3;
+  var obj3 = {};
+  for (var attrname in obj1) {
+    obj3[attrname] = obj1[attrname];
+  }
+  for (var attrname in obj2) {
+    obj3[attrname] = obj2[attrname];
+  }
+  return obj3;
 }
 
 function Retro() {
@@ -80,7 +84,9 @@ function Retro() {
       mode: "rust"
     },
     "rpm": {
-      mode: {name: "rpm-spec"},
+      mode: {
+        name: "rpm-spec"
+      },
       indentUnit: 4
     },
     "sh": {
@@ -126,6 +132,18 @@ function Retro() {
     editorSyntax = document.getElementById('editor-syntax');
 
   var code = CodeMirror.fromTextArea(editor, def);
+  code.setOption("extraKeys", {
+    Tab: function(cm) {
+      var spaces = Array(cm.getOption("indentUnit") + 1).join(" ");
+      cm.replaceSelection(spaces);
+    },
+    "Cmd-E": function(cm) {
+      toggleTabs();
+    },
+    "Cmd-O": function(cm) {
+      openFiles();
+    }
+  });
 
   CodeMirror.commands.save = function() {
     alert("Saving");
@@ -134,6 +152,10 @@ function Retro() {
   CodeMirror.on(code, 'vim-keypress', (key) => {
     var mode = modes[key.toUpperCase()]
     unfocusTabs();
+
+    if (mode === 'NORMAL')
+      toggleTabs();
+
     if (mode) {
       editorMode.className = "";
       editorMode.classList.add(mode.toLowerCase())
@@ -142,27 +164,27 @@ function Retro() {
   });
 
   // CodeMirror.on(code, 'vim-command-done', function(e) {
-  //   editorMode.innerHTML = keys;
+  //   document.body.focus();
   // });
 
   this.newTab = function() {},
 
-  this.setValue = function(file, tab) {
-    function changeSyntax(filepath) {
-      var syntax = filepath.split('.').pop();
-      console.log(syntax)
-      editorSyntax.textContent = syntax;
-      code.setOption(merge(def, syntaxes[syntax]));
-    }
-    fs.readFile(file, 'utf8', function(err, data) {
-      if (err) {
-        return alert(err);
+    this.setValue = function(file, tab) {
+      function changeSyntax(filepath) {
+        var syntax = filepath.split('.').pop();
+        console.log(syntax)
+        editorSyntax.textContent = syntax;
+        code.setOption(merge(def, syntaxes[syntax]));
       }
+      fs.readFile(file, 'utf8', function(err, data) {
+        if (err) {
+          return alert(err);
+        }
 
-      code.setValue(data);
-      changeSyntax(file);
-    });
-  }
+        code.setValue(data);
+        changeSyntax(file);
+      });
+    }
 }
 
 document.ondragover = document.ondrop = (ev) => {
@@ -175,12 +197,16 @@ document.body.ondrop = (ev) => {
   ev.preventDefault()
 }
 
-key('⌘+o', function(event, handler) {
-  // TODO: Multiple files and diretory
+function openFiles() {
   dialog.showOpenDialog(function(fileNames) {
     if (fileNames && fileNames.length)
       retro.setValue(fileNames[0]);
   });
+}
+
+key('⌘+o', function(event, handler) {
+  // TODO: Multiple files and diretory
+  openFiles();
 });
 
 key('⌘+e', function(event, handler) {
