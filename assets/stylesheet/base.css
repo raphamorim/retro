@@ -61,11 +61,51 @@ body {
 	background: #17181a;
 	height: 28pt;
 }
+
+.retro .tabs {
+  position: fixed;
+  height: 20pt;
+  background: #17181a;
+  z-index: 998;
+  width: 100%;
+  top: 18pt;
+  height: 15pt;
+  overflow: hidden;
+  left: 0;
+  padding: 5pt 0pt;
+  display: flex;
+  justify-content: space-around;
+  transition: all 400ms ease;
+}
+
+.retro .tabs.unfocus {
+  top: 0pt;
+}
+
+.retro .tabs>.tabs-item {
+  font-family: 'gamegirl';
+  font-size: 8pt;
+  width: 120pt;
+  text-align: left;
+  overflow-x: hidden;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.retro .tabs>.tabs-item.active::before {
+  content: '*';
+}
+.retro .tabs>.tabs-item.active {
+  color: #24C6E0;
+}
+
+
 .retro .main {
 	/*border: 1px solid #FFF;*/
-	margin-top: 30pt;
+	margin-top: 40pt;
 	padding: 10px 20px;
 }
+
 .retro .text {
 	position: relative;
 	display: inline-block;
@@ -93,13 +133,24 @@ body {
 	font-size: 8pt;
 }
 .retro footer #editor-mode.insert {
-	color: #409C97;
+	color: #24C6E0;
 }
 .retro footer #editor-mode.visual {
 	color: #f57157;
 }
 .retro footer #editor-mode.normal {
 	color: #555;
+}
+
+.retro footer #editor-file {
+  font-family: 'Bit-Wonder';
+  padding: 3pt 0 0 15pt;
+  font-size: 8pt;
+  max-width: 135pt;
+  overflow-x: hidden;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .retro footer #editor-syntax {

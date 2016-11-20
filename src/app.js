@@ -1,7 +1,12 @@
-var app = require('electron').remote;
-var dialog = app.dialog;
-var fs = require('fs');
-var retro = new Retro();
+const app = require('electron').remote;
+const dialog = app.dialog;
+const fs = require('fs');
+const retro = new Retro();
+
+function unfocusTabs() {
+  const tabs = document.querySelector('.tabs');
+  tabs.classList.add('unfocus');
+}
 
 function merge(obj1, obj2) {
     var obj3 = {};
@@ -122,6 +127,7 @@ function Retro() {
 
   CodeMirror.on(code, 'vim-keypress', (key) => {
     var mode = modes[key.toUpperCase()]
+    unfocusTabs();
     if (mode) {
       editorMode.className = "";
       editorMode.classList.add(mode.toLowerCase())

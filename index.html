@@ -33,6 +33,13 @@
   <style type="text/css">.CodeMirror{height: auto; z-index: 1;}</style>
     <div class="retro">
       <section role="topbar" class="topbar"></section>
+      <section role="tabs" class="tabs">
+        <div class="tabs-item">main.js</div>
+        <div class="tabs-item">base.css</div>
+        <div class="tabs-item active">keymap-core-game.js</div>
+        <div class="tabs-item">t.js</div>
+        <div class="tabs-item">jason-mars-code-academy.js</div>
+      </section>
       <section role="main" class="main">
         <textarea id="editor" name="editor">
 'use strict';
@@ -72,8 +79,9 @@ export default RenderView.render;
         </textarea>
       </section>
       <footer>
-        <div id="editor-mode" class="normal">NORMAL</div>
+        <div id="editor-file" class="normal">keymap-core-game</div>
         <div id="editor-syntax" class="normal">JS</div>
+        <div id="editor-mode" class="normal">NORMAL</div>
       </footer>
     </div>
     <script src="assets/javascript/keymaster.js"></script>
