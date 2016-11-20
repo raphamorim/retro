@@ -8,6 +8,11 @@ function unfocusTabs() {
   tabs.classList.add('unfocus');
 }
 
+function toggleTabs() {
+  const tabs = document.querySelector('.tabs');
+  tabs.classList.toggle('unfocus');
+}
+
 function merge(obj1, obj2) {
     var obj3 = {};
     for (var attrname in obj1) { obj3[attrname] = obj1[attrname]; }
@@ -172,9 +177,13 @@ document.body.ondrop = (ev) => {
 key('⌘+o', function(event, handler) {
   // TODO: Multiple files and diretory
   dialog.showOpenDialog(function(fileNames) {
-    if (fileNames.length)
+    if (fileNames && fileNames.length)
       retro.setValue(fileNames[0]);
   });
+});
+
+key('⌘+e', function(event, handler) {
+  toggleTabs();
 });
 
 key('⌘+,', function(event, handler) {
