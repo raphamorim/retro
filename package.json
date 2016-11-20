@@ -4,8 +4,8 @@
   "description": "",
   "main": "main.js",
   "scripts": {
-    "start": "electron .",
-    "package": "electron-packager ./ Retro --all --version=1.4.1 --out=~/Desktop --overwrite --icon=./assets/images/logo-128.icns"
+    "start": "./node_modules/electron/cli.js .",
+    "package": "./node_modules/electron-packager/cli.js ./ Retro --all --version=1.4.1 --out=~/Desktop --overwrite --icon=./assets/images/logo-128.icns"
   },
   "repository": "https://github.com/raphamorim/retro",
   "keywords": [],
