@@ -36,6 +36,13 @@
   outline: 0;
 }
 
+.modal-items {
+  max-height: 200px;
+  overflow-y: scroll;
+  display: flex;
+  flex-direction: column;
+}
+
 .modal-item {
   border: 1px solid #17181a;
   padding: 10px;
