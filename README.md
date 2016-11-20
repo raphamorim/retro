@@ -1,4 +1,4 @@
-# Retro
+# Retro [Work in Progress]
 
 ![Retro Logo](assets/images/retro-logo.png)
 
