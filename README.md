@@ -1,8 +1,8 @@
 # Retro [Work in Progress]
 
-![Retro Logo](assets/images/retro-logo.png)
-
 > A Vim Based Editor for the 21st Century
+
+![Retro Logo](assets/images/retro-logo.gif)
 
 License: [MIT](LICENSE)
 
