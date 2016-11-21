@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="assets/stylesheet/codemirror.css">
     <link rel="stylesheet" href="assets/stylesheet/dialog.css">
     <link rel="stylesheet" href="assets/stylesheet/theme.monokai.css">
+    <link rel="stylesheet" href="assets/stylesheet/modal.css">
 
     <script src="src/codemirror.js"></script>
     <script src="src/dialog.js"></script>
@@ -34,6 +35,12 @@
   <style type="text/css">.CodeMirror{height: auto; z-index: 1;}</style>
     <div class="retro">
       <section role="topbar" class="topbar"></section>
+      <section role="dialog" class="modal">
+        <input type="text" class="modal-search" placeholder="Search for packages....">
+        <div class="modal-items">
+          <div class="modal-item">Package X</div>
+        </div>
+      </section>
       <section role="tabs" class="tabs">
         <div class="tabs-item">main.js</div>
         <div class="tabs-item">base.css</div>

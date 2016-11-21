@@ -125,6 +125,11 @@ function Retro() {
     "ceylon": {
       mode: "text/x-ceylon"
     }
+    ,
+    "bnn": {
+      name: "banana",
+      mode: "text/scss"
+    }
   }
 
   var editor = document.getElementById("editor"),
