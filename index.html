@@ -35,63 +35,26 @@
   <style type="text/css">.CodeMirror{height: auto; z-index: 1;}</style>
     <div class="retro">
       <section role="topbar" class="topbar"></section>
-      <section role="dialog" class="modal">
+      <!-- <section role="dialog" class="modal">
         <input type="text" class="modal-search" placeholder="Search for packages....">
         <div class="modal-items">
           <div class="modal-item">Package X</div>
         </div>
-      </section>
+      </section> -->
       <section role="tabs" class="tabs">
-        <div class="tabs-item">main.js</div>
-        <div class="tabs-item">base.css</div>
-        <div class="tabs-item active">keymap-core-game.js</div>
-        <div class="tabs-item">t.js</div>
-        <div class="tabs-item">jason-mars-code-academy.js</div>
+        <!-- <div class="tabs-item">main.js</div> -->
+        <!-- <div class="tabs-item active">keymap-core-game.js</div> -->
       </section>
       <section role="main" class="main">
-        <textarea id="editor" name="editor">
-'use strict';
-
-/* jshint esnext:true */
-
-import component from './component';
-import * as HttpUtils from './http-utils';
-import * as Log from './log';
-
-
-var SWIFT_PUBLIC_URL = (process.env.SWIFT_HTTPS_PUBLIC_URL || process.env.SWIFT_PUBLIC_URL || '');
-var SWIFT_CONTAINER = process.env.SWIFT_CONTAINER;
-const PUBLIC_URL = SWIFT_PUBLIC_URL + (SWIFT_CONTAINER ? `/${SWIFT_CONTAINER}` : '');
-
-let RenderView = {
-    render: (request, response, done) => {
-        response.type('application/json');
-
-        let data = request.body.data;
-
-        let isDataValidArray = (Array.isArray(data) && data.length > 0);
-        if (isDataValidArray === false) {
-            return HttpUtils.emptyDataResponse(response, done);
-        }
-
-        let promises = RenderView._resolveComponents(data);
-        Promise.all(promises)
-            .then(RenderView._assembleResponse)
-            .then(HttpUtils.jsonResponse(response, done))
-            .catch(HttpUtils.error(response, done));
-    }
-};
-
-export default RenderView.render;
-
-        </textarea>
+        <textarea id="editor" name="editor"></textarea>
       </section>
       <footer>
-        <div id="editor-file" class="normal">keymap-core-game</div>
-        <div id="editor-syntax" class="normal">JS</div>
-        <div id="editor-mode" class="normal">NORMAL</div>
+        <div id="editor-file" class="normal"></div>
+        <div id="editor-syntax" class="normal"></div>
+        <div id="editor-mode" class="normal"></div>
       </footer>
     </div>
+    <script src="src/syntax.js"></script>
     <script src="assets/javascript/keymaster.js"></script>
     <script src="src/app.js"></script>
   </body>

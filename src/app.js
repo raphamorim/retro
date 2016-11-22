@@ -26,13 +26,12 @@ function merge(obj1, obj2) {
 
 function Retro() {
   // normal, insert, visual
-  var modes = {
+  const modes = {
     "I": "INSERT",
     "<ESC>": "NORMAL",
     "V": "VISUAL"
   };
-  var currentMode = 0;
-  var def = {
+  const def = {
     lineNumbers: true,
     mode: "text/javascript",
     keyMap: "vim",
@@ -42,101 +41,16 @@ function Retro() {
     styleActiveLine: true
   };
 
-  var syntaxes = {
-    "js": {
-      mode: "text/javascript"
-    },
-    "json": {
-      mode: "text/javascript"
-    },
-    "md": {
-      mode: 'markdown',
-    },
-    "markdown": {
-      mode: 'markdown',
-    },
-    "ts": {
-      mode: "text/typescript"
-    },
-    "py": {
-      mode: {
-        name: "python",
-        version: 3,
-        singleLineStringErrors: false
-      },
-      indentUnit: 4
-    },
-    "pyx": {
-      mode: {
-        name: "text/x-cython",
-        version: 2,
-        singleLineStringErrors: false
-      },
-      indentUnit: 4
-    },
-    "rb": {
-      mode: "text/x-ruby",
-      indentUnit: 4
-    },
-    "rs": {
-      lineWrapping: true,
-      indentUnit: 4,
-      mode: "rust"
-    },
-    "rpm": {
-      mode: {
-        name: "rpm-spec"
-      },
-      indentUnit: 4
-    },
-    "sh": {
-      mode: 'shell'
-    },
-    "c": {
-      mode: "text/x-csrc"
-    },
-    "cpp": {
-      mode: "text/x-c++src"
-    },
-    "cpp": {
-      mode: "text/x-c++src"
-    },
-    "java": {
-      mode: "text/x-java"
-    },
-    "m": {
-      mode: "text/x-objectivec"
-    },
-    "h": {
-      mode: "text/x-objectivec"
-    },
-    "scala": {
-      mode: "text/x-scala"
-    },
-    "sc": {
-      mode: "text/x-scala"
-    },
-    "kt": {
-      mode: "text/x-kotlin"
-    },
-    "kts": {
-      mode: "text/x-kotlin"
-    },
-    "ceylon": {
-      mode: "text/x-ceylon"
-    }
-    ,
-    "bnn": {
-      name: "banana",
-      mode: "text/scss"
-    }
-  }
-
-  var editor = document.getElementById("editor"),
+  const editor = document.getElementById("editor"),
+    editorFile = document.getElementById("editor-file"),
     editorMode = document.getElementById('editor-mode'),
     editorSyntax = document.getElementById('editor-syntax');
 
-  var code = CodeMirror.fromTextArea(editor, def);
+  const code = CodeMirror.fromTextArea(editor, def);
+
+  const tabs = document.querySelector(".tabs");
+  // this.tabs = {};
+
   code.setOption("extraKeys", {
     Tab: function(cm) {
       var spaces = Array(cm.getOption("indentUnit") + 1).join(" ");
@@ -158,8 +72,10 @@ function Retro() {
     var mode = modes[key.toUpperCase()]
     unfocusTabs();
 
-    if (mode === 'NORMAL')
+    if (mode === 'NORMAL') {
+      editorMode.textContent = mode;
       toggleTabs();
+    }
 
     if (mode) {
       editorMode.className = "";
@@ -172,24 +88,53 @@ function Retro() {
   //   document.body.focus();
   // });
 
-  this.newTab = function() {},
-
-    this.setValue = function(file, tab) {
-      function changeSyntax(filepath) {
-        var syntax = filepath.split('.').pop();
-        console.log(syntax)
-        editorSyntax.textContent = syntax;
-        code.setOption(merge(def, syntaxes[syntax]));
-      }
-      fs.readFile(file, 'utf8', function(err, data) {
-        if (err) {
-          return alert(err);
-        }
-
-        code.setValue(data);
-        changeSyntax(file);
-      });
+  this.setTabs = function(file, asActive) {
+    var tab = document.createElement("div");
+    tab.classList.add("tabs-item");
+    if (asActive) {
+      tab.classList.add("active");
     }
+
+    tab.textContent = file;
+    tabs.innerHTML = '';
+    tabs.appendChild(tab);
+  }
+
+  this.openFile = function(file, tab) {
+    function changeSyntax(filepath) {
+      filepath = filepath.split('/').pop();
+      console.log(filepath)
+      filepath = filepath.split('.');
+      console.log(filepath.length)
+      if (filepath.length <= 1) {
+        editorFile.textContent = '';
+        return;
+      }
+
+      const syntax = filepath.pop();
+      editorSyntax.textContent = syntax;
+      code.setOption(merge(def, syntaxes[syntax]));
+    }
+
+    function setCurrentFile(filepath) {
+      filepath = filepath.split('/').pop();
+      filepath = filepath.split('.').shift();
+      editorFile.textContent = filepath;
+      this.setTabs(filepath, true);
+    }
+
+    setCurrentFile = setCurrentFile.bind(this)
+
+    fs.readFile(file, 'utf8', function(err, data) {
+      if (err) {
+        return alert(err);
+      }
+
+      code.setValue(data);
+      changeSyntax(file);
+      setCurrentFile(file);
+    });
+  }
 }
 
 document.ondragover = document.ondrop = (ev) => {
@@ -198,14 +143,14 @@ document.ondragover = document.ondrop = (ev) => {
 
 document.body.ondrop = (ev) => {
   var filepath = ev.dataTransfer.files[0].path;
-  retro.setValue(filepath);
+  retro.openFile(filepath);
   ev.preventDefault()
 }
 
 function openFiles() {
   dialog.showOpenDialog(function(fileNames) {
     if (fileNames && fileNames.length)
-      retro.setValue(fileNames[0]);
+      retro.openFile(fileNames[0]);
   });
 }
 
