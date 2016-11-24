@@ -1,13 +1,13 @@
 .modal {
-  --width: 480px;
+  --width: 620px;
   background-color: #17181a;
   z-index: 999;
   position: fixed;
   top: 30px;
   width: 100%;
   max-width: var(--width);
-  font-family: '8bitwonder';
-  font-size: 11pt;
+  font-family: 'gamegirl';
+  font-size: 9pt;
   left: 50%;
   margin-left: calc((var(--width)/2)*-1);
   border: 6px solid #17181a;
@@ -15,24 +15,25 @@
 
 .modal-search {
   width: 100%;
-  font-family: '8bitwonder';
+  font-family: 'gamegirl';
   font-size: 11pt;
   padding: 20px;
   height: 25px;
   border: 1px solid #000;
   margin: 10px 0;
-  background-color: #ADB0A2;
-  color: #202224;
+  background-color: #000;
+  color: #FFF;
   box-sizing: border-box;
-  border: 1px solid;
+  border: 1px solid #202224;
 }
 
 .modal-search::-webkit-input-placeholder {
-   color: #696969;
+   color: #FFF;
+   background: #000;
 }
 
 .modal-search:focus {
-  border-color: #24C6E0;
+  border: 1px solid #24C6E0;
   outline: 0;
 }
 
