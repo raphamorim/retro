@@ -11,3 +11,6 @@
 - refactor
 - auto indentify tests (loader to check if all it's okay when save)
 - Combo Mode
+
+
+Handling of 'mousewheel' input event was delayed for 2717 ms due to main thread being busy. Consider marking event handler as 'passive' to make the page more responive.

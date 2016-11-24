@@ -1334,10 +1334,10 @@
           exCommandDispatcher.processCommand(cm, command.exArgs.input);
         } else {
           if (vim.visualMode) {
-            showPrompt(cm, { onClose: onPromptClose, prefix: ':', value: '\'<,\'>',
+            showPrompt(cm, { onClose: onPromptClose, prefix: '>> ', value: '\'<,\'>',
                 onKeyDown: onPromptKeyDown});
           } else {
-            showPrompt(cm, { onClose: onPromptClose, prefix: ':',
+            showPrompt(cm, { onClose: onPromptClose, prefix: '>> ',
                 onKeyDown: onPromptKeyDown});
           }
         }
@@ -3756,17 +3756,17 @@
     }
     function showConfirm(cm, text) {
       if (cm.openNotification) {
-        cm.openNotification('<span style="color: red">' + text + '</span>',
+        cm.openNotification('<div style="font-family: \'Monaco\'; margin-top: 15px; color: #f57157">' + text + '</div>',
                             {bottom: true, duration: 5000});
       } else {
         alert(text);
       }
     }
     function makePrompt(prefix, desc) {
-      var raw = '<span style="font-family: monospace; white-space: pre">' +
-          (prefix || "") + '<input type="text"></span>';
+      var raw = '<span style="font-family: \'arcade\'; white-space: pre">' +
+          (prefix || "") + ' &nbsp;&nbsp;<input type="text"></span>';
       if (desc)
-        raw += ' <span style="color: #888">' + desc + '</span>';
+        raw += ' <span style="color: #24C6E0">' + desc + '</span>';
       return raw;
     }
     var searchPromptDesc = '(Javascript regexp)';
@@ -3983,7 +3983,7 @@
           }
         }
         if (!commandName) {
-          showConfirm(cm, 'Not an editor command ":' + input + '"');
+          showConfirm(cm, 'Sorry dude! Not an editor command: "' + input + '"');
           return;
         }
         try {

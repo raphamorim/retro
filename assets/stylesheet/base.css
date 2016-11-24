@@ -43,7 +43,7 @@ html {
 	overflow: auto;
 }
 body {
-	background: #202224;
+	background: #202224;	/*background: #999;*/
 	color: #ADB0A2;
 }
 .retro {
@@ -61,51 +61,44 @@ body {
 	background: #17181a;
 	height: 28pt;
 }
-
 .retro .tabs {
-  position: fixed;
-  height: 20pt;
-  background: #17181a;
-  z-index: 998;
-  width: 100%;
-  top: 18pt;
-  height: 15pt;
-  overflow: hidden;
-  left: 0;
-  padding: 5pt 0pt;
-  display: flex;
-  justify-content: space-around;
-  transition: all 400ms ease;
+	position: fixed;
+	height: 20pt;
+	background: #17181a;
+	z-index: 998;
+	width: 100%;
+	top: 18pt;
+	height: 15pt;
+	overflow: hidden;
+	left: 0;
+	padding: 5pt 0pt;
+	display: flex;
+	justify-content: space-around;
+	transition: all 400ms ease;
 }
-
 .retro .tabs.unfocus {
-  top: 0pt;
+	top: 0pt;
 }
-
 .retro .tabs>.tabs-item {
-  font-family: 'gamegirl';
-  font-size: 8pt;
-  width: 120pt;
-  text-align: left;
-  overflow-x: hidden;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+	font-family: 'gamegirl';
+	font-size: 8pt;
+	width: 15%;
+	text-align: left;
+	overflow-x: hidden;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	text-align: center;
 }
 .retro .tabs>.tabs-item.active::before {
-  content: '*';
+	content: '*';
 }
 .retro .tabs>.tabs-item.active {
-  color: #24C6E0;
+	color: #24C6E0;
 }
-
-
 .retro .main {
-	/*border: 1px solid #FFF;*/
 	margin-top: 40pt;
-	padding: 10px 20px;
 }
-
 .retro .text {
 	position: relative;
 	display: inline-block;
@@ -115,7 +108,6 @@ body {
 	min-width: 180px;
 	word-break: break-all;
 }
-
 .retro footer {
 	position: fixed;
 	display: flex;
@@ -126,7 +118,6 @@ body {
 	color: #555;
 	z-index: 2;
 }
-
 .retro footer #editor-mode {
 	font-family: 'Bit-Wonder';
 	padding: 3pt 0 0 15pt;
@@ -141,18 +132,16 @@ body {
 .retro footer #editor-mode.normal {
 	color: #555;
 }
-
 .retro footer #editor-file {
-  font-family: 'Bit-Wonder';
-  padding: 3pt 0 0 15pt;
-  font-size: 8pt;
-  max-width: 135pt;
-  overflow-x: hidden;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+	font-family: 'Bit-Wonder';
+	padding: 3pt 0 0 15pt;
+	font-size: 8pt;
+	max-width: 135pt;
+	overflow-x: hidden;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
 }
-
 .retro footer #editor-syntax {
 	font-family: 'Bit-Wonder';
 	padding: 3pt 0 0 15pt;

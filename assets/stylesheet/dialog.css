@@ -9,12 +9,12 @@
 }
 
 .CodeMirror-dialog-top {
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px dotted #24C6E0;
   top: 0;
 }
 
 .CodeMirror-dialog-bottom {
-  border-top: 1px solid #eee;
+  border-top: 5px solid #24C6E0;
   bottom: 0;
 }
 
@@ -22,11 +22,14 @@
   border: none;
   outline: none;
   background: transparent;
-  width: 20em;
-  color: inherit;
-  font-family: monospace;
+  margin-top: 15px;
+  width: 100%;
+  color: #24C6E0;
+  font-family: 'arcade', Monaco, 'Inconsolata';
+  letter-spacing: 1.5pt;
+  font-size: 15pt; 
 }
 
 .CodeMirror-dialog button {
-  font-size: 70%;
+  /*font-size: 70%;*/
 }

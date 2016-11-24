@@ -36,7 +36,8 @@ function Retro() {
     mode: "text/javascript",
     keyMap: "vim",
     theme: "monokai",
-    matchBrackets: true,
+    dragDrop: false,
+    // matchBrackets: true, very slower mode
     showCursorWhenSelecting: true,
     styleActiveLine: true
   };
@@ -125,14 +126,24 @@ function Retro() {
 
     setCurrentFile = setCurrentFile.bind(this)
 
-    fs.readFile(file, 'utf8', function(err, data) {
-      if (err) {
-        return alert(err);
-      }
+    // var data = fs.(file, 'utf8');
+    var stream = fs.createReadStream(file)
 
-      code.setValue(data);
-      changeSyntax(file);
-      setCurrentFile(file);
+    changeSyntax(file);
+    setCurrentFile(file);
+
+    var d = '';
+    console.time('finished');
+    stream.on('data', function(chunk){
+      d += chunk;
+      // code.setValue(code.getValue() + chunk);
+      // code.getDoc().setValue(d);
+    });
+
+    stream.on('end', function() {
+      console.log(d);
+      code.setValue(d);
+      console.timeEnd('finished');
     });
   }
 }
