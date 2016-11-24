@@ -2,8 +2,9 @@
 - delete file
 - change file name
 - switch tabs
-
 - command+t
+
+- npm/nodejs integration
 
 - presentation screen for configurations (http://codepen.io/yoksel/pen/XJbzrO)
   - with TRON colors
