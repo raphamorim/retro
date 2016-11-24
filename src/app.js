@@ -1,3 +1,5 @@
+'use strict';
+
 const app = require('electron').remote;
 const dialog = app.dialog;
 const fs = require('fs');
@@ -134,7 +136,10 @@ function Retro() {
 
     var d = '';
     console.time('finished');
+    stream.setEncoding('utf8');
+
     stream.on('data', function(chunk){
+      console.log(chunk)
       d += chunk;
       // code.setValue(code.getValue() + chunk);
       // code.getDoc().setValue(d);
