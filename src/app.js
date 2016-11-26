@@ -36,11 +36,22 @@
     const def = {
       lineNumbers: true,
       mode: "text/javascript",
+      continuousScanning: 500,
+      incrementalLoading: true,
       keyMap: "vim",
+      electricChars: false,
+      autofocus: true,
+      allowDropFileTypes: false,
       theme: "monokai",
       dragDrop: false,
+      coverGutterNextToScrollbar: true,
+      cursorScrollMargin: 3,
+      inputStyle: "textarea",
+      pollInterval: 200,
+      flattenSpans: true,
+      viewportMargin: 1,
       // matchBrackets: true, very slower mode
-      showCursorWhenSelecting: true,
+      // showCursorWhenSelecting: true,
       styleActiveLine: true
     };
 
@@ -105,9 +116,7 @@
     this.openFile = function(file, tab) {
       function changeSyntax(filepath) {
         filepath = filepath.split('/').pop();
-        console.log(filepath)
         filepath = filepath.split('.');
-        console.log(filepath.length)
         if (filepath.length <= 1) {
           editorFile.textContent = '';
           return;
@@ -137,23 +146,32 @@
       console.time('finished');
       stream.setEncoding('utf8');
 
-      stream.on('data', function(chunk) {
-        console.log(chunk)
-        d += chunk;
-        // code.setValue(code.getValue() + chunk);
-        // code.getDoc().setValue(d);
-      });
+      stream.on('data', (chunk) => {d += chunk;})
 
       stream.on('end', function() {
-        console.log(d);
-        code.setValue(d);
-        console.timeEnd('finished');
+        var limit = 15000,
+          prev = 0;
+
+        console.log(d.length);
+        
+        if (d.length > limit) {
+          code.replaceRange(d.substr(prev, limit), CodeMirror.Pos(code.lastLine()));
+          var interval = setInterval(function() {
+            if (d.length <= 0) {
+              console.timeEnd('finished');
+              clearInterval(interval);
+            } else {
+              prev += limit;
+              limit += limit;
+              code.replaceRange(d.substr(prev, limit), CodeMirror.Pos(code.lastLine()));
+            }
+          }, 300)
+        } else {
+          code.setValue(d)
+          console.timeEnd('finished');
+        }
       });
     }
-  }
-
-  document.ondragover = document.ondrop = (ev) => {
-    ev.preventDefault()
   }
 
   document.body.ondrop = (ev) => {
