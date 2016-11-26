@@ -5,7 +5,8 @@
   "main": "main.js",
   "scripts": {
     "start": "./node_modules/electron/cli.js .",
-    "package": "./node_modules/electron-packager/cli.js ./ Retro --all --version=1.4.1 --out=~/Desktop --overwrite --icon=./assets/images/logo-128.icns"
+    "pack:osx": "./node_modules/electron-packager/cli.js ./ Retro --plataform=darwin --version=1.4.1 --out=~/Desktop --overwrite --icon=./assets/images/logo-128.icns",
+    "pack:all": "./node_modules/electron-packager/cli.js ./ Retro --all --version=1.4.1 --out=~/Desktop --overwrite --icon=./assets/images/logo-128.icns"
   },
   "repository": "https://github.com/raphamorim/retro",
   "keywords": [],

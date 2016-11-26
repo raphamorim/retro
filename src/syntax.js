@@ -1,9 +1,18 @@
-var syntaxes = {
+const syntaxes = {
   "js": {
-    mode: "text/javascript"
+    mode: "javascript"
+  },
+  "html": {
+    mode: "html"
+  },
+  "ejs": {
+    mode: "html"
+  },
+  "css": {
+    mode: "css"
   },
   "json": {
-    mode: "text/javascript"
+    mode: "javascript"
   },
   "md": {
     mode: 'markdown',
@@ -12,83 +21,69 @@ var syntaxes = {
     mode: 'markdown',
   },
   "ts": {
-    mode: "text/typescript"
+    mode: "typescript"
   },
   "py": {
-    mode: {
-      name: "python",
-      version: 3,
-      singleLineStringErrors: false
-    },
-    indentUnit: 4
+    mode: "python"
   },
   "pyx": {
-    mode: {
-      name: "text/x-cython",
-      version: 2,
-      singleLineStringErrors: false
-    },
-    indentUnit: 4
+    mode: "cython"
   },
   "rb": {
-    mode: "text/x-ruby",
-    indentUnit: 4
+    mode: "ruby"
   },
   "rs": {
-    lineWrapping: true,
-    indentUnit: 4,
     mode: "rust"
   },
   "rpm": {
-    mode: {
-      name: "rpm-spec"
-    },
-    indentUnit: 4
+    mode: "rpm-spec"
   },
   "sh": {
     mode: 'shell'
   },
   "c": {
-    mode: "text/x-csrc"
+    mode: "csrc"
   },
   "cpp": {
-    mode: "text/x-c++src"
+    mode: "c++src"
   },
   "cpp": {
-    mode: "text/x-c++src"
+    mode: "c_cpp"
   },
   "java": {
-    mode: "text/x-java"
+    mode: "java"
   },
   "m": {
-    mode: "text/x-objectivec"
+    mode: "objectivec"
   },
   "h": {
-    mode: "text/x-objectivec"
+    mode: "objectivec"
   },
   "scala": {
-    mode: "text/x-scala"
+    mode: "scala"
   },
   "sc": {
-    mode: "text/x-scala"
+    mode: "scala"
   },
   "kt": {
-    mode: "text/x-kotlin"
+    mode: "kotlin"
   },
   "kts": {
-    mode: "text/x-kotlin"
+    mode: "kotlin"
   },
   "ceylon": {
-    mode: "text/x-ceylon"
+    mode: "ceylon"
   },
   "bnn": {
-    name: "banana",
-    mode: "text/scss"
+    mode: "scss"
+  },
+  "scss": {
+    mode: "scss"
+  },
+  "less": {
+    mode: "less"
   },
   "go": {
-    indentUnit: 8,
-    tabSize: 8,
-    indentWithTabs: true,
-    mode: "text/x-go"
+    mode: "go"
   }
 }
