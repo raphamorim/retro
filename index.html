@@ -7,51 +7,46 @@
     <title>Retro</title>
     <link rel="stylesheet" href="assets/stylesheet/fonts.css">
     <link rel="stylesheet" href="assets/stylesheet/base.css">
-    <link rel="stylesheet" href="assets/stylesheet/codemirror.css">
-    <link rel="stylesheet" href="assets/stylesheet/dialog.css">
-    <link rel="stylesheet" href="assets/stylesheet/theme.monokai.css">
     <link rel="stylesheet" href="assets/stylesheet/modal.css">
 
-    <script src="src/codemirror.js"></script>
-    <script src="src/dialog.js"></script>
-    <script src="src/searchcursor.js"></script>
-    <script src="src/activeline.js"></script>
-    <script src="src/keymap.js"></script>
-
-    <!-- syntax -->
-    <script src="src/syntax/syntax.clike.js"></script>
-    <script src="src/syntax/syntax.clojure.js"></script>
-    <script src="src/syntax/syntax.coffeescript.js"></script>
-    <script src="src/syntax/syntax.css.js"></script>
-    <script src="src/syntax/syntax.erlang.js"></script>
-    <script src="src/syntax/syntax.go.js"></script>
-    <script src="src/syntax/syntax.haskell.js"></script>
-    <script src="src/syntax/syntax.javascript.js"></script>
-    <script src="src/syntax/syntax.markdown.js"></script>
-    <script src="src/syntax/syntax.python.js"></script>
-    <script src="src/syntax/syntax.yaml.js"></script>
+    <script src="src/ace/ace.js"></script>
+    <script src="assets/javascript/keymaster.js"></script>
   </head>
   <body>
-  <style type="text/css">.CodeMirror{height: auto; padding: 10px 20px; 
-    margin-bottom: 30pt; z-index: 1;}</style>
     <div class="retro">
       <section role="topbar" class="topbar"></section>
-      <section role="dialog" class="modal">
-        <input type="text" class="modal-search" placeholder="Search for files...">
-        <div class="modal-items">
-          <div class="modal-item">main.js</div>
-          <div class="modal-item">main.js</div>
-          <div class="modal-item">main.js</div>
-          <div class="modal-item">main.js</div>
-          <div class="modal-item">main.js</div>
-        </div>
-      </section>
       <section role="tabs" class="tabs">
         <!-- <div class="tabs-item">main.js</div> -->
         <!-- <div class="tabs-item active">keymap-core-game.js</div> -->
       </section>
       <section role="main" class="main">
-        <textarea id="editor" name="editor"></textarea>
+        <div id="editor">'use strict';
+
+(function() {
+  const app = require('electron').remote;
+  const dialog = app.dialog;
+  const fs = require('fs');
+  const retro = new Retro();
+  const tabs = document.querySelector('.tabs');
+
+  function unfocusTabs() {
+    tabs.classList.add('unfocus');
+  }
+
+  function toggleTabs() {
+    tabs.classList.toggle('unfocus');
+  }
+
+  function merge(obj1, obj2) {
+    var obj3 = {};
+    for (var attrname in obj1) {
+      obj3[attrname] = obj1[attrname];
+    }
+    for (var attrname in obj2) {
+      obj3[attrname] = obj2[attrname];
+    }
+    return obj3;}
+  })();</div>
       </section>
       <footer>
         <div id="editor-file" class="normal"></div>
@@ -60,7 +55,6 @@
       </footer>
     </div>
     <script src="src/syntax.js"></script>
-    <script src="assets/javascript/keymaster.js"></script>
     <script src="src/app.js"></script>
   </body>
 </html>
