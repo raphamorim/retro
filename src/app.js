@@ -27,13 +27,6 @@
   }
 
   function Retro() {
-    // normal, insert, visual
-    const modes = {
-      "I": "INSERT",
-      "<ESC>": "NORMAL",
-      "V": "VISUAL"
-    };
-
     const editor = document.getElementById("editor"),
       editorFile = document.getElementById("editor-file"),
       editorMode = document.getElementById('editor-mode'),
@@ -54,6 +47,23 @@
         name: "open file",
         exec: openFiles,
         bindKey: {mac: "cmd-o", win: "ctrl-o"}
+    })
+
+    code.on("changeStatus", function(e, a) {
+      var mode = code.keyBinding.getStatusText(code);
+      unfocusTabs();
+
+      if (!mode || !mode.length) {
+        mode = 'NORMAL';
+        editorMode.textContent = mode;
+        toggleTabs();
+      }
+
+      if (mode) {
+        editorMode.className = "";
+        editorMode.classList.add(mode.toLowerCase())
+        editorMode.textContent = mode;
+      }
     })
 
     this.setTabs = function(file, asActive) {
