@@ -84,6 +84,7 @@
         filepath = filepath.split('.');
         if (filepath.length <= 1) {
           editorFile.textContent = '';
+          editorSyntax.textContent = '';
           return;
         }
 

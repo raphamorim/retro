@@ -20,33 +20,7 @@
         <!-- <div class="tabs-item active">keymap-core-game.js</div> -->
       </section>
       <section role="main" class="main">
-        <div id="editor">'use strict';
-
-(function() {
-  const app = require('electron').remote;
-  const dialog = app.dialog;
-  const fs = require('fs');
-  const retro = new Retro();
-  const tabs = document.querySelector('.tabs');
-
-  function unfocusTabs() {
-    tabs.classList.add('unfocus');
-  }
-
-  function toggleTabs() {
-    tabs.classList.toggle('unfocus');
-  }
-
-  function merge(obj1, obj2) {
-    var obj3 = {};
-    for (var attrname in obj1) {
-      obj3[attrname] = obj1[attrname];
-    }
-    for (var attrname in obj2) {
-      obj3[attrname] = obj2[attrname];
-    }
-    return obj3;}
-  })();</div>
+        <div id="editor"></div>
       </section>
       <footer>
         <div id="editor-file" class="normal"></div>

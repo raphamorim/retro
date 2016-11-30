@@ -672,27 +672,30 @@ dom.importCssString("\
 .ace_dialog {\
   position: absolute;\
   left: 0; right: 0;\
-  background: white;\
+  background: #202224;\
   z-index: 15;\
   padding: .1em .8em;\
   overflow: hidden;\
-  color: #333;\
+  color: #24C6E0;\
 }\
 .ace_dialog-top {\
-  border-bottom: 1px solid #eee;\
+  border-bottom: 3px solid #24C6E0;\
   top: 0;\
 }\
 .ace_dialog-bottom {\
-  border-top: 1px solid #eee;\
+  border-top: 3px solid #24C6E0;\
   bottom: 0;\
 }\
 .ace_dialog input {\
   border: none;\
   outline: none;\
   background: transparent;\
-  width: 20em;\
+  width: 80%;\
+  padding: 15px 10px 10px 10px;\
+  margin-left: 4pt;\
   color: inherit;\
-  font-family: monospace;\
+  font-family: 'gamegirl';\
+  font-size: 14pt;\
 }", "vimMode");
 (function() {
   function dialogDiv(cm, template, bottom) {
@@ -1966,10 +1969,10 @@ dom.importCssString("\
           exCommandDispatcher.processCommand(cm, command.exArgs.input);
         } else {
           if (vim.visualMode) {
-            showPrompt(cm, { onClose: onPromptClose, prefix: ':', value: '\'<,\'>',
+            showPrompt(cm, { onClose: onPromptClose, prefix: '>>', value: '\'<,\'>',
                 onKeyDown: onPromptKeyDown});
           } else {
-            showPrompt(cm, { onClose: onPromptClose, prefix: ':',
+            showPrompt(cm, { onClose: onPromptClose, prefix: '>>',
                 onKeyDown: onPromptKeyDown});
           }
         }
