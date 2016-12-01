@@ -1,8 +1,10 @@
-- save file
+x- save file
 - delete file
 - change file name
 - switch tabs
 - command+t
+
+- colocar emmet
 
 - npm/nodejs integration
 

@@ -9,6 +9,11 @@
     <link rel="stylesheet" href="assets/stylesheet/base.css">
     <link rel="stylesheet" href="assets/stylesheet/modal.css">
 
+    <script>
+      /* Events */
+      const saveEv = new Event('save-file');
+    </script>
+
     <script src="src/ace/ace.js"></script>
     <script src="assets/javascript/keymaster.js"></script>
   </head>
@@ -23,12 +28,11 @@
         <div id="editor"></div>
       </section>
       <footer>
+        <div id="editor-mode" class="normal">normal</div>
         <div id="editor-file" class="normal"></div>
         <div id="editor-syntax" class="normal"></div>
-        <div id="editor-mode" class="normal"></div>
       </footer>
     </div>
-    <script src="src/syntax.js"></script>
     <script src="src/app.js"></script>
   </body>
 </html>

@@ -73,7 +73,7 @@ body {
 	left: 0;
 	padding: 5pt 0pt;
 	display: flex;
-	justify-content: space-around;
+	justify-content: flex-start;
 	transition: all 400ms ease;
 }
 .retro .tabs.unfocus {
@@ -83,7 +83,6 @@ body {
 	font-family: 'gamegirl';
 	font-size: 8pt;
 	width: 15%;
-	text-align: left;
 	overflow-x: hidden;
 	white-space: nowrap;
 	overflow: hidden;
@@ -160,7 +159,4 @@ body {
 	margin-bottom: 30pt;
 	height: auto;
 	z-index: 1;
-}
-.aui-ace-editor {
-	display: none;
 }

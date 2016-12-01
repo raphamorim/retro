@@ -962,6 +962,7 @@ dom.importCssString("\
     { name: 'vmap', shortName: 'vm' },
     { name: 'unmap' },
     { name: 'write', shortName: 'w' },
+    { name: 'WRITE', shortName: 'W' },
     { name: 'undo', shortName: 'u' },
     { name: 'redo', shortName: 'red' },
     { name: 'set', shortName: 'se' },
@@ -5536,7 +5537,10 @@ dom.importCssString("\
     type: "boolean"
   }, false);
   Vim.defineEx('write', 'w', function() {
-    console.log(':write is not implemented')
+    document.body.dispatchEvent(saveEv);
+  });
+  Vim.defineEx('WRITE', 'W', function() {
+    document.body.dispatchEvent(saveEv);
   });
   defaultKeymap.push(
     { keys: 'zc', type: 'action', action: 'fold', actionArgs: { open: false } },

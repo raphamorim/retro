@@ -87,3 +87,5 @@ const syntaxes = {
     mode: "go"
   }
 }
+
+module.exports = syntaxes;
