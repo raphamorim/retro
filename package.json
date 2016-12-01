@@ -14,5 +14,8 @@
   "devDependencies": {
     "electron": "^1.4.1",
     "electron-packager": "^8.2.0"
+  },
+  "dependencies": {
+    "js-beautify": "^1.6.4"
   }
 }
