@@ -2,17 +2,48 @@
 
 const CONFIG = require('./src/config');
 
+const fuzeOptions = {
+  shouldSort: true,
+  threshold: 0.6,
+  location: 0,
+  distance: 100,
+  maxPatternLength: 32,
+  keys: [
+    "path"
+  ]
+};
+
 const tron = require('./src/tron');
 const syntaxes = require('./src/syntax');
 const app = require('electron').remote;
 const dialog = app.dialog;
 const retro = new Retro();
+
 const tabs = document.querySelector('.tabs');
+const modal = document.querySelector('.modal');
+const modalSearch = document.querySelector('.modal-search');
+const modalItems = document.querySelector('.modal-items');
+
+// TODO: Change to ESLint?
 const beautify = require('js-beautify').js_beautify;
 const beautifyCss = require('js-beautify').css;
 const beautifyHtml = require('js-beautify').html;
+const Fuse = require('fuse.js')
 
 let currentFile;
+let cachedFiles = [];
+
+modalSearch.addEventListener('input', function(e) {
+  const fuse = new Fuse(cachedFiles, fuzeOptions);
+  const search = (fuse.search(e.target.value)).slice(0, 10);
+  modalItems.innerHTML = ''; 
+  for (var i = 0; i < search.length; i++) {
+    var div = document.createElement('div');
+    div.classList.add('modal-item');
+    div.textContent = '...' + search[i].path.slice(-40);
+    modalItems.appendChild(div);
+  }
+})
 
 // Helpers
 
@@ -22,6 +53,14 @@ function unfocusTabs() {
 
 function toggleTabs() {
   tabs.classList.toggle('unfocus');
+}
+
+function toggleModal() {
+  modal.classList.toggle('visible');
+  if (modal.classList.contains('visible')) {
+    modalSearch.focus();
+    // modalInput.focus();
+  }
 }
 
 function Retro() {
@@ -60,6 +99,15 @@ function Retro() {
   })
 
   code.commands.addCommand({
+    name: "toggle modal",
+    exec: toggleModal,
+    bindKey: {
+      mac: "cmd-p",
+      win: "ctrl-p"
+    }
+  })
+
+  code.commands.addCommand({
     name: "save file",
     exec: saveFile,
     bindKey: {
@@ -82,18 +130,16 @@ function Retro() {
     if (mode === 'javascript') {
       var val = code.session.getValue()
       code.session.setValue(beautify(val, CONFIG.format))
-    } 
-    else if (mode === 'html') {
+    } else if (mode === 'html') {
       var val = code.session.getValue()
       code.session.setValue(beautifyHtml(val, CONFIG.format))
-    }
-    else if (mode === 'css') {
+    } else if (mode === 'css') {
       var val = code.session.getValue()
       code.session.setValue(beautifyCss(val, CONFIG.format))
     }
   }
 
-  code.on("changeStatus", function(e, a) {
+  code.on("inputStatus", function(e, a) {
     var mode = code.keyBinding.getStatusText(code);
     unfocusTabs();
 
@@ -123,7 +169,7 @@ function Retro() {
   }
 
   this.openFile = function(file, tab) {
-    function changeSyntax(filepath) {
+    function inputSyntax(filepath) {
       currentFile = filepath;
       filepath = filepath.split('/').pop();
       filepath = filepath.split('.');
@@ -155,8 +201,11 @@ function Retro() {
 
     tron.readStream(file).then(function(data) {
       code.getSession().setValue(data);
-      changeSyntax(file);
+      inputSyntax(file);
       setCurrentFile(file);
+      const files = tron.listFiles(tron.folderPath(file));
+      if (files.length)
+        cachedFiles = cachedFiles.concat(files);
     })
   }
 
@@ -191,10 +240,6 @@ function merge(obj1, obj2) {
   return obj3;
 }
 
-function toggleModal() {
-
-}
-
 key('⌘+o', function(event, handler) {
   // TODO: Multiple files and diretory
   openFiles();
@@ -212,3 +257,5 @@ key('⌘+,', function(event, handler) {
   // TODO: Preferences
   console.log("Preferences")
 });
+
+retro.openFile('/Users/raphael.amorim/Documents/life/retro/main.js');

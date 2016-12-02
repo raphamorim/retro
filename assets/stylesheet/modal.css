@@ -3,7 +3,7 @@
   background-color: #17181a;
   z-index: 999;
   position: fixed;
-  top: 30px;
+  top: 32pt;
   width: 100%;
   max-width: var(--width);
   font-family: 'gamegirl';
@@ -11,6 +11,14 @@
   left: 50%;
   margin-left: calc((var(--width)/2)*-1);
   border: 6px solid #17181a;
+  visibility: hidden;
+  transition: all 300ms ease;
+  opacity: .0;
+}
+
+.modal.visible {
+  opacity: 1;
+  visibility: visible;
 }
 
 .modal-search {
@@ -38,7 +46,7 @@
 }
 
 .modal-items {
-  max-height: 200px;
+  max-height: 300pt;
   overflow-y: scroll;
   display: flex;
   flex-direction: column;
@@ -46,7 +54,7 @@
 
 .modal-item {
   border: 1px solid #17181a;
-  padding: 10px;
+  padding: 5px;
   cursor: pointer;
   background-color: #202224;
 }

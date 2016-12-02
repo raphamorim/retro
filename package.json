@@ -16,6 +16,7 @@
     "electron-packager": "^8.2.0"
   },
   "dependencies": {
+    "fuse.js": "^2.5.0",
     "js-beautify": "^1.6.4"
   }
 }

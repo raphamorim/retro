@@ -1,5 +1,6 @@
 function Tron(encoding) {
 	const fs = require('fs');
+	const path = require('path');
 	let queue = [];
 	this.encoding = encoding || 'utf8';
 
@@ -47,10 +48,39 @@ function Tron(encoding) {
 		});
 	}
 
+	// TODO: Doens't do it Synchrounous
+	function listFiles(dir, filelist) {
+		var files = fs.readdirSync(dir);
+		filelist = filelist || [];
+
+		files.forEach(function(file) {
+			if (fs.statSync(path.join(dir, file)).isDirectory()) {
+				filelist = listFiles(path.join(dir, file), filelist);
+			} else {
+				filelist.push({"path": path.join(dir, file)});
+			}
+		});
+		return filelist.filter(function(file) {
+			if (file.path.indexOf('.git') > -1)
+				return false;
+			else if (file.path.indexOf('node_modules') > -1)
+				return false;
+			
+			return file
+		});
+
+	}
+
+	function folderPath(file) {
+		return path.dirname(file);
+	}
+
 	this.read = read;
 	this.readStream = readStream;
 	this.write = write;
+	this.listFiles = listFiles;
 	this.writeStream = writeStream;
+	this.folderPath = folderPath;
 }
 
 const tron = new Tron();

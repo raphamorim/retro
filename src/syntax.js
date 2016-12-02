@@ -53,6 +53,9 @@ const syntaxes = {
   "java": {
     mode: "java"
   },
+  "jsx": {
+    mode: "jsx"
+  },
   "m": {
     mode: "objectivec"
   },
@@ -73,6 +76,9 @@ const syntaxes = {
   },
   "ceylon": {
     mode: "ceylon"
+  },
+  "lua": {
+    mode: "lua"
   },
   "bnn": {
     mode: "scss"
