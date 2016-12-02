@@ -36,7 +36,7 @@ let cachedFiles = [];
 modalSearch.addEventListener('input', function(e) {
   const fuse = new Fuse(cachedFiles, fuzeOptions);
   const search = (fuse.search(e.target.value)).slice(0, 10);
-  modalItems.innerHTML = ''; 
+  modalItems.innerHTML = '';
   for (var i = 0; i < search.length; i++) {
     var div = document.createElement('div');
     div.classList.add('modal-item');
@@ -203,9 +203,11 @@ function Retro() {
       code.getSession().setValue(data);
       inputSyntax(file);
       setCurrentFile(file);
-      const files = tron.listFiles(tron.folderPath(file));
-      if (files.length)
-        cachedFiles = cachedFiles.concat(files);
+      tron.listFiles(tron.folderPath(file)).then(function(files) {
+        console.log(files)
+        if (files.length)
+          cachedFiles = cachedFiles.concat(files);
+      })
     })
   }
 
