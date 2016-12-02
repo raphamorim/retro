@@ -48,7 +48,19 @@ function Tron(encoding) {
 		});
 	}
 
-	// TODO: Doens't do it Synchrounous
+	function isDirectory(filepath) {
+		return new Promise(function(resolve, reject) {
+			fs.stat(filepath, function(err, stat) {
+				if (err) {
+					reject(err);
+				}
+
+				resolve(stat.isDirectory());
+			});
+		});
+	}
+
+	// TODO: Doens't do fs.stat synchrounous
 	function listFiles(dir, filelist) {
 		return new Promise(function(resolve, reject) {
 			var files = fs.readdir(dir, function(err, files) {

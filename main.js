@@ -29,7 +29,6 @@ function createWindow() {
     darkTheme: true,
     vibrancy: "ultra-dark",
     acceptFirstMouse: true,
-    backgroundColor: '#202224',
     show: false,
     icon: resolve(__dirname + '/assets/images/logo-128.icns')
   })
