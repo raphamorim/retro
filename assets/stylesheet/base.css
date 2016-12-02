@@ -98,6 +98,7 @@ body {
 .retro .main {
 	margin-top: 40pt;
 }
+.retro .text {
 	position: relative;
 	display: inline-block;
 	line-height: 20pt;

@@ -21,8 +21,8 @@ const retro = new Retro();
 
 const tabs = document.querySelector('.tabs');
 const modal = document.querySelector('.modal');
-const modalSearch = document.querySelector('.modal-search');
 const modalItems = document.querySelector('.modal-items');
+const modalSearch = document.querySelector('#modal-search');
 
 // TODO: Change to ESLint?
 const beautify = require('js-beautify').js_beautify;
@@ -32,6 +32,17 @@ const Fuse = require('fuse.js')
 
 let currentFile;
 let cachedFiles = [];
+
+modalSearch.addEventListener('keydown', function(e) {
+  // enter
+  // if (e.keyCode === 13) {
+  //   // openFile
+  // }
+
+  // esc
+  if (e.keyCode === 27)
+    modal.classList.remove('visible');
+}, {passive: true})
 
 modalSearch.addEventListener('input', function(e) {
   const fuse = new Fuse(cachedFiles, fuzeOptions);
@@ -58,8 +69,7 @@ function toggleTabs() {
 function toggleModal() {
   modal.classList.toggle('visible');
   if (modal.classList.contains('visible')) {
-    modalSearch.focus();
-    // modalInput.focus();
+    setTimeout(() => {modalSearch.focus() }, 30);
   }
 }
 
@@ -139,7 +149,7 @@ function Retro() {
     }
   }
 
-  code.on("inputStatus", function(e, a) {
+  code.on("inputStatus", function() {
     var mode = code.keyBinding.getStatusText(code);
     unfocusTabs();
 
@@ -203,11 +213,10 @@ function Retro() {
       code.getSession().setValue(data);
       inputSyntax(file);
       setCurrentFile(file);
-      tron.listFiles(tron.folderPath(file)).then(function(files) {
-        console.log(files)
-        if (files.length)
-          cachedFiles = cachedFiles.concat(files);
-      })
+      const files = tron.listFiles(tron.folderPath(file));
+      if (files.length) {
+        cachedFiles = cachedFiles.concat(files);
+      }
     })
   }
 
