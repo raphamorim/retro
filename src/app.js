@@ -28,7 +28,8 @@ const modalSearch = document.querySelector('#modal-search');
 const beautify = require('js-beautify').js_beautify;
 const beautifyCss = require('js-beautify').css;
 const beautifyHtml = require('js-beautify').html;
-const Fuse = require('fuse.js')
+
+const Fuse = require('fuse.js');
 
 let currentFile;
 let cachedFiles = [];
@@ -318,5 +319,3 @@ key('⌘+,', function(event, handler) {
   // TODO: Preferences
   console.log("Preferences")
 });
-
-retro.openFile('/Users/raphael.amorim/Documents/life/retro/main.js');
