@@ -42,7 +42,7 @@ modalSearch.addEventListener('keydown', function(e) {
   // esc
   if (e.keyCode === 27)
     modal.classList.remove('visible');
-}, {passive: true})
+})
 
 modalSearch.addEventListener('input', function(e) {
   const fuse = new Fuse(cachedFiles, fuzeOptions);
@@ -149,7 +149,7 @@ function Retro() {
     }
   }
 
-  code.on("inputStatus", function() {
+  code.on("changeStatus", function() {
     var mode = code.keyBinding.getStatusText(code);
     unfocusTabs();
 
