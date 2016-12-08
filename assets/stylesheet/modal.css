@@ -62,3 +62,7 @@
 .modal-item:hover {
   color: #24C6E0;
 }
+
+.modal-item.active {
+  color: #24C6E0;
+}
