@@ -129,7 +129,7 @@ function Tron(encoding) {
 			else if (file.path.indexOf('.gif') > -1)
 				return false;
 
-			
+
 			return file
 		});
 
@@ -148,4 +148,4 @@ function Tron(encoding) {
 }
 
 const tron = new Tron();
-module.exports = tron;
+export default tron;

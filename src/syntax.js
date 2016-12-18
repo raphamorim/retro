@@ -94,4 +94,4 @@ const syntaxes = {
   }
 }
 
-module.exports = syntaxes;
+export default syntaxes;

@@ -1,6 +1,10 @@
-'use strict';
+import { format } from './config';
+import tron from './tron';
+import syntaxes from './syntax';
+import { remote as app } from 'electron';
+import Fuse from 'Fuse.js'
 
-const CONFIG = require('./src/config');
+import { js_beautify, css, html } from 'js-beautify'
 
 const fuzeOptions = {
   shouldSort: true,
@@ -13,9 +17,6 @@ const fuzeOptions = {
   ]
 };
 
-const tron = require('./src/tron');
-const syntaxes = require('./src/syntax');
-const app = require('electron').remote;
 const dialog = app.dialog;
 const retro = new Retro();
 
@@ -25,11 +26,6 @@ const modalItems = document.querySelector('.modal-items');
 const modalSearch = document.querySelector('#modal-search');
 
 // TODO: Change to ESLint?
-const beautify = require('js-beautify').js_beautify;
-const beautifyCss = require('js-beautify').css;
-const beautifyHtml = require('js-beautify').html;
-
-const Fuse = require('fuse.js');
 
 let currentFile;
 let cachedFiles = [];
@@ -74,7 +70,7 @@ function indexInParent(node) {
 function updateModalItems(key) {
   const item = modalItems.querySelector('.active');
   let currentPos = indexInParent(item);
-  
+
   let nextPos = (key === 'down') ? ++currentPos : --currentPos;
   if (currentPos < 0) {
     nextPos = modalItems.children.length - 1;
@@ -190,13 +186,13 @@ function Retro() {
     const mode = code.getSession().getMode().$id.split('/').pop();
     if (mode === 'javascript') {
       var val = code.session.getValue()
-      code.session.setValue(beautify(val, CONFIG.format))
+      code.session.setValue(js_beautify(val, format))
     } else if (mode === 'html') {
       var val = code.session.getValue()
-      code.session.setValue(beautifyHtml(val, CONFIG.format))
+      code.session.setValue(html(val, format))
     } else if (mode === 'css') {
       var val = code.session.getValue()
-      code.session.setValue(beautifyCss(val, CONFIG.format))
+      code.session.setValue(css(val, format))
     }
   }
 
