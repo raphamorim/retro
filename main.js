@@ -1,6 +1,6 @@
 const electron = require('electron')
 
-const resolve = require('path').resolve;
+const resolve = require('path').resolve
 const app = electron.app
 const BrowserWindow = electron.BrowserWindow
 
@@ -51,16 +51,18 @@ function createWindow() {
   })
 }
 
-app.on('ready', createWindow)
+if (app) {
+  app.on('ready', createWindow)
 
-app.on('window-all-closed', function() {
-  if (process.platform !== 'darwin') {
-    app.quit()
-  }
-})
+  app.on('window-all-closed', function() {
+    if (process.platform !== 'darwin') {
+      app.quit()
+    }
+  })
 
-app.on('activate', function() {
-  if (mainWindow === null) {
-    createWindow()
-  }
-})
+  app.on('activate', function() {
+    if (mainWindow === null) {
+      createWindow()
+    }
+  })
+}

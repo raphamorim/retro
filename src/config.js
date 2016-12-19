@@ -1,4 +1,6 @@
-const config = {
+let config = {
+  cachedFiles: [],
+  currentFile: '',
   format: {
     "indent_size": 2,
     "indent_char": " ",
