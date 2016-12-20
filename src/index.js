@@ -1,7 +1,6 @@
 import retro from './retro'
 
 import config from './config'
-import syntaxes from './syntax'
 import { modalSearch, modalItems, modal } from './selectors'
 import keys from './keys'
 import Fuse from 'Fuse.js'

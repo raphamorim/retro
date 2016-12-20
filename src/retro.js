@@ -11,6 +11,7 @@ import {
 
 import tron from './tron'
 import config from './config'
+import syntaxes from './syntax'
 
 import { js_beautify, css, html } from 'js-beautify'
 
