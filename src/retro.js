@@ -13,7 +13,11 @@ import tron from './tron'
 import config from './config'
 import syntaxes from './syntax'
 
-import { js_beautify, css, html } from 'js-beautify'
+import {
+  js_beautify,
+  css,
+  html
+} from 'js-beautify'
 
 // TODO: Change to ES2015/Class
 function Retro() {
@@ -22,12 +26,16 @@ function Retro() {
     editorMode = document.getElementById('editor-mode'),
     editorSyntax = document.getElementById('editor-syntax')
 
+  ace.require("ace/ext/language_tools")
   const code = ace.edit("editor")
 
   code.setKeyboardHandler("ace/keyboard/vim")
   code.setTheme("ace/theme/monokai")
   code.setOptions({
-    showPrintMargin: false
+    showPrintMargin: false,
+    enableBasicAutocompletion: true,
+    // enableSnippets: true,
+    enableLiveAutocompletion: true
   })
   code.$blockScrolling = Infinity
   code.getSession().setMode("ace/mode/javascript")

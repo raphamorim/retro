@@ -96,3 +96,6 @@ document.body.ondrop = (ev) => {
 }
 
 keys.init();
+
+// TODEBUG
+retro.openFile('./src/index.js')

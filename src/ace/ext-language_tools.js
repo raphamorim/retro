@@ -1175,7 +1175,8 @@ var AcePopup = function(parentNode) {
 
 dom.importCssString("\
 .ace_editor.ace_autocomplete .ace_marker-layer .ace_active-line {\
-    background-color: #CAD6FA;\
+    background-color: #333;\
+    border-left: 4px solid #F5B840;\
     z-index: 1;\
 }\
 .ace_editor.ace_autocomplete .ace_line-hover {\
@@ -1193,27 +1194,37 @@ dom.importCssString("\
    box-shadow: none;\
 }\
 .ace_rightAlignedText {\
-    color: gray;\
+    color: #CBC9BF;\
+    font-size: 12pt;\
     display: inline-block;\
     position: absolute;\
     right: 4px;\
     text-align: right;\
     z-index: -1;\
 }\
-.ace_editor.ace_autocomplete .ace_completion-highlight{\
-    color: #000;\
-    text-shadow: 0 0 0.01em;\
+.ace_editor.ace_autocomplete .ace_selected .ace_rightAlignedText {\
+    color: #F5B840;\
+}\
+.ace_editor.ace_autocomplete .ace_selected .ace_completion-highlight{\
+    color: #FFF;\
 }\
 .ace_editor.ace_autocomplete {\
     width: 280px;\
+    font-family: 'Inconsolata';\
+    font-size: 12pt; \
     z-index: 200000;\
-    background: #fbfbfb;\
-    color: #444;\
-    border: 1px lightgray solid;\
+    background: #17181a;\
+    color: #CBC9BF;\
+    padding: 13px; \
+    border: 0.5px solid #232324;\
     position: fixed;\
-    box-shadow: 2px 3px 5px rgba(0,0,0,.2);\
     line-height: 1.4;\
-}");
+}\
+.ace_editor.ace_autocomplete .ace_selected {\
+    color: #FFF; \
+    padding-left: 8px; \
+}\
+");
 
 exports.AcePopup = AcePopup;
 
