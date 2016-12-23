@@ -129,6 +129,17 @@ function Retro() {
     tabs.appendChild(tab)
   }
 
+  this.updateFile = function(file, forcedUpdate = false) {
+    if (!forcedUpdate)
+      forcedUpdate = confirm("This file was update, do you want to update it?");
+    
+    if (forcedUpdate) {
+      tron.readStream(file).then(function(data) {
+        code.getSession().setValue(data);
+      })
+    }
+  }
+
   this.openFile = function(file, tab) {
     function inputSyntax(filepath) {
       config.currentFile = filepath

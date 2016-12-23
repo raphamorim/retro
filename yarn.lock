@@ -146,6 +146,10 @@ async@^2.1.2:
   dependencies:
     lodash "^4.14.0"
 
+async@~0.1.22:
+  version "0.1.22"
+  resolved "https://registry.yarnpkg.com/async/-/async-0.1.22.tgz#0fc1aaa088a0e3ef0ebe2d8831bab0dcf8845061"
+
 async@~0.2.6:
   version "0.2.10"
   resolved "https://registry.yarnpkg.com/async/-/async-0.2.10.tgz#b6bbe0b0674b9d719708ca38de8c237cb526c3d1"
@@ -1257,6 +1261,13 @@ fs-extra@^0.30.0:
     klaw "^1.0.0"
     path-is-absolute "^1.0.0"
     rimraf "^2.2.8"
+
+fs.notify@0.0.4:
+  version "0.0.4"
+  resolved "https://registry.yarnpkg.com/fs.notify/-/fs.notify-0.0.4.tgz#63284d45a34b52ce60088a6ddbec5b776d3c013d"
+  dependencies:
+    async "~0.1.22"
+    retry "~0.6.0"
 
 fs.realpath@^1.0.0:
   version "1.0.0"
@@ -2496,6 +2507,10 @@ require-main-filename@^1.0.1:
 resolve@^1.1.6:
   version "1.2.0"
   resolved "https://registry.yarnpkg.com/resolve/-/resolve-1.2.0.tgz#9589c3f2f6149d1417a40becc1663db6ec6bc26c"
+
+retry@~0.6.0:
+  version "0.6.1"
+  resolved "https://registry.yarnpkg.com/retry/-/retry-0.6.1.tgz#fdc90eed943fde11b893554b8cc63d0e899ba918"
 
 right-align@^0.1.1:
   version "0.1.3"

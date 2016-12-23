@@ -1,12 +1,23 @@
 import retro from './retro'
 
+import Notify from 'fs.notify'
 import { remote as app } from 'electron'
 import { tabs, modalSearch, modalItems, modal } from './selectors'
 
+const notifications = new Notify();
+
+// notifications.close to end all
+notifications.on('change', (file, event, path) => {
+	if (event === 'change')
+		retro.updateFile(path);
+})
+
 export function openFiles() {
-	app.dialog.showOpenDialog(function(fileNames) {
-		if (fileNames && fileNames.length)
+	app.dialog.showOpenDialog((fileNames) => {
+		if (fileNames && fileNames.length) {
 			retro.openFile(fileNames[0]);
+			notifications.add(fileNames[0]);
+		}
 	});
 }
 
