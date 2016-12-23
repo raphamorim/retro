@@ -4,12 +4,12 @@ import Notify from 'fs.notify'
 import { remote as app } from 'electron'
 import { tabs, modalSearch, modalItems, modal } from './selectors'
 
-const notifications = new Notify();
+export const notifications = new Notify();
 
-// notifications.close to end all
 notifications.on('change', (file, event, path) => {
-	if (event === 'change')
-		retro.updateFile(path);
+	if (event === 'change') {
+		retro.updateFile(path)
+	}
 })
 
 export function openFiles() {

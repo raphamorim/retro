@@ -130,14 +130,16 @@ function Retro() {
   }
 
   this.updateFile = function(file, forcedUpdate = false) {
-    if (!forcedUpdate)
-      forcedUpdate = confirm("This file was update, do you want to update it?");
-    
-    if (forcedUpdate) {
-      tron.readStream(file).then(function(data) {
-        code.getSession().setValue(data);
-      })
-    }
+    tron.readStream(file).then(function(data) {
+      if (data === code.getValue())
+        return
+
+      if (!forcedUpdate)
+        forcedUpdate = confirm('This file was update, do you want to update it?')
+
+      if (forcedUpdate)
+        code.getSession().setValue(data)
+    })
   }
 
   this.openFile = function(file, tab) {
