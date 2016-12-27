@@ -43,7 +43,7 @@ html {
 	overflow: auto;
 }
 body {
-	background: #202224;
+	background: #14191f;
 	color: #ADB0A2;
 }
 .retro {
@@ -113,8 +113,11 @@ body {
 	bottom: 0;
 	height: 25pt;
 	width: 100%;
-	background: #202224;
-	color: #555;
+	/*background: #202224;*/
+	background: #17181a;
+	/*color: #555;*/
+	color: #999;
+	letter-spacing: 0.05em;
 	z-index: 2;
 }
 .retro footer #editor-mode {
@@ -129,7 +132,8 @@ body {
 	color: #f57157;
 }
 .retro footer #editor-mode.normal {
-	color: #555;
+	color: #999;
+
 }
 .retro footer #editor-file {
 	font-family: 'Bit-Wonder';
@@ -154,7 +158,8 @@ body {
 	left: 0;
 	z-index: 1;
 	padding: 10px 20px;
-	background: #202224;
+	/*background: #202224;*/
+	background: #14191f;
 	margin-top: 45pt;
 	margin-bottom: 30pt;
 	height: auto;

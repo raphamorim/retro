@@ -5,6 +5,9 @@ import { modalSearch, modalItems, modal } from './selectors'
 import keys from './keys'
 import Fuse from 'Fuse.js'
 
+// DEBUG
+import {notifications} from './screen'
+
 const fuzeOptions = {
   shouldSort: true,
   threshold: 0.6,
@@ -97,5 +100,7 @@ document.body.ondrop = (ev) => {
 
 keys.init();
 
+
 // TODEBUG
-retro.openFile('./src/index.js')
+retro.openFile('./src/index.js');
+// notifications.add('./index.html');

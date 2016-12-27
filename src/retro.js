@@ -27,14 +27,14 @@ function Retro() {
     editorSyntax = document.getElementById('editor-syntax')
 
   ace.require("ace/ext/language_tools")
+  ace.require("ace/ext/emmet")
   const code = ace.edit("editor")
 
   code.setKeyboardHandler("ace/keyboard/vim")
-  code.setTheme("ace/theme/monokai")
+  code.setTheme("ace/theme/retro")
   code.setOptions({
     showPrintMargin: false,
     enableBasicAutocompletion: true,
-    // enableSnippets: true,
     enableLiveAutocompletion: true
   })
   code.$blockScrolling = Infinity

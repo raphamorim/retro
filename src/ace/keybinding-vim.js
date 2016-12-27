@@ -962,6 +962,7 @@ dom.importCssString("\
     { name: 'vmap', shortName: 'vm' },
     { name: 'unmap' },
     { name: 'write', shortName: 'w' },
+    { name: '!', shortName: '!' },
     { name: 'WRITE', shortName: 'W' },
     { name: 'undo', shortName: 'u' },
     { name: 'redo', shortName: 'red' },
@@ -982,7 +983,7 @@ dom.importCssString("\
   var Vim = function() { return vimApi; } //{
     function enterVimMode(cm) {
       cm.setOption('disableInput', true);
-      cm.setOption('showCursorWhenSelecting', false);
+      cm.setOption('showCursorWhenSelecting', true);
       CodeMirror.signal(cm, "vim-mode-change", {mode: "normal"});
       cm.on('cursorActivity', onCursorActivity);
       maybeInitVimState(cm);
@@ -1970,10 +1971,10 @@ dom.importCssString("\
           exCommandDispatcher.processCommand(cm, command.exArgs.input);
         } else {
           if (vim.visualMode) {
-            showPrompt(cm, { onClose: onPromptClose, prefix: '>>', value: '\'<,\'>',
+            showPrompt(cm, { onClose: onPromptClose, prefix: ':', value: '\'<,\'>',
                 onKeyDown: onPromptKeyDown});
           } else {
-            showPrompt(cm, { onClose: onPromptClose, prefix: '>>',
+            showPrompt(cm, { onClose: onPromptClose, prefix: ':',
                 onKeyDown: onPromptKeyDown});
           }
         }
@@ -5536,8 +5537,12 @@ dom.importCssString("\
     },
     type: "boolean"
   }, false);
-  Vim.defineEx('write', 'w', function() {
+  Vim.defineEx('write', 'w', function(a, b) {
+    console.log(a, b)
     document.body.dispatchEvent(saveEv);
+  });
+  Vim.defineEx('!', '!', function(a, b) {
+    console.log(a, b)
   });
   Vim.defineEx('WRITE', 'W', function() {
     document.body.dispatchEvent(saveEv);

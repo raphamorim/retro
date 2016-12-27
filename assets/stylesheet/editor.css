@@ -1,7 +1,8 @@
 .ace_editor {
 	position: relative;
 	overflow: hidden;
-	background-color: #202224;
+	/*background-color: #202224;*/
+	background: #07090B;
 	color: #F8F8F2;
 	font-size: 14pt;
 	font-family: Inconsolata, Consolas, Courier, monospace;
@@ -58,7 +59,8 @@
 	-moz-user-select: none;
 	-webkit-user-select: none;
 	user-select: none;
-	background: #202224;
+	/*background: #202224;*/
+	background: #07090B;
 	color: #8F908A
 }
 .ace_gutter-active-line {
@@ -423,7 +425,7 @@
 	border-bottom-left-radius: 3px;
 }
 .ace_cursor {
-	border: 1px solid #F5B840;
-    background-color: #F5B840;
+	border: 1px solid #7bdcec;
+    background-color: #7bdcec;
     opacity: .8;
 }

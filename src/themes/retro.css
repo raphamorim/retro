@@ -1,0 +1,86 @@
+.ace-retro .ace_gutter {
+	background: #14191f;
+	color: #aec2e0;
+}
+.ace-retro .ace_print-margin {
+	width: 1px;
+	background: #555651
+}
+.ace-retro {
+	background-color: #202224;
+	color: #F8F8F2;
+	font-size: 14pt;
+	font-family: Inconsolata, Consolas, Courier, monospace;
+	line-height: 16pt;
+	letter-spacing: 0.3pt;
+}
+.ace-retro .ace_cursor {
+	color: #F8F8F0
+}
+.ace-retro .ace_marker-layer .ace_selection {
+	background: #0a3b43
+}
+.ace-retro.ace_multiselect .ace_selection.ace_start {
+	box-shadow: 0 0 3px 0px #202224;
+}
+.ace-retro .ace_marker-layer .ace_step {
+	background: rgb(102, 82, 0)
+}
+.ace-retro .ace_marker-layer .ace_bracket {
+	margin: -1px 0 0 -1px;
+	border: 1px solid #49483E
+}
+.ace-retro .ace_marker-layer .ace_active-line {
+	background: #2c2f32
+}
+.ace-retro .ace_gutter-active-line {
+	background-color: #2c2f32
+}
+.ace-retro .ace_marker-layer .ace_selected-word {
+	border: 1px solid #49483E
+}
+.ace-retro .ace_invisible {
+	color: #52524d
+}
+.ace-retro .ace_entity.ace_name.ace_tag, .ace-retro .ace_keyword, .ace-retro .ace_meta.ace_tag, .ace-retro .ace_storage {
+	color: #267fb5
+}
+.ace-retro .ace_punctuation, .ace-retro .ace_punctuation.ace_tag {
+	color: #fff
+}
+.ace-retro .ace_constant.ace_character, .ace-retro .ace_constant.ace_language, .ace-retro .ace_constant.ace_numeric, .ace-retro .ace_constant.ace_other {
+	color: #C7F026
+}
+.ace-retro .ace_invalid {
+	color: #F8F8F0;
+	background-color: #F92672
+}
+.ace-retro .ace_invalid.ace_deprecated {
+	color: #F8F8F0;
+	background-color: #AE81FF
+}
+.ace-retro .ace_support.ace_constant, .ace-retro .ace_support.ace_function {
+	color: #66D9EF
+}
+.ace-retro .ace_fold {
+	background-color: #A6E22E;
+	border-color: #F8F8F2
+}
+.ace-retro .ace_storage.ace_type, .ace-retro .ace_support.ace_class, .ace-retro .ace_support.ace_type {
+	color: #267fb5
+}
+.ace-retro .ace_entity.ace_name.ace_function, .ace-retro .ace_entity.ace_other, .ace-retro .ace_entity.ace_other.ace_attribute-name, .ace-retro .ace_variable {
+	color: #FFF
+}
+.ace-retro .ace_variable.ace_parameter {
+	color: #FD971F
+}
+.ace-retro .ace_string {
+	color: #6ee2ff
+}
+.ace-retro .ace_comment {
+	color: #324357
+}
+.ace-retro .ace_indent-guide {
+	/*background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAACCAYAAACZgbYnAAAAEklEQVQImWPQ0FD0ZXBzd/wPAAjVAoxeSgNeAAAAAElFTkSuQmCC) right repeat-y*/
+}
