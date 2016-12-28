@@ -1,4 +1,84 @@
-html, body, div, span, applet, object, iframe, h1, h2, h3, h4, h5, h6, p, blockquote, pre, a, abbr, acronym, address, big, cite, code, del, dfn, em, img, ins, kbd, q, s, samp, small, strike, strong, sub, sup, tt, var, b, u, i, center, dl, dt, dd, ol, ul, li, fieldset, form, label, legend, table, caption, tbody, tfoot, thead, tr, th, td, article, aside, canvas, details, embed, figure, figcaption, footer, header, hgroup, menu, nav, output, ruby, section, summary, time, mark, audio, video {
+html,
+body,
+div,
+span,
+applet,
+object,
+iframe,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p,
+blockquote,
+pre,
+a,
+abbr,
+acronym,
+address,
+big,
+cite,
+code,
+del,
+dfn,
+em,
+img,
+ins,
+kbd,
+q,
+s,
+samp,
+small,
+strike,
+strong,
+sub,
+sup,
+tt,
+var,
+b,
+u,
+i,
+center,
+dl,
+dt,
+dd,
+ol,
+ul,
+li,
+fieldset,
+form,
+label,
+legend,
+table,
+caption,
+tbody,
+tfoot,
+thead,
+tr,
+th,
+td,
+article,
+aside,
+canvas,
+details,
+embed,
+figure,
+figcaption,
+footer,
+header,
+hgroup,
+menu,
+nav,
+output,
+ruby,
+section,
+summary,
+time,
+mark,
+audio,
+video {
 	margin: 0;
 	padding: 0;
 	border: 0;
@@ -8,29 +88,51 @@ html, body, div, span, applet, object, iframe, h1, h2, h3, h4, h5, h6, p, blockq
 }
 
 /* HTML5 display-role reset for older browsers */
-article, aside, details, figcaption, figure, footer, header, hgroup, menu, nav, section {
+article,
+aside,
+details,
+figcaption,
+figure,
+footer,
+header,
+hgroup,
+menu,
+nav,
+section {
 	display: block;
 }
+
 body {
 	line-height: 1;
 }
-ol, ul {
+
+ol,
+ul {
 	list-style: none;
 }
-blockquote, q {
+
+blockquote,
+q {
 	quotes: none;
 }
-blockquote:before, blockquote:after, q:before, q:after {
+
+blockquote:before,
+blockquote:after,
+q:before,
+q:after {
 	content: '';
 	content: none;
 }
+
 table {
 	border-collapse: collapse;
 	border-spacing: 0;
 }
+
 a {
 	text-decoration: none;
 }
+
 pre {
 	white-space: pre-wrap;       /* css-3 */
 	white-space: -moz-pre-wrap;  /* Mozilla, since 1999 */
@@ -38,20 +140,24 @@ pre {
 	white-space: -o-pre-wrap;    /* Opera 7 */
 	word-wrap: break-word;       /* Internet Explorer 5.5+ */
 }
+
 html {
 	height: 100%;
 	overflow: auto;
 }
+
 body {
 	background: #14191f;
 	color: #ADB0A2;
 }
+
 .retro {
 	font-size: 14pt;
 	font-family: Monaco, Inconsolata, Consolas, Courier, monospace !important;
 	line-height: 18pt !important;
 	letter-spacing: 0.3pt;
 }
+
 .retro .topbar {
 	position: fixed;
 	top: 0;
@@ -61,6 +167,7 @@ body {
 	background: #17181a;
 	height: 28pt;
 }
+
 .retro .tabs {
 	position: fixed;
 	height: 20pt;
@@ -76,9 +183,11 @@ body {
 	justify-content: flex-start;
 	transition: all 400ms ease;
 }
+
 .retro .tabs.unfocus {
 	top: 0pt;
 }
+
 .retro .tabs>.tabs-item {
 	font-family: 'gamegirl';
 	font-size: 8pt;
@@ -89,15 +198,19 @@ body {
 	text-overflow: ellipsis;
 	text-align: center;
 }
+
 .retro .tabs>.tabs-item.active::before {
 	content: '*';
 }
+
 .retro .tabs>.tabs-item.active {
 	color: #24C6E0;
 }
+
 .retro .main {
 	margin-top: 40pt;
 }
+
 .retro .text {
 	position: relative;
 	display: inline-block;
@@ -107,34 +220,37 @@ body {
 	min-width: 180px;
 	word-break: break-all;
 }
+
 .retro footer {
 	position: fixed;
 	display: flex;
 	bottom: 0;
 	height: 25pt;
-	width: 100%;
-	/*background: #202224;*/
-	background: #17181a;
-	/*color: #555;*/
+	width: 100%;	/*background: #202224;*/
+	background: #17181a;	/*color: #555;*/
 	color: #999;
 	letter-spacing: 0.05em;
 	z-index: 2;
 }
+
 .retro footer #editor-mode {
 	font-family: 'Bit-Wonder';
 	padding: 3pt 0 0 15pt;
 	font-size: 8pt;
 }
+
 .retro footer #editor-mode.insert {
 	color: #24C6E0;
 }
+
 .retro footer #editor-mode.visual {
 	color: #f57157;
 }
+
 .retro footer #editor-mode.normal {
 	color: #999;
-
 }
+
 .retro footer #editor-file {
 	font-family: 'Bit-Wonder';
 	padding: 3pt 0 0 15pt;
@@ -145,11 +261,13 @@ body {
 	overflow: hidden;
 	text-overflow: ellipsis;
 }
+
 .retro footer #editor-syntax {
 	font-family: 'Bit-Wonder';
 	padding: 3pt 0 0 15pt;
 	font-size: 8pt;
 }
+
 #editor {
 	position: absolute;
 	top: 0;
@@ -157,11 +275,65 @@ body {
 	bottom: 0;
 	left: 0;
 	z-index: 1;
-	padding: 10px 20px;
-	/*background: #202224;*/
+	padding: 10px 20px;	/*background: #202224;*/
 	background: #14191f;
 	margin-top: 45pt;
 	margin-bottom: 30pt;
 	height: auto;
 	z-index: 1;
+}
+
+.loader {
+	height: 2px;
+	position: absolute;
+	bottom: 0;
+	width: 100%;
+	display: none;
+	opacity: 0;
+	transition: all 500ms ease;
+	overflow: hidden;
+	background-color: transparent;
+}
+
+.loader:before {
+	display: block;
+	position: absolute;
+	content: '';
+	left: -200px;
+	width: 200px;
+	height: 4px;
+	background-color: #24C6E0;
+	animation: loading 2s ease-in infinite;
+}
+
+.loader.on {
+	display: block;
+	opacity: 1;
+}
+
+@keyframes loading {
+	from {
+		left: -200px;
+		width: 0%;
+	}
+
+	50% {
+		width: 30%;
+	}
+
+	70% {
+		width: 70%;
+	}
+
+	80% {
+		left: 50%;
+	}
+
+	95% {
+		left: 120%;
+	}
+
+	to {
+		left: 100%;
+	}
 }

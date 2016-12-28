@@ -9,6 +9,8 @@ import {
   toggleTabs
 } from './screen'
 
+import loader from './lib/loader'
+
 import tron from './tron'
 import config from './config'
 import syntaxes from './syntax'
@@ -143,6 +145,7 @@ function Retro() {
   }
 
   this.openFile = function(file, tab) {
+    loader.on();
     function inputSyntax(filepath) {
       config.currentFile = filepath
       filepath = filepath.split('/').pop()
@@ -162,6 +165,10 @@ function Retro() {
         }
 
       code.getSession().setMode("ace/mode/" + current.mode);
+      if (current.mode === 'html') {
+        console.log(1)
+        code.setOption("enableEmmet", true);
+      }
     }
 
     function setCurrentFile(filepath) {
@@ -181,6 +188,8 @@ function Retro() {
       if (files.length) {
         config.cachedFiles = config.cachedFiles.concat(files);
       }
+    }).then(() => {
+      setTimeout(() => { loader.off(); }, 500)      
     })
   }
 

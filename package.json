@@ -21,6 +21,7 @@
     "babel-core": "6.21.0",
     "babel-loader": "6.2.10",
     "babel-preset-es2015": "6.3.13",
+    "electron": "1.4.13",
     "electron-prebuilt": "1.4.12",
     "fs.notify": "0.0.4",
     "fuse.js": "2.6.0",

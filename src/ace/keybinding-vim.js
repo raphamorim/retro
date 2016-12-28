@@ -672,7 +672,7 @@ dom.importCssString("\
 .ace_dialog {\
   position: absolute;\
   left: 0; right: 0;\
-  background: #202224;\
+  background: #14191f;\
   z-index: 15;\
   padding: .1em .8em;\
   overflow: hidden;\
