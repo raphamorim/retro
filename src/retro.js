@@ -89,16 +89,20 @@ function Retro() {
   })
 
   function formatCode() {
+    const currentLine = code.getSelectionRange().start.row
     const mode = code.getSession().getMode().$id.split('/').pop()
     if (mode === 'javascript') {
       var val = code.session.getValue()
       code.session.setValue(js_beautify(val, config.format))
+      code.gotoLine(currentLine + 1, Infinity)
     } else if (mode === 'html') {
       var val = code.session.getValue()
       code.session.setValue(html(val, config.format))
+      code.gotoLine(currentLine + 1, Infinity)
     } else if (mode === 'css') {
       var val = code.session.getValue()
       code.session.setValue(css(val, config.format))
+      code.gotoLine(currentLine + 1, Infinity)
     }
   }
 
@@ -106,7 +110,7 @@ function Retro() {
     var mode = code.keyBinding.getStatusText(code)
     unfocusTabs()
 
-    if (!mode || !mode.length) {
+    if (!mode || mode.length < 2) {
       mode = 'NORMAL'
       editorMode.textContent = mode
       toggleTabs()
