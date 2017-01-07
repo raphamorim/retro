@@ -1,9 +1,10 @@
 import retro from './retro'
 
 import config from './config'
-import { modalSearch, modalItems, modal } from './selectors'
+import { container, modalSearch, modalItems, modal } from './selectors'
 import keys from './keys'
 import Fuse from 'Fuse.js'
+import { opening } from './animation/index'
 
 // DEBUG
 import {notifications} from './screen'
@@ -98,9 +99,11 @@ document.body.ondrop = (ev) => {
   ev.preventDefault()
 }
 
-keys.init();
+container.style.display = 'none';
 
+// keys.init();
+opening()
 
 // TODEBUG
-retro.openFile('./src/index.js');
+// retro.openFile('./src/index.js');
 // notifications.add('./index.html');

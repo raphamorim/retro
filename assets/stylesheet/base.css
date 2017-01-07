@@ -337,3 +337,21 @@ body {
 		left: 100%;
 	}
 }
+
+.opening .title {
+	padding: 3pt 0 0 15pt;
+	color: #24C6E0;
+	position: absolute;
+	bottom: 30pt;
+	font-family: helvetica, arial;
+	font-family: 'gamegirl';
+	letter-spacing: 0.2em;
+}
+
+.opening .title h1 {
+	font-family: 'tron';
+	color: #14191f;
+	-webkit-text-stroke: 1px #24C6E0;
+	font-size: 30pt;
+	padding-top: 15px;
+}

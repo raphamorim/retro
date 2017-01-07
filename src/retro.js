@@ -42,6 +42,7 @@ function Retro() {
   code.$blockScrolling = Infinity
   code.getSession().setMode("ace/mode/javascript")
   code.getSession().setUseWorker(false)
+  code.getSession().setUseWrapMode(true)
 
   code.commands.addCommand({
     name: "open file",
