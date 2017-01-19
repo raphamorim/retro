@@ -1,8 +1,8 @@
 # Retro [Work in Progress]
 
-> A Vim Based Editor for the 30st Century
+> A Vim Based Editor for the 30th Century
 
-Status: A lot of work to do, but [you can help following the issues](https://github.com/raphamorim/retro/issues).
+Status: A lot of work to do, but [you can help solving issues](https://github.com/raphamorim/retro/issues).
 
 ![Example](assets/images/example.png)
 
@@ -17,6 +17,18 @@ Retro is a project that seeks to aggressively rethink Vim in order to:
 - Full Extensible'n Hackable Editor (allow to change interfaces brutally)
 	- Improve extensibility with a new plugin architecture
 
-License: [MIT](LICENSE)
+## Our Goal
 
-Author: [Raphael Amorim](http://github.com/raphamorim)
+The goal of the project is to create a extensible/hackable experience for VIM users, built on open web standards.
+
+Nowadays our focus will be specifically about speed, stability, experience and productivity.
+
+## Credits
+
+Authored by Raphael Amorim - [@raphamundi](https://twitter.com/raphamundi)
+
+Special thanks to the following people:
+
+- [Afonso Pacifer](https://github.com/afonsopacifer) for his working around some components.
+
+License: [MIT](LICENSE)
