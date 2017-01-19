@@ -1,31 +1,31 @@
 import {
-  openFiles,
-  toggleModal,
-  toggleTabs
+	openFiles,
+	toggleModal,
+	toggleTabs
 } from './screen'
 
 function Keys() {
 	function init() {
 		key('⌘+o', function(event, handler) {
 			// TODO: Multiple files and diretory
-			openFiles();
-		});
+			openFiles()
+		})
 
 		key('⌘+p', function(event, handler) {
-			toggleModal();
-		});
+			toggleModal()
+		})
 
 		key('⌘+e', function(event, handler) {
-			toggleTabs();
-		});
+			toggleTabs()
+		})
 
 		key('⌘+,', function(event, handler) {
 			// TODO: Preferences
-			console.log("Preferences")
-		});
+			console.log('Preferences')
+		})
 	}
 
-	this.init = init;
+	this.init = init
 }
 
-export default new Keys();
+export default new Keys()
