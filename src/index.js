@@ -1,13 +1,14 @@
 import retro from './retro'
 
+import db from './data'
 import config from './config'
-import { container, modalSearch, modalItems, modal } from './selectors'
-import keys from './keys'
+import { container, modalSearch, modalItems, modal } from './config/selectors'
+import keys from './lib/keys'
 import Fuse from 'Fuse.js'
 import { opening } from './animation/index'
 
 // DEBUG
-import { notifications } from './screen'
+import { notifications } from './lib/screen'
 
 const fuzeOptions = {
 	shouldSort: true,
@@ -55,7 +56,7 @@ function indexInParent(node) {
 		if (children[i] == node) return num
 		if (children[i].nodeType == 1) num++
 	}
-  
+
 	return -1
 }
 
@@ -103,7 +104,21 @@ document.body.ondrop = (ev) => {
 container.style.display = 'none'
 
 // keys.init();
+var doc = { hello: 'world'
+   , n: 5
+   , today: new Date()
+   , nedbIsAwesome: true
+   , notthere: null
+   , notToBeSaved: undefined  // Will not be saved
+   , fruits: [ 'apple', 'orange', 'pear' ]
+   , infos: { name: 'nedb' }
+};
+
 opening()
+
+db.insert(doc, function (err, newDoc) {
+  console.log(newDoc)
+});
 
 // TODEBUG
 // retro.openFile('./src/index.js');

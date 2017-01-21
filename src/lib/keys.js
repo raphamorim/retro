@@ -1,8 +1,4 @@
-import {
-	openFiles,
-	toggleModal,
-	toggleTabs
-} from './screen'
+import { openFiles, toggleModal, toggleTabs } from './screen'
 
 function Keys() {
 	function init() {
