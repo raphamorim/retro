@@ -7,7 +7,7 @@ const opening = function() {
 		dst.x = src.x
 		dst.y = src.y
 		dst.z = src.z
-        
+
 		return dst
 	}
 	var Trail = function(pos, t, plan_i) {
@@ -71,12 +71,12 @@ const opening = function() {
 	}
 	Trail.prototype.update = function(t) {
 		quadIn(
-            t - this.start_time,
-            this.start,
-            this.goal,
-            this.take_time,
-            this.pos
-        )
+			t - this.start_time,
+			this.start,
+			this.goal,
+			this.take_time,
+			this.pos
+		)
 		if (t - this.start_time > this.take_time) {
 			this.setNextGoal(this.start_time + this.take_time)
 			this.update(t)
@@ -119,10 +119,10 @@ const opening = function() {
 		if (dz > 0) {
 			dst.x = (point.x - camera.x) / dz
 			dst.y = (point.y - camera.y) / dz
-            
+
 			return true
 		}
-        
+
 		return false
 	}
 	var updateScene = function(ctx) {
@@ -151,8 +151,8 @@ const opening = function() {
 	var time_pre = time_now
 	for (i = 0; i < 8; i++) {
 		trails.push(new Trail({
-			x: Math.random() * 50 - 25,
-			y: Math.random() * 50 - 25,
+			x: Math.random() * 100 - 50,
+			y: Math.random() * 100 - 50,
 			z: i
 		}, time_now, i))
 	}

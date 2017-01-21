@@ -1,68 +1,60 @@
 .modal {
-  --width: 620px;
-  background-color: #17181a;
-  z-index: 999;
-  position: fixed;
-  top: 32pt;
-  width: 100%;
-  max-width: var(--width);
-  font-family: 'gamegirl';
-  font-size: 9pt;
-  left: 50%;
-  margin-left: calc((var(--width)/2)*-1);
-  border: 6px solid #17181a;
-  visibility: hidden;
-  transition: all 200ms ease;
-  opacity: .0;
+	--width: 620px;
+	background-color: #17181a;
+	z-index: 999;
+	position: fixed;
+	top: 32pt;
+	width: 100%;
+	max-width: var(--width);
+	font-family: 'gamegirl';
+	font-size: 9pt;
+	left: 50%;
+	margin-left: calc((var(--width)/2)*-1);
+	border: 6px solid #17181a;
+	visibility: hidden;
+	transition: all 200ms ease;
+	opacity: .0;
 }
-
 .modal.visible {
-  opacity: 1;
-  visibility: visible;
+	opacity: 1;
+	visibility: visible;
 }
-
 .modal-search {
-  width: 100%;
-  font-family: 'gamegirl';
-  font-size: 11pt;
-  padding: 20px;
-  height: 23px;
-  border: 1px solid #000;
-  margin: 10px 0;
-  background-color: #000;
-  color: #FFF;
-  box-sizing: border-box;
-  border: 1px solid #202224;
+	width: 100%;
+	font-family: 'gamegirl';
+	font-size: 11pt;
+	padding: 20px;
+	height: 23px;
+	border: 1px solid #000;
+	margin: 10px 0;
+	background-color: #000;
+	color: #FFF;
+	box-sizing: border-box;
+	border: 1px solid #202224;
 }
-
 .modal-search::-webkit-input-placeholder {
-   color: #FFF;
-   background: #000;
+	color: #FFF;
+	background: #000;
 }
-
 .modal-search:focus {
-  border: 1px solid #24C6E0;
-  outline: 0;
+	border: 1px solid #24C6E0;
+	outline: 0;
 }
-
 .modal-items {
-  max-height: 300pt;
-  overflow-y: scroll;
-  display: flex;
-  flex-direction: column;
+	max-height: 300pt;
+	overflow-y: scroll;
+	display: flex;
+	flex-direction: column;
 }
-
 .modal-item {
-  border: 1px solid #17181a;
-  padding: 5px;
-  cursor: pointer;
-  background-color: #202224;
+	border: 1px solid #17181a;
+	padding: 5px;
+	cursor: pointer;
+	background-color: #202224;
 }
-
 .modal-item:hover {
-  color: #24C6E0;
+	color: #24C6E0;
 }
-
 .modal-item.active {
-  color: #24C6E0;
+	color: #24C6E0;
 }

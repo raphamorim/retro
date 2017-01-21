@@ -10,7 +10,7 @@ function Tron(encoding) {
 
 	function writeStream(filepath, data) {
 		const encode = this.encoding
-		
+
 		return new Promise(function(resolve, reject) {
 			const stream = fs.createWriteStream(filepath)
 			stream.write(data, function() {
@@ -22,7 +22,7 @@ function Tron(encoding) {
 
 	function read(filepath) {
 		const encode = this.encoding
-		
+
 		return new Promise(function(resolve, reject) {
 			fs.readFile(filepath, encode, function(err, data) {
 				if (err)
@@ -35,7 +35,7 @@ function Tron(encoding) {
 
 	function readStream(filepath) {
 		const encode = this.encoding
-		
+
 		return new Promise(function(resolve, reject) {
 			const stream = fs.createReadStream(filepath)
 			var d = ''
@@ -114,7 +114,7 @@ function Tron(encoding) {
 				filelist.push({ 'path': path.join(dir, file) })
 			}
 		})
-		
+
 		return filelist.filter(function(file) {
 			if (file.path.indexOf('.git') > -1)
 				return false

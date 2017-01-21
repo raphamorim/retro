@@ -1,25 +1,13 @@
-import {
-	tabs
-} from './selectors'
-
-import {
-	openFiles,
-	unfocusTabs,
-	toggleModal,
-	toggleTabs
-} from './screen'
+import { openFiles, unfocusTabs, toggleModal, toggleTabs } from './lib/screen'
 
 import loader from './lib/loader'
+import tron from './lib/tron'
 
-import tron from './tron'
 import config from './config'
-import syntaxes from './syntax'
+import syntaxes from './config/syntax'
+import { tabs } from './config/selectors'
 
-import {
-	js_beautify,
-	css,
-	html
-} from 'js-beautify'
+import { js_beautify, css, html } from 'js-beautify'
 
 // TODO: Change to ES2015/Class
 function Retro() {
@@ -159,7 +147,7 @@ function Retro() {
 			if (filepath.length <= 1) {
 				editorFile.textContent = ''
 				editorSyntax.textContent = ''
-				
+
 				return
 			}
 

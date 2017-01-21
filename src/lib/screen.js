@@ -1,9 +1,9 @@
-import retro from './retro'
+import retro from '../retro'
 
 import Notify from 'fs.notify'
 import { remote as app } from 'electron'
-import { tabs, modalSearch, modalItems, modal } from './selectors'
-import loader from './lib/loader'
+import { tabs, modalSearch, modalItems, modal } from '../config/selectors'
+import loader from './loader'
 
 export const notifications = new Notify()
 
