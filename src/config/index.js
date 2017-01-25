@@ -1,6 +1,9 @@
-let config = {
+// import db, { findOrCreate } from '../data'
+import tron from '../lib/tron'
+
+const defaultConfig = {
 	cachedFiles: [],
-	currentFile: '',
+	currentFile: null,
 	format: {
 		'indent_size': 2,
 		'indent_char': ' ',
@@ -25,4 +28,6 @@ let config = {
 	}
 }
 
-export default config
+const currentConfig = tron.upsert('~/.retroconfig', JSON.stringify(defaultConfig))
+
+export default currentConfig

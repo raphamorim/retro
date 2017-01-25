@@ -188,6 +188,7 @@ body {
 	to {
 		left: 100%;
 	}
+
 }
 
 .opening .title {
@@ -202,7 +203,7 @@ body {
 	font-size: 30pt;
 }
 
-.opening .message {
+.opening .hint {
 	position: absolute;
 	left: 0;
 	width: 100%;
@@ -211,4 +212,20 @@ body {
 	bottom: 18pt;
 	font-family: 'gamegirl', helvetica, arial;
 	letter-spacing: 0.2em;
+	animation: blink-animation 2s steps(5, start) infinite;
+	-webkit-animation: blink-animation 2s steps(5, start) infinite;
+}
+
+@keyframes blink-animation {
+	to {
+		visibility: hidden;
+	}
+
+}
+
+@-webkit-keyframes blink-animation {
+	to {
+		visibility: hidden;
+	}
+
 }
