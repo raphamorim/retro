@@ -1,16 +1,16 @@
 const opening = function() {
 	const d = document
 	const w = window
-	var FPS = 1000
-	var TRAIL_PLAN = [ 'u', 'r', 'd', 'b', 'r', 'c' ]
-	var pointCopy = function(src, dst) {
+	const FPS = 1000
+	const TRAIL_PLAN = [ 'u', 'r', 'd', 'b', 'r', 'c' ]
+	const pointCopy = function(src, dst) {
 		dst.x = src.x
 		dst.y = src.y
 		dst.z = src.z
 
 		return dst
 	}
-	var Trail = function(pos, t, plan_i) {
+	const Trail = function(pos, t, plan_i) {
 		this.pos = {
 			x: 0,
 			y: 0,
@@ -83,8 +83,8 @@ const opening = function() {
 		}
 	}
 	Trail.prototype.draw = function(ctx, camera) {
-		var i
-		var ps = {
+		let i
+		let ps = {
 			x: 0,
 			y: 0
 		}
@@ -92,7 +92,7 @@ const opening = function() {
 		if (perspective(this.vertexes[0], camera, ps)) {
 			ctx.moveTo(ps.x, ps.y)
 		}
-		var x0 = ps.x
+		let x0 = ps.x
 		for (i = 1; i < this.vertexes.length; i++) {
 			if (perspective(this.vertexes[i], camera, ps)) {
 				ctx.strokeStyle = 'rgba(36,198,224,' + 2 / (this.vertexes[i].z - camera.z) + ')'
@@ -108,14 +108,14 @@ const opening = function() {
 			ctx.stroke()
 		}
 	}
-	var quadIn = function(t, b, c, d, dst) {
+	const quadIn = function(t, b, c, d, dst) {
 		t /= d
 		dst.x = (c.x - b.x) * t * t + b.x
 		dst.y = (c.y - b.y) * t * t + b.y
 		dst.z = (c.z - b.z) * t * t + b.z
 	}
-	var perspective = function(point, camera, dst) {
-		var dz = point.z - camera.z
+	const perspective = function(point, camera, dst) {
+		const dz = point.z - camera.z
 		if (dz > 0) {
 			dst.x = (point.x - camera.x) / dz
 			dst.y = (point.y - camera.y) / dz
@@ -125,10 +125,10 @@ const opening = function() {
 
 		return false
 	}
-	var updateScene = function(ctx) {
-		var i
-		var time_now = new Date().getTime()
-		var time_d = time_now - time_pre
+	const updateScene = function(ctx) {
+		const time_now = new Date().getTime()
+		let i
+		let time_d = time_now - time_pre
 		for (i = 0; i < trails.length; i++) {
 			trails[i].update(time_now)
 		}
@@ -136,19 +136,19 @@ const opening = function() {
 		camera.y += (trails[0].pos.y - camera.y - 300) * 0.00002 * time_d
 		time_pre = time_now
 	}
-	var drawScene = function(ctx) {
-		var i
+	const drawScene = function(ctx) {
+		let i
 		ctx.clearRect(-canvas.width / 2, -canvas.height / 2, canvas.width, canvas.height)
 		for (i = 0; i < trails.length; i++) {
 			trails[i].draw(ctx, camera)
 		}
 	}
-	var canvas = d.getElementById('canvas')
-	var ctx = canvas.getContext('2d')
-	var trails = []
-	var i
-	var time_now = new Date().getTime()
-	var time_pre = time_now
+	const canvas = d.getElementById('canvas')
+	const ctx = canvas.getContext('2d')
+	let trails = []
+	let i
+	const time_now = new Date().getTime()
+	let time_pre = time_now
 	for (i = 0; i < 8; i++) {
 		trails.push(new Trail({
 			x: Math.random() * 100 - 50,
@@ -156,7 +156,7 @@ const opening = function() {
 			z: i
 		}, time_now, i))
 	}
-	var camera = {
+	let camera = {
 		x: 0,
 		y: 0,
 		z: -2

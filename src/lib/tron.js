@@ -4,8 +4,17 @@ function Tron(encoding) {
 	let queue = []
 	this.encoding = encoding || 'utf8'
 
-	function write(filepath, data) {
+	function writeSync(filepath, data) {
 		return fs.writeFileSync(filepath, data, this.encoding)
+	}
+
+	function upsert(filepath, data) {
+		if (!fs.existsSync(filepath)) {
+			writeSync(filepath, data)
+			return data
+		}
+
+		return fs.readFileSync(filepath, this.encoding)
 	}
 
 	function writeStream(filepath, data) {
@@ -143,10 +152,11 @@ function Tron(encoding) {
 
 	this.read = read
 	this.readStream = readStream
-	this.write = write
+	this.writeSync = writeSync
 	this.listFiles = listFiles
 	this.writeStream = writeStream
 	this.folderPath = folderPath
+	this.upsert = upsert
 }
 
 const tron = new Tron()
