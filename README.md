@@ -1,3 +1,6 @@
+[![Build Status](https://travis-ci.org/raphamorim/retro.svg?branch=master)](https://travis-ci.org/raphamorim/retro)
+![NPM Version](https://img.shields.io/npm/v/express.svg?style=flat)
+
 # Retro [Work in Progress]
 
 > A Vim Based Editor for the 30th Century
