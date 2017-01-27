@@ -1,17 +1,14 @@
 import retro from '../retro'
-
 import Notify from 'fs.notify'
 import { remote as app } from 'electron'
 import { tabs, modalSearch, modalItems, modal } from '../config/selectors'
+import animation from '../animation'
 import loader from './loader'
 
-export const notifications = new Notify()
+const container = document.querySelector('.container')
+const presentation = document.querySelector('.presentation')
 
-notifications.on('change', (file, event, path) => {
-	if (event === 'change') {
-		retro.updateFile(path)
-	}
-})
+export const notifications = new Notify()
 
 export function openFiles() {
 	app.dialog.showOpenDialog((fileNames) => {
@@ -39,3 +36,19 @@ export function toggleModal() {
 		}, 30)
 	}
 }
+
+export function displayEditor() {
+	document.body.removeChild(presentation)
+	container.style.display = 'block'
+}
+
+export function displayPresentation() {
+	presentation.style.display = 'block'
+	animation.presentation()
+}
+
+notifications.on('change', (file, event, path) => {
+	if (event === 'change') {
+		retro.updateFile(path)
+	}
+})

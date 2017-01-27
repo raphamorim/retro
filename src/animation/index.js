@@ -1,5 +1,5 @@
-import opening from './opening'
+import presentation from './opening'
 
-export {
-	opening
+export default {
+	presentation
 }

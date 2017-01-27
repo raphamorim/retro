@@ -1,7 +1,14 @@
-import { openFiles, toggleModal, toggleTabs } from './screen'
+import {
+	displayEditor,
+	openFiles,
+	toggleModal,
+	toggleTabs
+} from './screen'
 
-function Keys() {
-	function init() {
+class Keys {
+	// TODO: reset method: unbind all keys
+
+	editor() {
 		key('⌘+o', function(event, handler) {
 			// TODO: Multiple files and diretory
 			openFiles()
@@ -21,7 +28,13 @@ function Keys() {
 		})
 	}
 
-	this.init = init
+	presentation() {
+		key('enter', () => {
+			displayEditor()
+			key.unbind('enter')
+			this.editor()
+		})
+	}
 }
 
 export default new Keys()

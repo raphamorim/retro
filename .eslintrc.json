@@ -99,12 +99,7 @@
 				]
 			}
 		],
-		"indent": [
-			"error",
-			"tab", {
-				"SwitchCase": 1
-			}
-		],
+		"indent": [ "error", 2 ],
 		"jsx-quotes": [
 			"error",
 			"prefer-double"
