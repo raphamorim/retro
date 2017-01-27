@@ -20,28 +20,6 @@ const fuzeOptions = {
   ]
 }
 
-// TODO: Change to ESLint?
-modalSearch.addEventListener('keydown', function(e) {
-  // enter
-  if (e.keyCode === 13) {
-    enterModalItems()
-  }
-
-  // up key
-  if (e.keyCode === 38) {
-    updateModalItems('up')
-  }
-
-  // down key
-  if (e.keyCode === 40) {
-    updateModalItems('down')
-  }
-
-  // esc
-  if (e.keyCode === 27)
-    modal.classList.remove('visible')
-})
-
 function enterModalItems() {
   modal.classList.remove('visible')
   const item = modalItems.querySelector('.active')
@@ -52,8 +30,8 @@ function indexInParent(node) {
   var children = node.parentNode.childNodes
   var num = 0
   for (var i = 0; i < children.length; i++) {
-    if (children[i] == node) return num
-    if (children[i].nodeType == 1) num++
+    if (children[i] === node) return num
+    if (children[i].nodeType === 1) num++
   }
 
   return -1
@@ -77,9 +55,31 @@ function updateModalItems(key) {
   }
 }
 
-modalSearch.addEventListener('input', function(e) {
+// TODO: Change to ESLint?
+modalSearch.addEventListener('keydown', function(ev) {
+  // enter
+  if (ev.keyCode === 13) {
+    enterModalItems()
+  }
+
+  // up key
+  if (ev.keyCode === 38) {
+    updateModalItems('up')
+  }
+
+  // down key
+  if (ev.keyCode === 40) {
+    updateModalItems('down')
+  }
+
+  // esc
+  if (ev.keyCode === 27)
+    modal.classList.remove('visible')
+})
+
+modalSearch.addEventListener('input', function(ev) {
   const fuse = new Fuse(config.cachedFiles, fuzeOptions)
-  const search = (fuse.search(e.target.value)).slice(0, 10)
+  const search = (fuse.search(ev.target.value)).slice(0, 10)
   modalItems.innerHTML = ''
   for (var i = 0; i < search.length; i++) {
     var div = document.createElement('div')

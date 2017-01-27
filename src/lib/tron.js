@@ -11,7 +11,7 @@ function Tron(encoding) {
   function upsert(filepath, data) {
     if (!fs.existsSync(filepath)) {
       writeSync(filepath, data)
-			
+
       return data
     }
 
@@ -38,7 +38,7 @@ function Tron(encoding) {
         if (err)
           reject(err)
         else
-					resolve(data)
+          resolve(data)
       })
     })
   }
@@ -48,15 +48,15 @@ function Tron(encoding) {
 
     return new Promise(function(resolve, reject) {
       const stream = fs.createReadStream(filepath)
-      var d = ''
+      let file = ''
       stream.setEncoding(encode)
       stream.on('data', (chunk) => {
-        d += chunk
+        file += chunk
       })
 
       stream.on('end', function() {
         stream.close()
-        resolve(d)
+        resolve(file)
       })
     })
   }
@@ -70,6 +70,41 @@ function Tron(encoding) {
 
         resolve(stat.isDirectory())
       })
+    })
+  }
+
+  // TODO: Doens't do fs.stat synchrounous
+  function listFiles(dir, filelist) {
+    var files = fs.readdirSync(dir)
+    filelist = filelist || []
+
+    files.forEach(function(file) {
+      if (fs.statSync(path.join(dir, file)).isDirectory()) {
+        filelist = listFiles(path.join(dir, file), filelist)
+      } else {
+        filelist.push({ 'path': path.join(dir, file) })
+      }
+    })
+
+    return filelist.filter(function(file) {
+      if (file.path.indexOf('.git') > -1)
+        return false
+      else if (file.path.indexOf('node_modules') > -1)
+        return false
+      else if (file.path.indexOf('.DS_Store') > -1)
+        return false
+      else if (file.path.indexOf('.png') > -1)
+        return false
+      else if (file.path.indexOf('.ico') > -1)
+        return false
+      else if (file.path.indexOf('.jpg') > -1)
+        return false
+      else if (file.path.indexOf('.jpeg') > -1)
+        return false
+      else if (file.path.indexOf('.gif') > -1)
+        return false
+
+      return file
     })
   }
 
@@ -109,41 +144,6 @@ function Tron(encoding) {
           resolve(filelist)
         })
       })
-    })
-  }
-
-	// TODO: Doens't do fs.stat synchrounous
-  function listFiles(dir, filelist) {
-    var files = fs.readdirSync(dir)
-    filelist = filelist || []
-
-    files.forEach(function(file) {
-      if (fs.statSync(path.join(dir, file)).isDirectory()) {
-        filelist = listFiles(path.join(dir, file), filelist)
-      } else {
-        filelist.push({ 'path': path.join(dir, file) })
-      }
-    })
-
-    return filelist.filter(function(file) {
-      if (file.path.indexOf('.git') > -1)
-        return false
-      else if (file.path.indexOf('node_modules') > -1)
-        return false
-      else if (file.path.indexOf('.DS_Store') > -1)
-        return false
-      else if (file.path.indexOf('.png') > -1)
-        return false
-      else if (file.path.indexOf('.ico') > -1)
-        return false
-      else if (file.path.indexOf('.jpg') > -1)
-        return false
-      else if (file.path.indexOf('.jpeg') > -1)
-        return false
-      else if (file.path.indexOf('.gif') > -1)
-        return false
-
-      return file
     })
   }
 

@@ -47,6 +47,30 @@ function Retro() {
   code.getSession().setUseWorker(false)
   code.getSession().setUseWrapMode(true)
 
+  function saveFile() {
+    tron.writeStream(config.currentFile, code.getValue())
+  }
+
+  function formatCode() {
+    const currentLine = code.getSelectionRange().start.row
+    const mode = code.getSession().getMode().$id.split('/').pop()
+    let val
+
+    if (mode === 'javascript') {
+      val = code.session.getValue()
+      code.session.setValue(js_beautify(val, data.format))
+      code.gotoLine(currentLine + 1, Infinity)
+    } else if (mode === 'html') {
+      val = code.session.getValue()
+      code.session.setValue(html(val, data.format))
+      code.gotoLine(currentLine + 1, Infinity)
+    } else if (mode === 'css') {
+      val = code.session.getValue()
+      code.session.setValue(css(val, data.format))
+      code.gotoLine(currentLine + 1, Infinity)
+    }
+  }
+
   code.commands.addCommand({
     name: 'open file',
     exec: openFiles,
@@ -92,24 +116,6 @@ function Retro() {
     }
   })
 
-  function formatCode() {
-    const currentLine = code.getSelectionRange().start.row
-    const mode = code.getSession().getMode().$id.split('/').pop()
-    if (mode === 'javascript') {
-      var val = code.session.getValue()
-      code.session.setValue(js_beautify(val, data.format))
-      code.gotoLine(currentLine + 1, Infinity)
-    } else if (mode === 'html') {
-      var val = code.session.getValue()
-      code.session.setValue(html(val, data.format))
-      code.gotoLine(currentLine + 1, Infinity)
-    } else if (mode === 'css') {
-      var val = code.session.getValue()
-      code.session.setValue(css(val, data.format))
-      code.gotoLine(currentLine + 1, Infinity)
-    }
-  }
-
   code.on('changeStatus', function() {
     var mode = code.keyBinding.getStatusText(code)
     unfocusTabs()
@@ -140,15 +146,15 @@ function Retro() {
   }
 
   this.updateFile = function(file, forcedUpdate = false) {
-    tron.readStream(file).then(function(data) {
-      if (data === code.getValue())
+    tron.readStream(file).then(function(tronData) {
+      if (tronData === code.getValue())
         return
 
       if (!forcedUpdate)
         forcedUpdate = confirm('This file was update, do you want to update it?')
 
       if (forcedUpdate)
-        code.getSession().setValue(data)
+        code.getSession().setValue(tronData)
     })
   }
 
@@ -190,8 +196,8 @@ function Retro() {
 
     setCurrentFile = setCurrentFile.bind(this)
 
-    tron.readStream(file).then(function(data) {
-      code.getSession().setValue(data)
+    tron.readStream(file).then(function(tronData) {
+      code.getSession().setValue(tronData)
       inputSyntax(file)
       setCurrentFile(file)
       const files = tron.listFiles(tron.folderPath(file))
@@ -203,10 +209,6 @@ function Retro() {
         loader.off()
       }, 500)
     })
-  }
-
-  function saveFile() {
-    tron.writeStream(config.currentFile, code.getValue())
   }
 
   document.body.addEventListener('save-file', saveFile.bind(this), false)

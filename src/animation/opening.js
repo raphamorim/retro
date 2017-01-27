@@ -1,3 +1,5 @@
+/* eslint-disable */
+
 const opening = function() {
   const d = document
   const w = window
@@ -171,3 +173,5 @@ const opening = function() {
 }
 
 export default opening
+
+/* eslint-enable */

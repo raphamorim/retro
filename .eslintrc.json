@@ -20,10 +20,6 @@
 			"error",
 			"smart"
 		],
-		"complexity": [
-			"error",
-			7
-		],
 		"no-caller": "error",
 		"no-console": "off",
 		"no-extra-bind": "error",
@@ -43,7 +39,6 @@
 		"no-useless-escape": "error",
 		"no-with": "error",
 		"radix": "error",
-		"vars-on-top": "error",
 		"wrap-iife": [
 			"error",
 			"inside"
@@ -51,7 +46,6 @@
 		"yoda": "error",
 		"strict": "error",
 		"no-catch-shadow": "error",
-		"no-shadow": "error",
 		"no-shadow-restricted-names": "error",
 		"no-undef": "error",
 		"no-undefined": "error",
@@ -74,7 +68,6 @@
 				"allowSingleLine": true
 			}
 		],
-		"camelcase": "error",
 		"comma-style": "error",
 		"computed-property-spacing": [
 			"error",
