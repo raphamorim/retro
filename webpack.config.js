@@ -1,6 +1,6 @@
-const webpack = require('webpack');
-const nodeEnv = process.env.NODE_ENV || 'development';
-const isProd = nodeEnv === 'production';
+const webpack = require('webpack')
+const nodeEnv = process.env.NODE_ENV || 'development'
+const isProd = nodeEnv === 'production'
 
 module.exports = {
   target: 'electron',

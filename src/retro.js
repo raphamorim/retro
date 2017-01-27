@@ -1,4 +1,11 @@
-import { openFiles, unfocusTabs, toggleModal, toggleTabs } from './lib/screen'
+/* global ace */
+
+import {
+  openFiles,
+  unfocusTabs,
+  toggleModal,
+  toggleTabs
+} from './lib/screen'
 
 import loader from './lib/loader'
 import tron from './lib/tron'
@@ -6,11 +13,17 @@ import data from './data'
 
 import config from './config'
 import syntaxes from './config/syntax'
-import { tabs } from './config/selectors'
 
-import { js_beautify, css, html } from 'js-beautify'
+import {
+  tabs
+} from './config/selectors'
 
-// TODO: Change to ES2015/Class
+import {
+  js_beautify,
+  css,
+  html
+} from 'js-beautify'
+
 function Retro() {
   const editor = document.getElementById('editor'),
     editorFile = document.getElementById('editor-file'),
@@ -22,6 +35,7 @@ function Retro() {
   const code = ace.edit('editor')
 
   code.setKeyboardHandler('ace/keyboard/vim')
+    // code.setShowInvisibles(true)
   code.setTheme('ace/theme/retro')
   code.setOptions({
     showPrintMargin: false,
@@ -29,7 +43,7 @@ function Retro() {
     enableLiveAutocompletion: true
   })
   code.$blockScrolling = Infinity
-  code.getSession().setMode('ace/mode/javascript')
+  code.getSession().setMode('ace/mode/text')
   code.getSession().setUseWorker(false)
   code.getSession().setUseWrapMode(true)
 

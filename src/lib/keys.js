@@ -1,16 +1,18 @@
+/* global key */
+
 import {
-	displayEditor,
-	openFiles,
-	toggleModal,
-	toggleTabs
+  displayEditor,
+  openFiles,
+  toggleModal,
+  toggleTabs
 } from './screen'
 
 class Keys {
-	// TODO: reset method: unbind all keys
+  // TODO: reset method: unbind all keys
 
   editor() {
     key('⌘+o', function(event, handler) {
-			// TODO: Multiple files and diretory
+      // TODO: Multiple files and diretory
       openFiles()
     })
 
@@ -23,7 +25,7 @@ class Keys {
     })
 
     key('⌘+,', function(event, handler) {
-			// TODO: Preferences
+      // TODO: Preferences
       console.log('Preferences')
     })
   }
