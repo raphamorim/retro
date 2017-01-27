@@ -8,33 +8,33 @@ import {
 class Keys {
 	// TODO: reset method: unbind all keys
 
-	editor() {
-		key('⌘+o', function(event, handler) {
+  editor() {
+    key('⌘+o', function(event, handler) {
 			// TODO: Multiple files and diretory
-			openFiles()
-		})
+      openFiles()
+    })
 
-		key('⌘+p', function(event, handler) {
-			toggleModal()
-		})
+    key('⌘+p', function(event, handler) {
+      toggleModal()
+    })
 
-		key('⌘+e', function(event, handler) {
-			toggleTabs()
-		})
+    key('⌘+e', function(event, handler) {
+      toggleTabs()
+    })
 
-		key('⌘+,', function(event, handler) {
+    key('⌘+,', function(event, handler) {
 			// TODO: Preferences
-			console.log('Preferences')
-		})
-	}
+      console.log('Preferences')
+    })
+  }
 
-	presentation() {
-		key('enter', () => {
-			displayEditor()
-			key.unbind('enter')
-			this.editor()
-		})
-	}
+  presentation() {
+    key('enter', () => {
+      displayEditor()
+      key.unbind('enter')
+      this.editor()
+    })
+  }
 }
 
 export default new Keys()

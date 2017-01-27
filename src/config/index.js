@@ -1,6 +1,6 @@
 export const config = {
-	cachedFiles: [],
-	currentFile: null
+  cachedFiles: [],
+  currentFile: null
 }
 
 export default config

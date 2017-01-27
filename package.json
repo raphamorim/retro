@@ -8,7 +8,9 @@
     "build": "NODE_ENV='production' ./node_modules/webpack/bin/webpack.js . && npm run pack:all",
     "dev": "./node_modules/webpack/bin/webpack.js . -w",
     "pack:osx": "./node_modules/electron-packager/cli.js ./ Retro --plataform=darwin --version=1.4.1 --out=~/Desktop --overwrite --icon=./assets/images/logo-128.icns",
-    "pack:all": "./node_modules/electron-packager/cli.js ./ Retro --all --version=1.4.1 --out=~/Desktop --overwrite --icon=./assets/images/logo-128.icns"
+    "pack:all": "./node_modules/electron-packager/cli.js ./ Retro --all --version=1.4.1 --out=~/Desktop --overwrite --icon=./assets/images/logo-128.icns",
+    "lint": "./node_modules/.bin/eslint --ext .js src/",
+    "test": "npm run lint"
   },
   "repository": "https://github.com/raphamorim/retro",
   "keywords": [],

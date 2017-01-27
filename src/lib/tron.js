@@ -1,162 +1,163 @@
 function Tron(encoding) {
-	const fs = require('fs')
-	const path = require('path')
-	let queue = []
-	this.encoding = encoding || 'utf8'
+  const fs = require('fs')
+  const path = require('path')
+  let queue = []
+  this.encoding = encoding || 'utf8'
 
-	function writeSync(filepath, data) {
-		return fs.writeFileSync(filepath, data, this.encoding)
-	}
+  function writeSync(filepath, data) {
+    return fs.writeFileSync(filepath, data, this.encoding)
+  }
 
-	function upsert(filepath, data) {
-		if (!fs.existsSync(filepath)) {
-			writeSync(filepath, data)
-			return data
-		}
+  function upsert(filepath, data) {
+    if (!fs.existsSync(filepath)) {
+      writeSync(filepath, data)
+			
+      return data
+    }
 
-		return fs.readFileSync(filepath, this.encoding)
-	}
+    return fs.readFileSync(filepath, this.encoding)
+  }
 
-	function writeStream(filepath, data) {
-		const encode = this.encoding
+  function writeStream(filepath, data) {
+    const encode = this.encoding
 
-		return new Promise(function(resolve, reject) {
-			const stream = fs.createWriteStream(filepath)
-			stream.write(data, function() {
-				stream.close()
-				resolve()
-			})
-		})
-	}
+    return new Promise(function(resolve, reject) {
+      const stream = fs.createWriteStream(filepath)
+      stream.write(data, function() {
+        stream.close()
+        resolve()
+      })
+    })
+  }
 
-	function read(filepath) {
-		const encode = this.encoding
+  function read(filepath) {
+    const encode = this.encoding
 
-		return new Promise(function(resolve, reject) {
-			fs.readFile(filepath, encode, function(err, data) {
-				if (err)
-					reject(err)
-				else
+    return new Promise(function(resolve, reject) {
+      fs.readFile(filepath, encode, function(err, data) {
+        if (err)
+          reject(err)
+        else
 					resolve(data)
-			})
-		})
-	}
+      })
+    })
+  }
 
-	function readStream(filepath) {
-		const encode = this.encoding
+  function readStream(filepath) {
+    const encode = this.encoding
 
-		return new Promise(function(resolve, reject) {
-			const stream = fs.createReadStream(filepath)
-			var d = ''
-			stream.setEncoding(encode)
-			stream.on('data', (chunk) => {
-				d += chunk
-			})
+    return new Promise(function(resolve, reject) {
+      const stream = fs.createReadStream(filepath)
+      var d = ''
+      stream.setEncoding(encode)
+      stream.on('data', (chunk) => {
+        d += chunk
+      })
 
-			stream.on('end', function() {
-				stream.close()
-				resolve(d)
-			})
-		})
-	}
+      stream.on('end', function() {
+        stream.close()
+        resolve(d)
+      })
+    })
+  }
 
-	function isDirectory(filepath) {
-		return new Promise(function(resolve, reject) {
-			fs.stat(filepath, function(err, stat) {
-				if (err) {
-					reject(err)
-				}
+  function isDirectory(filepath) {
+    return new Promise(function(resolve, reject) {
+      fs.stat(filepath, function(err, stat) {
+        if (err) {
+          reject(err)
+        }
 
-				resolve(stat.isDirectory())
-			})
-		})
-	}
+        resolve(stat.isDirectory())
+      })
+    })
+  }
 
-	function listFilesAsync(dir, filelist) {
-		return new Promise(function(resolve, reject) {
-			var files = fs.readdir(dir, function(err, files) {
-				if (err)
-					reject(err)
+  function listFilesAsync(dir, filelist) {
+    return new Promise(function(resolve, reject) {
+      var files = fs.readdir(dir, function(err, files) {
+        if (err)
+          reject(err)
 
-				filelist = filelist || []
-				var promises = []
+        filelist = filelist || []
+        var promises = []
 
-				for (var i = files.length - 1; i >= 0; i--) {
-					const file = files[i]
-					if (fs.statSync(path.join(dir, file)).isDirectory()) {
-						promises.push(listFiles(path.join(dir, file), filelist))
-					} else {
-						filelist.push({
-							'path': path.join(dir, file)
-						})
-					}
-				}
+        for (var i = files.length - 1; i >= 0; i--) {
+          const file = files[i]
+          if (fs.statSync(path.join(dir, file)).isDirectory()) {
+            promises.push(listFiles(path.join(dir, file), filelist))
+          } else {
+            filelist.push({
+              'path': path.join(dir, file)
+            })
+          }
+        }
 
-				filelist = filelist.filter(function(file) {
-					if (file.path.indexOf('.git') > -1)
-						return false
-					else if (file.path.indexOf('node_modules') > -1)
-						return false
+        filelist = filelist.filter(function(file) {
+          if (file.path.indexOf('.git') > -1)
+            return false
+          else if (file.path.indexOf('node_modules') > -1)
+            return false
 
-					return file
-				})
+          return file
+        })
 
-				return Promise.all(promises).then(function(results) {
-					for (var i = results.length - 1; i >= 0; i--) {
-						filelist = filelist.concat(results[i])
-					}
-					resolve(filelist)
-				})
-			})
-		})
-	}
+        return Promise.all(promises).then(function(results) {
+          for (var i = results.length - 1; i >= 0; i--) {
+            filelist = filelist.concat(results[i])
+          }
+          resolve(filelist)
+        })
+      })
+    })
+  }
 
 	// TODO: Doens't do fs.stat synchrounous
-	function listFiles(dir, filelist) {
-		var files = fs.readdirSync(dir)
-		filelist = filelist || []
+  function listFiles(dir, filelist) {
+    var files = fs.readdirSync(dir)
+    filelist = filelist || []
 
-		files.forEach(function(file) {
-			if (fs.statSync(path.join(dir, file)).isDirectory()) {
-				filelist = listFiles(path.join(dir, file), filelist)
-			} else {
-				filelist.push({ 'path': path.join(dir, file) })
-			}
-		})
+    files.forEach(function(file) {
+      if (fs.statSync(path.join(dir, file)).isDirectory()) {
+        filelist = listFiles(path.join(dir, file), filelist)
+      } else {
+        filelist.push({ 'path': path.join(dir, file) })
+      }
+    })
 
-		return filelist.filter(function(file) {
-			if (file.path.indexOf('.git') > -1)
-				return false
-			else if (file.path.indexOf('node_modules') > -1)
-				return false
-			else if (file.path.indexOf('.DS_Store') > -1)
-				return false
-			else if (file.path.indexOf('.png') > -1)
-				return false
-			else if (file.path.indexOf('.ico') > -1)
-				return false
-			else if (file.path.indexOf('.jpg') > -1)
-				return false
-			else if (file.path.indexOf('.jpeg') > -1)
-				return false
-			else if (file.path.indexOf('.gif') > -1)
-				return false
+    return filelist.filter(function(file) {
+      if (file.path.indexOf('.git') > -1)
+        return false
+      else if (file.path.indexOf('node_modules') > -1)
+        return false
+      else if (file.path.indexOf('.DS_Store') > -1)
+        return false
+      else if (file.path.indexOf('.png') > -1)
+        return false
+      else if (file.path.indexOf('.ico') > -1)
+        return false
+      else if (file.path.indexOf('.jpg') > -1)
+        return false
+      else if (file.path.indexOf('.jpeg') > -1)
+        return false
+      else if (file.path.indexOf('.gif') > -1)
+        return false
 
-			return file
-		})
-	}
+      return file
+    })
+  }
 
-	function folderPath(file) {
-		return path.dirname(file)
-	}
+  function folderPath(file) {
+    return path.dirname(file)
+  }
 
-	this.read = read
-	this.readStream = readStream
-	this.writeSync = writeSync
-	this.listFiles = listFiles
-	this.writeStream = writeStream
-	this.folderPath = folderPath
-	this.upsert = upsert
+  this.read = read
+  this.readStream = readStream
+  this.writeSync = writeSync
+  this.listFiles = listFiles
+  this.writeStream = writeStream
+  this.folderPath = folderPath
+  this.upsert = upsert
 }
 
 const tron = new Tron()
