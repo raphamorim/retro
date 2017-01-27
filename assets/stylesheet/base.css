@@ -8,6 +8,7 @@ body {
 	font-family: Monaco, Inconsolata, Consolas, Courier, monospace !important;
 	line-height: 18pt !important;
 	letter-spacing: 0.3pt;
+	display: none;
 }
 
 .retro .topbar {
@@ -191,7 +192,11 @@ body {
 
 }
 
-.opening .title {
+.presentation {
+	display: none;
+}
+
+.presentation .title {
 	position: absolute;
 	top: 80px;
 	left: 0;
@@ -203,7 +208,7 @@ body {
 	font-size: 30pt;
 }
 
-.opening .hint {
+.presentation .hint {
 	position: absolute;
 	left: 0;
 	width: 100%;

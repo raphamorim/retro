@@ -1,9 +1,10 @@
 import retro from './retro'
+import data from './data'
 import config from './config'
-import { container, modalSearch, modalItems, modal } from './config/selectors'
+import { presentation, container, modalSearch, modalItems, modal } from './config/selectors'
+import { displayEditor, displayPresentation } from './lib/screen'
 import keys from './lib/keys'
 import Fuse from 'Fuse.js'
-import { opening } from './animation/index'
 
 // DEBUG
 import { notifications } from './lib/screen'
@@ -77,21 +78,19 @@ function updateModalItems(key) {
 }
 
 modalSearch.addEventListener('input', function(e) {
-	getConfig.then((config) => {
-		const fuse = new Fuse(config.cachedFiles, fuzeOptions)
-		const search = (fuse.search(e.target.value)).slice(0, 10)
-		modalItems.innerHTML = ''
-		for (var i = 0; i < search.length; i++) {
-			var div = document.createElement('div')
-			div.classList.add('modal-item')
-			if (i === 0) {
-				div.classList.add('active')
-			}
-			div.setAttribute('data-path', search[i].path)
-			div.textContent = '...' + search[i].path.slice(-40)
-			modalItems.appendChild(div)
+	const fuse = new Fuse(config.cachedFiles, fuzeOptions)
+	const search = (fuse.search(e.target.value)).slice(0, 10)
+	modalItems.innerHTML = ''
+	for (var i = 0; i < search.length; i++) {
+		var div = document.createElement('div')
+		div.classList.add('modal-item')
+		if (i === 0) {
+			div.classList.add('active')
 		}
-	})
+		div.setAttribute('data-path', search[i].path)
+		div.textContent = '...' + search[i].path.slice(-40)
+		modalItems.appendChild(div)
+	}
 })
 
 // Init
@@ -101,13 +100,13 @@ document.body.ondrop = (ev) => {
 	ev.preventDefault()
 }
 
-container.style.display = 'none'
-
-console.log(config)
-
-// keys.init();
-opening()
-
-// TODEBUG
-// retro.openFile('./src/index.js');
-// notifications.add('./index.html');
+data.get().then((retroConfig) => {
+	if (retroConfig) {
+		displayEditor()
+		keys.editor()
+	} else {
+		displayPresentation()
+		keys.presentation()
+		data.init()
+	}
+})

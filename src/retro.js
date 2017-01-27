@@ -2,6 +2,7 @@ import { openFiles, unfocusTabs, toggleModal, toggleTabs } from './lib/screen'
 
 import loader from './lib/loader'
 import tron from './lib/tron'
+import data from './data'
 
 import config from './config'
 import syntaxes from './config/syntax'
@@ -82,15 +83,15 @@ function Retro() {
 		const mode = code.getSession().getMode().$id.split('/').pop()
 		if (mode === 'javascript') {
 			var val = code.session.getValue()
-			code.session.setValue(js_beautify(val, config.format))
+			code.session.setValue(js_beautify(val, data.format))
 			code.gotoLine(currentLine + 1, Infinity)
 		} else if (mode === 'html') {
 			var val = code.session.getValue()
-			code.session.setValue(html(val, config.format))
+			code.session.setValue(html(val, data.format))
 			code.gotoLine(currentLine + 1, Infinity)
 		} else if (mode === 'css') {
 			var val = code.session.getValue()
-			code.session.setValue(css(val, config.format))
+			code.session.setValue(css(val, data.format))
 			code.gotoLine(currentLine + 1, Infinity)
 		}
 	}
