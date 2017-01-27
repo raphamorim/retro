@@ -104,10 +104,10 @@ ace.define("ace/keyboard/vim",["require","exports","module","ace/range","ace/lib
     TextModeTokenRe.lastIndex = 0;
     return TextModeTokenRe.test(ch);
   };
-  
+
 (function() {
   oop.implement(CodeMirror.prototype, EventEmitter);
-  
+
   this.destroy = function() {
     this.ace.off('change', this.onChange);
     this.ace.off('changeSelection', this.onSelectionChange);
@@ -226,7 +226,7 @@ ace.define("ace/keyboard/vim",["require","exports","module","ace/range","ace/lib
       r.cursor = Range.comparePoints(r.start, head) ? r.end : r.start;
       return r;
     });
-    
+
     if (this.ace.inVirtualSelectionMode) {
       this.ace.selection.fromOrientedRange(ranges[0]);
       return;
@@ -268,7 +268,7 @@ ace.define("ace/keyboard/vim",["require","exports","module","ace/range","ace/lib
     var rowShift = (end.row - start.row) * (isInsert ? 1 : -1);
     var colShift = (end.column - start.column) * (isInsert ? 1 : -1);
     if (isInsert) end = start;
-    
+
     for (var i in this.marks) {
       var point = this.marks[i];
       var cmp = Range.comparePoints(point, start);
@@ -665,38 +665,45 @@ ace.define("ace/keyboard/vim",["require","exports","module","ace/range","ace/lib
 CodeMirror.defineExtension = function(name, fn) {
   CodeMirror.prototype[name] = fn;
 };
-dom.importCssString("\
-.normal-mode .ace_hidden-cursors .ace_cursor{\
-  background-color: transparent;\
-}\
-.ace_dialog {\
-  position: absolute;\
-  left: 0; right: 0;\
-  background: #14191f;\
-  z-index: 15;\
-  padding: .1em .8em;\
-  overflow: hidden;\
-  color: #24C6E0;\
-}\
-.ace_dialog-top {\
-  border-bottom: 3px solid #24C6E0;\
-  top: 0;\
-}\
-.ace_dialog-bottom {\
-  border-top: 3px solid #24C6E0;\
-  bottom: 0;\
-}\
-.ace_dialog input {\
-  border: none;\
-  outline: none;\
-  background: transparent;\
-  width: 80%;\
-  padding: 15px 10px 10px 10px;\
-  margin-left: 4pt;\
-  color: inherit;\
-  font-family: 'gamegirl';\
-  font-size: 14pt;\
-}", "vimMode");
+dom.importCssString(`
+.normal-mode .ace_hidden-cursors .ace_cursor{
+  background-color: transparent;
+}
+.ace_dialog {
+  position: absolute;
+  left: 0; right: 0;
+  background: #14191f;
+  z-index: 15;
+  padding: .1em .8em;
+  overflow: hidden;
+  color: #24C6E0;
+}
+.ace_dialog-top {
+  border-bottom: 3px solid #24C6E0;
+  top: 0;
+}
+.ace_dialog-bottom {
+  border-top: 3px solid #24C6E0;
+  bottom: 0;
+}
+.ace_dialog input, .ace_dialog-confirm {
+  border: none;
+  outline: none;
+  background: transparent;
+  width: 80%;
+  padding: 15px 10px 10px 10px;
+  margin-left: 4pt;
+  color: inherit;
+  font-weight: 300;
+  letter-spacing: 0.05em;
+  font-family: 'inconsolata';
+  font-size: 20pt;
+}
+.ace_dialog-confirm {
+  font-size: 15pt;
+  padding: 0px;
+  color: #f57157;
+}`, "vimMode");
 (function() {
   function dialogDiv(cm, template, bottom) {
     var wrap = cm.ace.container;
@@ -806,7 +813,7 @@ dom.importCssString("\
   });
 })();
 
-  
+
   var defaultKeymap = [
     { keys: '<Left>', type: 'keyToKey', toKeys: 'h' },
     { keys: '<Right>', type: 'keyToKey', toKeys: 'l' },
@@ -4131,8 +4138,8 @@ dom.importCssString("\
     }
     function showConfirm(cm, text) {
       if (cm.openNotification) {
-        cm.openNotification('<span style="color: red">' + text + '</span>',
-                            {bottom: true, duration: 5000});
+        cm.openNotification('<p class="ace_dialog-confirm">' + text + '</p>',
+                            {bottom: true, duration: 3000});
       } else {
         alert(text);
       }
@@ -4342,7 +4349,7 @@ dom.importCssString("\
           }
         }
         if (!commandName) {
-          showConfirm(cm, 'Not an editor command ":' + input + '"');
+          showConfirm(cm, `'${input}' isn't a command!`);
           return;
         }
         try {
@@ -5310,7 +5317,7 @@ dom.importCssString("\
     } else if (cm.ace.inMultiSelectMode && vim.visualBlock) {
        vim.wasInVisualBlock = true;
     }
-    
+
     if (key == '<Esc>' && !vim.insertMode && !vim.visualMode && cm.ace.inMultiSelectMode) {
       cm.ace.exitMultiSelectMode();
     } else if (visualBlock || !cm.ace.inMultiSelectMode || cm.ace.inVirtualSelectionMode) {
@@ -5329,7 +5336,7 @@ dom.importCssString("\
           anchor = offsetCursor(anchor, 0, anchorOffset);
           cm.state.vim.sel.head = head;
           cm.state.vim.sel.anchor = anchor;
-          
+
           isHandled = handleKey(cm, key, origin);
           sel.$desiredColumn = cm.state.vim.lastHPos == -1 ? null : cm.state.vim.lastHPos;
           if (cm.virtualSelectionMode()) {
@@ -5353,12 +5360,12 @@ dom.importCssString("\
       var top = pixelPos.top;
       var left = pixelPos.left;
       if (!vim.insertMode) {
-        var isbackwards = !sel.cursor 
+        var isbackwards = !sel.cursor
             ? session.selection.isBackwards() || session.selection.isEmpty()
             : Range.comparePoints(sel.cursor, sel.start) <= 0;
         if (!isbackwards && left > w)
           left -= w;
-      }     
+      }
       if (!vim.insertMode && vim.status) {
         h = h / 2;
         top += h;
@@ -5373,7 +5380,7 @@ dom.importCssString("\
       var cm = editor.state.cm;
       var vim = getVim(cm);
       if (keyCode == -1) return;
-      
+
       if (key == "c" && hashId == 1) { // key == "ctrl-c"
         if (!useragent.isMac && editor.getCopyText()) {
           editor.once("copy", function() {
@@ -5387,7 +5394,7 @@ dom.importCssString("\
           key = data.inputChar;
         }
       }
-      
+
       if (hashId == -1 || hashId & 1 || hashId === 0 && key.length > 1) {
         var insertMode = vim.insertMode;
         var name = lookupKey(hashId, key, e || {});
@@ -5556,7 +5563,7 @@ dom.importCssString("\
     { keys: 'zA', type: 'action', action: 'fold', actionArgs: { toggle: true, all: true } },
     { keys: 'zf', type: 'action', action: 'fold', actionArgs: { open: true, all: true } },
     { keys: 'zd', type: 'action', action: 'fold', actionArgs: { open: true, all: true } },
-    
+
     { keys: '<C-A-k>', type: 'action', action: 'aceCommand', actionArgs: { name: "addCursorAbove" } },
     { keys: '<C-A-j>', type: 'action', action: 'aceCommand', actionArgs: { name: "addCursorBelow" } },
     { keys: '<C-A-S-k>', type: 'action', action: 'aceCommand', actionArgs: { name: "addCursorAboveSkipCurrent" } },
@@ -5589,6 +5596,6 @@ dom.importCssString("\
   exports.handler.defaultKeymap = defaultKeymap;
   exports.handler.actions = actions;
   exports.Vim = Vim;
-  
+
   Vim.map("Y", "yy", "normal");
 });

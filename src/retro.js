@@ -54,18 +54,15 @@ function Retro() {
   function formatCode() {
     const currentLine = code.getSelectionRange().start.row
     const mode = code.getSession().getMode().$id.split('/').pop()
-    let val
+    let val = code.session.getValue()
 
     if (mode === 'javascript') {
-      val = code.session.getValue()
       code.session.setValue(js_beautify(val, data.format))
       code.gotoLine(currentLine + 1, Infinity)
     } else if (mode === 'html') {
-      val = code.session.getValue()
       code.session.setValue(html(val, data.format))
       code.gotoLine(currentLine + 1, Infinity)
     } else if (mode === 'css') {
-      val = code.session.getValue()
       code.session.setValue(css(val, data.format))
       code.gotoLine(currentLine + 1, Infinity)
     }
@@ -182,7 +179,6 @@ function Retro() {
 
       code.getSession().setMode('ace/mode/' + current.mode)
       if (current.mode === 'html') {
-        console.log(1)
         code.setOption('enableEmmet', true)
       }
     }

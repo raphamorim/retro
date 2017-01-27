@@ -1,7 +1,7 @@
 {
   "name": "retro",
   "version": "0.1.0",
-  "description": "A Vim Based Editor for the 30st Century",
+  "description": "A Vim Based Editor for the 30th Century",
   "main": "main.js",
   "scripts": {
     "start": "./node_modules/electron/cli.js main.js",
@@ -13,7 +13,9 @@
     "test": "npm run lint"
   },
   "repository": "https://github.com/raphamorim/retro",
-  "keywords": [],
+  "keywords": [
+  	"retro", "vim", "editor", "core"
+  ],
   "license": "MIT",
   "devDependencies": {
     "babel-eslint": "7.1.1",
