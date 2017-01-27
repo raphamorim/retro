@@ -6,7 +6,7 @@
   "scripts": {
     "start": "./node_modules/electron/cli.js main.js",
     "build": "NODE_ENV='production' ./node_modules/webpack/bin/webpack.js . && npm run pack:all",
-    "dev": "./node_modules/webpack/bin/webpack.js . -w",
+    "dev": "./node_modules/.bin/webpack . -w",
     "pack:osx": "./node_modules/electron-packager/cli.js ./ Retro --plataform=darwin --version=1.4.1 --out=~/Desktop --overwrite --icon=./assets/images/logo-128.icns",
     "pack:all": "./node_modules/electron-packager/cli.js ./ Retro --all --version=1.4.1 --out=~/Desktop --overwrite --icon=./assets/images/logo-128.icns",
     "lint": "./node_modules/.bin/eslint --ext .js src/",
