@@ -21,6 +21,9 @@ endif
 build:
 	npm run build
 
+pack-osx:
+	npm run pack:osx
+
 watch:
 	npm run dev
 

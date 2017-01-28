@@ -29,7 +29,7 @@ module.exports = {
         NODE_ENV: JSON.stringify(nodeEnv)
       }
     }),
-    new webpack.optimize.UglifyJsPlugin(),
+    // new webpack.optimize.UglifyJsPlugin(),
     new webpack.optimize.OccurrenceOrderPlugin(),
     new webpack.LoaderOptionsPlugin({
       debug: false,
