@@ -1,4 +1,5 @@
-<!DOCTYPE html>
+module.exports = (body) => {
+	return `<!DOCTYPE html>
 <html>
 	<head>
 		<meta charset="utf-8"/>
@@ -20,8 +21,8 @@
 		<script src="assets/javascript/keymaster.js"></script>
 	</head>
 	<body>
-		<div id="root"><div class="retro container" data-reactroot="" data-reactid="1" data-react-checksum="-800909580"><section role="topbar" class="topbar" data-reactid="2"></section><section role="dialog" class="modal" data-reactid="3"><input type="text" class="modal-search" id="modal-search" placeholder="Search for packages...." data-reactid="4"/><div class="modal-items" data-reactid="5"></div></section><section role="tabs" class="tabs" data-reactid="6"></section><div data-reactid="7"><section role="main" class="main" data-reactid="8"><div id="editor" data-reactid="9"></div></section><footer data-reactid="10"><div id="editor-mode" class="normal" data-reactid="11">normal</div><div id="editor-file" class="normal" data-reactid="12"></div><div id="editor-syntax" class="normal" data-reactid="13"></div><div class="loader" data-reactid="14"></div></footer></div></div></div>
-		<!-- <div class='presentation'>
+		<div id="root">${body}</div>
+		<div class='presentation'>
 			<canvas id='canvas'></canvas>
 			<div class='title'>The Retro</div>
 			<div class='hint'>Press {enter} to continue</div>
@@ -31,14 +32,14 @@
 			<section role="dialog" class="modal">
 				<input type="text" class="modal-search" id="modal-search" placeholder="Search for packages....">
 				<div class="modal-items">
-					<div class="modal-item active">Package X</div>
+					<!-- <div class="modal-item active">Package X</div>
 					<div class="modal-item">Package X</div>
 					<div class="modal-item">Package X</div>
-					<div class="modal-item">Package X</div>
+					<div class="modal-item">Package X</div> -->
 				</div>
 			</section>
 			<section role="tabs" class="tabs">
-				<div class="tabs-item">main.js</div>
+				<!-- <div class="tabs-item">main.js</div> -->
 			</section>
 			<section role="main" class="main">
 				<div id="editor"></div>
@@ -49,7 +50,8 @@
 				<div id="editor-syntax" class="normal"></div>
 				<div class="loader"></div>
 			</footer>
-		</div> -->
+		</div>
 		<script async src="dist/retro.js"></script>
 	</body>
-</html>
+</html>`
+}

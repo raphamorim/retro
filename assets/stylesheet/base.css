@@ -8,7 +8,7 @@ body {
 	font-family: Monaco, Inconsolata, Consolas, Courier, monospace !important;
 	line-height: 18pt !important;
 	letter-spacing: 0.3pt;
-	display: none;
+	/*display: none;*/
 }
 
 .retro .topbar {
@@ -41,7 +41,7 @@ body {
 	top: 0pt;
 }
 
-.retro .tabs>.tabs-item {
+.retro .tabs .tabs-item {
 	font-family: 'gamegirl';
 	font-size: 8pt;
 	width: 15%;
@@ -52,7 +52,7 @@ body {
 	text-align: center;
 }
 
-.retro .tabs>.tabs-item.active::before {
+.retro .tabs .tabs-item.active::before {
 	content: '*';
 }
 

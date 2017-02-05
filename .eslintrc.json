@@ -92,7 +92,7 @@
 				]
 			}
 		],
-		"indent": [ "error", 2 ],
+		"indent": [ "error", 4 ],
 		"jsx-quotes": [
 			"error",
 			"prefer-double"
