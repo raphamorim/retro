@@ -12,7 +12,7 @@ export default class Retro extends Component {
 
   render() {
     return (
-      <div className="retro container">
+      <div ref='retro' className='retro container'>
         <TopBar/>
         <Dialog/>
         <Tabs/>

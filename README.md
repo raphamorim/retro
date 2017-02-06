@@ -18,7 +18,7 @@ Retro is a project that seeks to aggressively rethink Vim in order to:
 - Chromium-based GUI
 - Enable advanced external UIs without modifications to the core
 - Full Extensible'n Hackable Editor (allow to change interfaces brutally)
-	- Improve extensibility with a new plugin architecture
+  - Improve extensibility with a new plugin architecture
 
 ## Our Goal
 

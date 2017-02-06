@@ -15,9 +15,9 @@ charset = utf-8
 
 # Tab indentation (no size specified)
 [Makefile]
-indent_style = tab
+indent_style = space
 
 # Indentation override for all JS and TPL files
 [*.{js}]
 indent_style = space
-indent_size = 4
+indent_size = 2

@@ -1,11 +1,11 @@
 const electron = require('electron')
-
 const resolve = require('path').resolve
+
+const elekid = require('elekid')
+const template = require('./src/template')
+
 const app = electron.app
 const BrowserWindow = electron.BrowserWindow
-
-const path = require('path')
-const url = require('url')
 
 let mainWindow
 
@@ -33,14 +33,13 @@ function createWindow() {
     icon: resolve(__dirname + '/assets/images/logo-128.icns')
   })
 
-  mainWindow.loadURL(url.format({
-    pathname: path.join(__dirname, 'index.html'),
-    protocol: 'file:',
-    slashes: true
+  mainWindow.loadURL(elekid({
+    path: 'src/components/Retro.js',
+    template: template
   }))
 
   // Open the DevTools.
-  // mainWindow.webContents.openDevTools()
+  mainWindow.webContents.openDevTools()
 
   mainWindow.on('closed', function() {
     mainWindow = null

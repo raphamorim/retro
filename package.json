@@ -1,6 +1,7 @@
 {
   "name": "retro",
   "version": "0.1.0",
+  "browser": "dist/retro.js",
   "description": "A Vim Based Editor for the 30th Century",
   "main": "main.js",
   "scripts": {
@@ -33,15 +34,15 @@
     "enzyme": "2.7.0",
     "eslint": "3.13.0",
     "jest": "18.1.0",
-    "webpack": "2.2.0-rc.0",
-    "webpack-shell-plugin": "^0.5.0"
+    "webpack": "2.2.0-rc.0"
   },
   "dependencies": {
     "electron": "1.4.13",
+    "elekid": "0.2.1",
     "fs.notify": "0.0.4",
-    "react": "15.4.1",
-    "react-dom": "15.4.1",
     "fuse.js": "2.6.0",
-    "js-beautify": "1.6.4"
+    "js-beautify": "1.6.4",
+    "react": "15.4.1",
+    "react-dom": "15.4.1"
   }
 }
