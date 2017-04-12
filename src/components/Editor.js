@@ -5,6 +5,7 @@ import Footer from './Footer'
 
 import { remote as app } from 'electron'
 import tron from '../lib/tron'
+import loader from '../lib/loader'
 
 import {
   js_beautify,
@@ -14,17 +15,74 @@ import {
 
 import syntaxes from '../config/syntax'
 
-export default class Editor extends Component {
-  constructor() {
-    super()
+class Editor extends Component {
+  static defaultProps = {
+    filepath: false,
+  }
+
+  state = {
+    reading: false,
+  }
+
+  openFile = () => {
+    loader.on()
+
+    function inputSyntax(filepath) {
+      config.currentFile = filepath
+      filepath = filepath.split('/').pop()
+      filepath = filepath.split('.')
+      if (filepath.length <= 1) {
+        editorFile.textContent = ''
+        editorSyntax.textContent = ''
+
+        return
+      }
+
+      const syntax = filepath.pop()
+      editorSyntax.textContent = syntax
+      var current = syntaxes[syntax]
+      if (!current)
+        current = {
+          mode: 'text'
+        }
+
+      code.getSession().setMode('ace/mode/' + current.mode)
+      if (current.mode === 'html') {
+        code.setOption('enableEmmet', true)
+      }
+    }
+
+    function setCurrentFile(filepath) {
+      filepath = filepath.split('/').pop()
+      filepath = filepath.split('.').shift()
+      editorFile.textContent = filepath
+      this.setTabs(filepath, true)
+    }
+
+    setCurrentFile = setCurrentFile.bind(this)
+
+    tron.readStream(file).then(function(tronData) {
+      code.getSession().setValue(tronData)
+      inputSyntax(file)
+      setCurrentFile(file)
+      const files = tron.listFiles(tron.folderPath(file))
+      if (files.length) {
+        config.cachedFiles = config.cachedFiles.concat(files)
+      }
+    }).then(() => {
+      setTimeout(() => {
+        loader.off()
+      }, 500)
+    })
   }
 
   openFilesDialog() {
+    console.log(this.openFile)
     app.dialog.showOpenDialog((fileNames) => {
-        // if (fileNames && fileNames.length) {
-        //     retro.openFile(fileNames[0])
-        //     notifications.add(fileNames[0])
-        // }
+      if (fileNames && fileNames.length) {
+        this.openFile(fileNames[0])
+        // notifications.add(fileNames[0])
+      }
     })
   }
 
@@ -127,7 +185,6 @@ export default class Editor extends Component {
       })
 
       code.getSession().setMode('ace/mode/javascript')
-      code.getSession().setValue('asasasas')
   }
 
   render() {
@@ -141,3 +198,5 @@ export default class Editor extends Component {
     )
   }
 }
+
+export default Editor

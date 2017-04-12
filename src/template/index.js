@@ -1,10 +1,5 @@
-<<<<<<< HEAD
-module.exports = (app) => {
-    return `<!DOCTYPE html>
-=======
 module.exports = (app) => (
 `<!DOCTYPE html>
->>>>>>> 10eaa7a... fixup! Merge branch 'react' of github.com:raphamorim/retro into react
 <html>
     <head>
         <meta charset="utf-8"/>
@@ -29,9 +24,4 @@ module.exports = (app) => (
         <div id="root">${app}</div>
         <script async src="dist/retro.js"></script>
     </body>
-<<<<<<< HEAD
-</html>`
-}
-=======
 </html>`)
->>>>>>> 10eaa7a... fixup! Merge branch 'react' of github.com:raphamorim/retro into react
