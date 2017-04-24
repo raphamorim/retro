@@ -2384,7 +2384,7 @@ exports.Translator = function(rootStcx, ast){
         return true;
     };
     
-    this.InlineFunctionExpr	= function(node) {
+    this.InlineFunctionExpr = function(node) {
         pushSctx(node.pos);
         this.visitChildren(node);
         popSctx();
@@ -7045,7 +7045,7 @@ var Rules = {
 exports.XQueryLexer = function(){ return new Lexer(XQueryTokenizer, Rules); };
 },{"./XQueryTokenizer":"/node_modules/xqlint/lib/lexers/XQueryTokenizer.js","./lexer":"/node_modules/xqlint/lib/lexers/lexer.js"}],"/node_modules/xqlint/lib/parsers/JSONParseTreeHandler.js":[function(_dereq_,module,exports){
 exports.JSONParseTreeHandler = function (code) {
-	'use strict';
+    'use strict';
     var toBeIndex = ['VarDecl', 'FunctionDecl'];
     var list = [
         'OrExpr', 'AndExpr', 'ComparisonExpr', 'StringConcatExpr', 'RangeExpr',

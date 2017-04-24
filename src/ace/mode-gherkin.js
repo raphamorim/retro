@@ -1,22 +1,18 @@
-ace.define("ace/mode/gherkin_highlight_rules",["require","exports","module","ace/lib/oop","ace/mode/text_highlight_rules"], function(require, exports, module) {
+ace.define("ace/mode/gherkin_highlight_rules",["require","exports","module","ace/lib/oop","ace/mode/text_highlight_rules"], (require, exports, module) => {
 
-var oop = require("../lib/oop");
-var TextHighlightRules = require("./text_highlight_rules").TextHighlightRules;
-var stringEscape =  "\\\\(x[0-9A-Fa-f]{2}|[0-7]{3}|[\\\\abfnrtv'\"]|U[0-9A-Fa-f]{8}|u[0-9A-Fa-f]{4})";
+const oop = require("../lib/oop");
+const TextHighlightRules = require("./text_highlight_rules").TextHighlightRules;
+const stringEscape =  "\\\\(x[0-9A-Fa-f]{2}|[0-7]{3}|[\\\\abfnrtv'\"]|U[0-9A-Fa-f]{8}|u[0-9A-Fa-f]{4})";
 
-var GherkinHighlightRules = function() {
-    var languages = [{
+const GherkinHighlightRules = function() {
+    const languages = [{
         name: "en",
         labels: "Feature|Background|Scenario(?: Outline)?|Examples",
         keywords: "Given|When|Then|And|But"
     }];
     
-    var labels = languages.map(function(l) {
-        return l.labels;
-    }).join("|");
-    var keywords = languages.map(function(l) {
-        return l.keywords;
-    }).join("|");
+    const labels = languages.map(l => l.labels).join("|");
+    const keywords = languages.map(l => l.keywords).join("|");
     this.$rules = {
         start : [{
             token: "constant.numeric",
@@ -26,7 +22,7 @@ var GherkinHighlightRules = function() {
             regex : "#.*$"
         }, {
             token : "keyword",
-            regex : "(?:" + labels + "):|(?:" + keywords + ")\\b"
+            regex : `(?:${labels}):|(?:${keywords})\\b`
         }, {
             token : "keyword",
             regex : "\\*"
@@ -103,20 +99,20 @@ var GherkinHighlightRules = function() {
         }]
     };
     this.normalizeRules();
-}
+};
 
 oop.inherits(GherkinHighlightRules, TextHighlightRules);
 
 exports.GherkinHighlightRules = GherkinHighlightRules;
 });
 
-ace.define("ace/mode/gherkin",["require","exports","module","ace/lib/oop","ace/mode/text","ace/mode/gherkin_highlight_rules"], function(require, exports, module) {
+ace.define("ace/mode/gherkin",["require","exports","module","ace/lib/oop","ace/mode/text","ace/mode/gherkin_highlight_rules"], (require, exports, module) => {
 
-var oop = require("../lib/oop");
-var TextMode = require("./text").Mode;
-var GherkinHighlightRules = require("./gherkin_highlight_rules").GherkinHighlightRules;
+const oop = require("../lib/oop");
+const TextMode = require("./text").Mode;
+const GherkinHighlightRules = require("./gherkin_highlight_rules").GherkinHighlightRules;
 
-var Mode = function() {
+const Mode = function() {
     this.HighlightRules = GherkinHighlightRules;
 };
 oop.inherits(Mode, TextMode);
@@ -126,11 +122,11 @@ oop.inherits(Mode, TextMode);
     this.$id = "ace/mode/gherkin";
 
     this.getNextLineIndent = function(state, line, tab) {
-        var indent = this.$getIndent(line);
-        var space2 = "  ";
+        let indent = this.$getIndent(line);
+        const space2 = "  ";
 
-        var tokenizedLine = this.getTokenizer().getLineTokens(line, state);
-        var tokens = tokenizedLine.tokens;
+        const tokenizedLine = this.getTokenizer().getLineTokens(line, state);
+        const tokens = tokenizedLine.tokens;
         
         console.log(state)
         

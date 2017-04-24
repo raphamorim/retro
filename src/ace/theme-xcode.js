@@ -1,4 +1,4 @@
-ace.define("ace/theme/xcode",["require","exports","module","ace/lib/dom"], function(require, exports, module) {
+ace.define("ace/theme/xcode",["require","exports","module","ace/lib/dom"], (require, exports, module) => {
 
 exports.isDark = false;
 exports.cssClass = "ace-xcode";
@@ -83,6 +83,6 @@ color: #008E00\
 background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAACCAYAAACZgbYnAAAAE0lEQVQImWP4////f4bLly//BwAmVgd1/w11/gAAAABJRU5ErkJggg==) right repeat-y\
 }";
 
-var dom = require("../lib/dom");
+const dom = require("../lib/dom");
 dom.importCssString(exports.cssText, exports.cssClass);
 });

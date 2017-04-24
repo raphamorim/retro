@@ -1,31 +1,29 @@
-ace.define("ace/mode/coffee_highlight_rules",["require","exports","module","ace/lib/oop","ace/mode/text_highlight_rules"], function(require, exports, module) {
-"use strict";
-
-    var oop = require("../lib/oop");
-    var TextHighlightRules = require("./text_highlight_rules").TextHighlightRules;
+ace.define("ace/mode/coffee_highlight_rules",["require","exports","module","ace/lib/oop","ace/mode/text_highlight_rules"], (require, exports, module) => {
+    const oop = require("../lib/oop");
+    const TextHighlightRules = require("./text_highlight_rules").TextHighlightRules;
 
     oop.inherits(CoffeeHighlightRules, TextHighlightRules);
 
     function CoffeeHighlightRules() {
-        var identifier = "[$A-Za-z_\\x7f-\\uffff][$\\w\\x7f-\\uffff]*";
+        const identifier = "[$A-Za-z_\\x7f-\\uffff][$\\w\\x7f-\\uffff]*";
 
-        var keywords = (
+        const keywords = (
             "this|throw|then|try|typeof|super|switch|return|break|by|continue|" +
             "catch|class|in|instanceof|is|isnt|if|else|extends|for|own|" +
             "finally|function|while|when|new|no|not|delete|debugger|do|loop|of|off|" +
             "or|on|unless|until|and|yes"
         );
 
-        var langConstant = (
+        const langConstant = (
             "true|false|null|undefined|NaN|Infinity"
         );
 
-        var illegal = (
+        const illegal = (
             "case|const|default|function|var|void|with|enum|export|implements|" +
             "interface|let|package|private|protected|public|static|yield"
         );
 
-        var supportClass = (
+        const supportClass = (
             "Array|Boolean|Date|Function|Number|Object|RegExp|ReferenceError|String|" +
             "Error|EvalError|InternalError|RangeError|ReferenceError|StopIteration|" +
             "SyntaxError|TypeError|URIError|"  +
@@ -33,16 +31,16 @@ ace.define("ace/mode/coffee_highlight_rules",["require","exports","module","ace/
             "Uint16Array|Uint32Array|Uint8Array|Uint8ClampedArray"
         );
 
-        var supportFunction = (
+        const supportFunction = (
             "Math|JSON|isNaN|isFinite|parseInt|parseFloat|encodeURI|" +
             "encodeURIComponent|decodeURI|decodeURIComponent|String|"
         );
 
-        var variableLanguage = (
+        const variableLanguage = (
             "window|arguments|prototype|document"
         );
 
-        var keywordMapper = this.createKeywordMapper({
+        const keywordMapper = this.createKeywordMapper({
             "keyword": keywords,
             "constant.language": langConstant,
             "invalid.illegal": illegal,
@@ -51,12 +49,12 @@ ace.define("ace/mode/coffee_highlight_rules",["require","exports","module","ace/
             "variable.language": variableLanguage
         }, "identifier");
 
-        var functionRule = {
+        const functionRule = {
             token: ["paren.lparen", "variable.parameter", "paren.rparen", "text", "storage.type"],
             regex: /(?:(\()((?:"[^")]*?"|'[^')]*?'|\/[^\/)]*?\/|[^()"'\/])*?)(\))(\s*))?([\-=]>)/.source
         };
 
-        var stringEscape = /\\(?:x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|[0-2][0-7]{0,2}|3[0-6][0-7]?|37[0-7]?|[4-7][0-7]?|.)/;
+        const stringEscape = /\\(?:x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|[0-2][0-7]{0,2}|3[0-6][0-7]?|37[0-7]?|[4-7][0-7]?|.)/;
 
         this.$rules = {
             start : [
@@ -103,7 +101,7 @@ ace.define("ace/mode/coffee_highlight_rules",["require","exports","module","ace/
                         {defaultToken: "string"}
                     ]
                 }, {
-                    regex: "[{}]", onMatch: function(val, state, stack) {
+                    regex: "[{}]", onMatch(val, state, stack) {
                         this.next = "";
                         if (val == "{" && stack.length) {
                             stack.unshift("start", state);
@@ -112,7 +110,7 @@ ace.define("ace/mode/coffee_highlight_rules",["require","exports","module","ace/
                         if (val == "}" && stack.length) {
                             stack.shift();
                             this.next = stack.shift() || "";
-                            if (this.next.indexOf("string") != -1)
+                            if (this.next.includes("string"))
                                 return "paren.string";
                         }
                         return "paren";
@@ -133,22 +131,22 @@ ace.define("ace/mode/coffee_highlight_rules",["require","exports","module","ace/
                     regex : "#.*"
                 }, {
                     token : ["punctuation.operator", "text", "identifier"],
-                    regex : "(\\.)(\\s*)(" + illegal + ")"
+                    regex : `(\\.)(\\s*)(${illegal})`
                 }, {
                     token : "punctuation.operator",
                     regex : "\\.{1,3}"
                 }, {
                     token : ["keyword", "text", "language.support.class",
                      "text", "keyword", "text", "language.support.class"],
-                    regex : "(class)(\\s+)(" + identifier + ")(?:(\\s+)(extends)(\\s+)(" + identifier + "))?"
+                    regex : `(class)(\\s+)(${identifier})(?:(\\s+)(extends)(\\s+)(${identifier}))?`
                 }, {
                     token : ["entity.name.function", "text", "keyword.operator", "text"].concat(functionRule.token),
-                    regex : "(" + identifier + ")(\\s*)([=:])(\\s*)" + functionRule.regex
+                    regex : `(${identifier})(\\s*)([=:])(\\s*)${functionRule.regex}`
                 }, 
                 functionRule, 
                 {
                     token : "variable",
-                    regex : "@(?:" + identifier + ")?"
+                    regex : `@(?:${identifier})?`
                 }, {
                     token: keywordMapper,
                     regex : identifier
@@ -199,194 +197,184 @@ ace.define("ace/mode/coffee_highlight_rules",["require","exports","module","ace/
     exports.CoffeeHighlightRules = CoffeeHighlightRules;
 });
 
-ace.define("ace/mode/matching_brace_outdent",["require","exports","module","ace/range"], function(require, exports, module) {
-"use strict";
+ace.define("ace/mode/matching_brace_outdent",["require","exports","module","ace/range"], (require, exports, module) => {
+    const Range = require("../range").Range;
 
-var Range = require("../range").Range;
+    const MatchingBraceOutdent = () => {};
 
-var MatchingBraceOutdent = function() {};
+    (function() {
 
-(function() {
+        this.checkOutdent = (line, input) => {
+            if (! /^\s+$/.test(line))
+                return false;
 
-    this.checkOutdent = function(line, input) {
-        if (! /^\s+$/.test(line))
-            return false;
+            return /^\s*\}/.test(input);
+        };
 
-        return /^\s*\}/.test(input);
-    };
+        this.autoOutdent = function(doc, row) {
+            const line = doc.getLine(row);
+            const match = line.match(/^(\s*\})/);
 
-    this.autoOutdent = function(doc, row) {
-        var line = doc.getLine(row);
-        var match = line.match(/^(\s*\})/);
+            if (!match) return 0;
 
-        if (!match) return 0;
+            const column = match[1].length;
+            const openBracePos = doc.findMatchingBracket({row, column});
 
-        var column = match[1].length;
-        var openBracePos = doc.findMatchingBracket({row: row, column: column});
+            if (!openBracePos || openBracePos.row == row) return 0;
 
-        if (!openBracePos || openBracePos.row == row) return 0;
+            const indent = this.$getIndent(doc.getLine(openBracePos.row));
+            doc.replace(new Range(row, 0, row, column-1), indent);
+        };
 
-        var indent = this.$getIndent(doc.getLine(openBracePos.row));
-        doc.replace(new Range(row, 0, row, column-1), indent);
-    };
+        this.$getIndent = line => line.match(/^\s*/)[0];
 
-    this.$getIndent = function(line) {
-        return line.match(/^\s*/)[0];
-    };
+    }).call(MatchingBraceOutdent.prototype);
 
-}).call(MatchingBraceOutdent.prototype);
-
-exports.MatchingBraceOutdent = MatchingBraceOutdent;
+    exports.MatchingBraceOutdent = MatchingBraceOutdent;
 });
 
-ace.define("ace/mode/folding/coffee",["require","exports","module","ace/lib/oop","ace/mode/folding/fold_mode","ace/range"], function(require, exports, module) {
-"use strict";
+ace.define("ace/mode/folding/coffee",["require","exports","module","ace/lib/oop","ace/mode/folding/fold_mode","ace/range"], (require, exports, module) => {
+    const oop = require("../../lib/oop");
+    const BaseFoldMode = require("./fold_mode").FoldMode;
+    const Range = require("../../range").Range;
 
-var oop = require("../../lib/oop");
-var BaseFoldMode = require("./fold_mode").FoldMode;
-var Range = require("../../range").Range;
+    const FoldMode = exports.FoldMode = () => {};
+    oop.inherits(FoldMode, BaseFoldMode);
 
-var FoldMode = exports.FoldMode = function() {};
-oop.inherits(FoldMode, BaseFoldMode);
+    (function() {
 
-(function() {
+        this.getFoldWidgetRange = function(session, foldStyle, row) {
+            const range = this.indentationBlock(session, row);
+            if (range)
+                return range;
 
-    this.getFoldWidgetRange = function(session, foldStyle, row) {
-        var range = this.indentationBlock(session, row);
-        if (range)
-            return range;
+            const re = /\S/;
+            let line = session.getLine(row);
+            const startLevel = line.search(re);
+            if (startLevel == -1 || line[startLevel] != "#")
+                return;
 
-        var re = /\S/;
-        var line = session.getLine(row);
-        var startLevel = line.search(re);
-        if (startLevel == -1 || line[startLevel] != "#")
-            return;
+            const startColumn = line.length;
+            const maxRow = session.getLength();
+            const startRow = row;
+            let endRow = row;
 
-        var startColumn = line.length;
-        var maxRow = session.getLength();
-        var startRow = row;
-        var endRow = row;
+            while (++row < maxRow) {
+                line = session.getLine(row);
+                const level = line.search(re);
 
-        while (++row < maxRow) {
-            line = session.getLine(row);
-            var level = line.search(re);
+                if (level == -1)
+                    continue;
 
-            if (level == -1)
-                continue;
+                if (line[level] != "#")
+                    break;
 
-            if (line[level] != "#")
-                break;
-
-            endRow = row;
-        }
-
-        if (endRow > startRow) {
-            var endColumn = session.getLine(endRow).length;
-            return new Range(startRow, startColumn, endRow, endColumn);
-        }
-    };
-    this.getFoldWidget = function(session, foldStyle, row) {
-        var line = session.getLine(row);
-        var indent = line.search(/\S/);
-        var next = session.getLine(row + 1);
-        var prev = session.getLine(row - 1);
-        var prevIndent = prev.search(/\S/);
-        var nextIndent = next.search(/\S/);
-
-        if (indent == -1) {
-            session.foldWidgets[row - 1] = prevIndent!= -1 && prevIndent < nextIndent ? "start" : "";
-            return "";
-        }
-        if (prevIndent == -1) {
-            if (indent == nextIndent && line[indent] == "#" && next[indent] == "#") {
-                session.foldWidgets[row - 1] = "";
-                session.foldWidgets[row + 1] = "";
-                return "start";
+                endRow = row;
             }
-        } else if (prevIndent == indent && line[indent] == "#" && prev[indent] == "#") {
-            if (session.getLine(row - 2).search(/\S/) == -1) {
-                session.foldWidgets[row - 1] = "start";
-                session.foldWidgets[row + 1] = "";
+
+            if (endRow > startRow) {
+                const endColumn = session.getLine(endRow).length;
+                return new Range(startRow, startColumn, endRow, endColumn);
+            }
+        };
+        this.getFoldWidget = (session, foldStyle, row) => {
+            const line = session.getLine(row);
+            const indent = line.search(/\S/);
+            const next = session.getLine(row + 1);
+            const prev = session.getLine(row - 1);
+            const prevIndent = prev.search(/\S/);
+            const nextIndent = next.search(/\S/);
+
+            if (indent == -1) {
+                session.foldWidgets[row - 1] = prevIndent!= -1 && prevIndent < nextIndent ? "start" : "";
                 return "";
             }
-        }
+            if (prevIndent == -1) {
+                if (indent == nextIndent && line[indent] == "#" && next[indent] == "#") {
+                    session.foldWidgets[row - 1] = "";
+                    session.foldWidgets[row + 1] = "";
+                    return "start";
+                }
+            } else if (prevIndent == indent && line[indent] == "#" && prev[indent] == "#") {
+                if (session.getLine(row - 2).search(/\S/) == -1) {
+                    session.foldWidgets[row - 1] = "start";
+                    session.foldWidgets[row + 1] = "";
+                    return "";
+                }
+            }
 
-        if (prevIndent!= -1 && prevIndent < indent)
-            session.foldWidgets[row - 1] = "start";
-        else
-            session.foldWidgets[row - 1] = "";
+            if (prevIndent!= -1 && prevIndent < indent)
+                session.foldWidgets[row - 1] = "start";
+            else
+                session.foldWidgets[row - 1] = "";
 
-        if (indent < nextIndent)
-            return "start";
-        else
-            return "";
-    };
+            if (indent < nextIndent)
+                return "start";
+            else
+                return "";
+        };
 
-}).call(FoldMode.prototype);
-
+    }).call(FoldMode.prototype);
 });
 
-ace.define("ace/mode/coffee",["require","exports","module","ace/mode/coffee_highlight_rules","ace/mode/matching_brace_outdent","ace/mode/folding/coffee","ace/range","ace/mode/text","ace/worker/worker_client","ace/lib/oop"], function(require, exports, module) {
-"use strict";
+ace.define("ace/mode/coffee",["require","exports","module","ace/mode/coffee_highlight_rules","ace/mode/matching_brace_outdent","ace/mode/folding/coffee","ace/range","ace/mode/text","ace/worker/worker_client","ace/lib/oop"], (require, exports, module) => {
+    const Rules = require("./coffee_highlight_rules").CoffeeHighlightRules;
+    const Outdent = require("./matching_brace_outdent").MatchingBraceOutdent;
+    const FoldMode = require("./folding/coffee").FoldMode;
+    const Range = require("../range").Range;
+    const TextMode = require("./text").Mode;
+    const WorkerClient = require("../worker/worker_client").WorkerClient;
+    const oop = require("../lib/oop");
 
-var Rules = require("./coffee_highlight_rules").CoffeeHighlightRules;
-var Outdent = require("./matching_brace_outdent").MatchingBraceOutdent;
-var FoldMode = require("./folding/coffee").FoldMode;
-var Range = require("../range").Range;
-var TextMode = require("./text").Mode;
-var WorkerClient = require("../worker/worker_client").WorkerClient;
-var oop = require("../lib/oop");
+    function Mode() {
+        this.HighlightRules = Rules;
+        this.$outdent = new Outdent();
+        this.foldingRules = new FoldMode();
+    }
 
-function Mode() {
-    this.HighlightRules = Rules;
-    this.$outdent = new Outdent();
-    this.foldingRules = new FoldMode();
-}
+    oop.inherits(Mode, TextMode);
 
-oop.inherits(Mode, TextMode);
-
-(function() {
-    var indenter = /(?:[({[=:]|[-=]>|\b(?:else|try|(?:swi|ca)tch(?:\s+[$A-Za-z_\x7f-\uffff][$\w\x7f-\uffff]*)?|finally))\s*$|^\s*(else\b\s*)?(?:if|for|while|loop)\b(?!.*\bthen\b)/;
-    
-    this.lineCommentStart = "#";
-    this.blockComment = {start: "###", end: "###"};
-    
-    this.getNextLineIndent = function(state, line, tab) {
-        var indent = this.$getIndent(line);
-        var tokens = this.getTokenizer().getLineTokens(line, state).tokens;
-    
-        if (!(tokens.length && tokens[tokens.length - 1].type === 'comment') &&
-            state === 'start' && indenter.test(line))
-            indent += tab;
-        return indent;
-    };
-    
-    this.checkOutdent = function(state, line, input) {
-        return this.$outdent.checkOutdent(line, input);
-    };
-    
-    this.autoOutdent = function(state, doc, row) {
-        this.$outdent.autoOutdent(doc, row);
-    };
-    
-    this.createWorker = function(session) {
-        var worker = new WorkerClient(["ace"], "ace/mode/coffee_worker", "Worker");
-        worker.attachToDocument(session.getDocument());
+    (function() {
+        const indenter = /(?:[({[=:]|[-=]>|\b(?:else|try|(?:swi|ca)tch(?:\s+[$A-Za-z_\x7f-\uffff][$\w\x7f-\uffff]*)?|finally))\s*$|^\s*(else\b\s*)?(?:if|for|while|loop)\b(?!.*\bthen\b)/;
         
-        worker.on("annotate", function(e) {
-            session.setAnnotations(e.data);
-        });
+        this.lineCommentStart = "#";
+        this.blockComment = {start: "###", end: "###"};
         
-        worker.on("terminate", function() {
-            session.clearAnnotations();
-        });
+        this.getNextLineIndent = function(state, line, tab) {
+            let indent = this.$getIndent(line);
+            const tokens = this.getTokenizer().getLineTokens(line, state).tokens;
         
-        return worker;
-    };
+            if (!(tokens.length && tokens[tokens.length - 1].type === 'comment') &&
+                state === 'start' && indenter.test(line))
+                indent += tab;
+            return indent;
+        };
+        
+        this.checkOutdent = function(state, line, input) {
+            return this.$outdent.checkOutdent(line, input);
+        };
+        
+        this.autoOutdent = function(state, doc, row) {
+            this.$outdent.autoOutdent(doc, row);
+        };
+        
+        this.createWorker = session => {
+            const worker = new WorkerClient(["ace"], "ace/mode/coffee_worker", "Worker");
+            worker.attachToDocument(session.getDocument());
+            
+            worker.on("annotate", e => {
+                session.setAnnotations(e.data);
+            });
+            
+            worker.on("terminate", () => {
+                session.clearAnnotations();
+            });
+            
+            return worker;
+        };
 
-    this.$id = "ace/mode/coffee";
-}).call(Mode.prototype);
+        this.$id = "ace/mode/coffee";
+    }).call(Mode.prototype);
 
-exports.Mode = Mode;
-
+    exports.Mode = Mode;
 });

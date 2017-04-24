@@ -1,310 +1,300 @@
-ace.define("ace/mode/logiql_highlight_rules",["require","exports","module","ace/lib/oop","ace/mode/text_highlight_rules"], function(require, exports, module) {
-"use strict";
+ace.define("ace/mode/logiql_highlight_rules",["require","exports","module","ace/lib/oop","ace/mode/text_highlight_rules"], (require, exports, module) => {
+    const oop = require("../lib/oop");
+    const TextHighlightRules = require("./text_highlight_rules").TextHighlightRules;
 
-var oop = require("../lib/oop");
-var TextHighlightRules = require("./text_highlight_rules").TextHighlightRules;
+    const LogiQLHighlightRules = function() {
 
-var LogiQLHighlightRules = function() {
+        this.$rules = { start: 
+           [ { token: 'comment.block',
+               regex: '/\\*',
+               push: 
+                [ { token: 'comment.block', regex: '\\*/', next: 'pop' },
+                  { defaultToken: 'comment.block' } ]
+                },
+             { token: 'comment.single',
+               regex: '//.*'
+                },
+             { token: 'constant.numeric',
+               regex: '\\d+(?:\\.\\d+)?(?:[eE][+-]?\\d+)?[fd]?'
+                },
+             { token: 'string',
+               regex: '"',
+               push: 
+                [ { token: 'string', regex: '"', next: 'pop' },
+                  { defaultToken: 'string' } ]
+                },
+             { token: 'constant.language',
+               regex: '\\b(true|false)\\b'
+                },
+             { token: 'entity.name.type.logicblox',
+               regex: '`[a-zA-Z_:]+(\\d|\\a)*\\b'
+                },
+             { token: 'keyword.start', regex: '->',  comment: 'Constraint' },
+             { token: 'keyword.start', regex: '-->', comment: 'Level 1 Constraint'},
+             { token: 'keyword.start', regex: '<-',  comment: 'Rule' },
+             { token: 'keyword.start', regex: '<--', comment: 'Level 1 Rule' },
+             { token: 'keyword.end',   regex: '\\.', comment: 'Terminator' },
+             { token: 'keyword.other', regex: '!',   comment: 'Negation' },
+             { token: 'keyword.other', regex: ',',   comment: 'Conjunction' },
+             { token: 'keyword.other', regex: ';',   comment: 'Disjunction' },
+             { token: 'keyword.operator', regex: '<=|>=|!=|<|>', comment: 'Equality'},
+             { token: 'keyword.other', regex: '@', comment: 'Equality' },
+             { token: 'keyword.operator', regex: '\\+|-|\\*|/', comment: 'Arithmetic operations'},
+             { token: 'keyword', regex: '::', comment: 'Colon colon' },
+             { token: 'support.function',
+               regex: '\\b(agg\\s*<<)',
+               push: 
+                [ { include: '$self' },
+                  { token: 'support.function',
+                    regex: '>>',
+                    next: 'pop' } ]
+                },
+             { token: 'storage.modifier',
+               regex: '\\b(lang:[\\w:]*)'
+                },
+             { token: [ 'storage.type', 'text' ],
+               regex: '(export|sealed|clauses|block|alias|alias_all)(\\s*\\()(?=`)'
+                },
+             { token: 'entity.name',
+               regex: '[a-zA-Z_][a-zA-Z_0-9:]*(@prev|@init|@final)?(?=(\\(|\\[))'
+                },
+             { token: 'variable.parameter',
+               regex: '([a-zA-Z][a-zA-Z_0-9]*|_)\\s*(?=(,|\\.|<-|->|\\)|\\]|=))'
+                } ] }
+        
+        this.normalizeRules();
+    };
 
-    this.$rules = { start: 
-       [ { token: 'comment.block',
-           regex: '/\\*',
-           push: 
-            [ { token: 'comment.block', regex: '\\*/', next: 'pop' },
-              { defaultToken: 'comment.block' } ]
-            },
-         { token: 'comment.single',
-           regex: '//.*'
-            },
-         { token: 'constant.numeric',
-           regex: '\\d+(?:\\.\\d+)?(?:[eE][+-]?\\d+)?[fd]?'
-            },
-         { token: 'string',
-           regex: '"',
-           push: 
-            [ { token: 'string', regex: '"', next: 'pop' },
-              { defaultToken: 'string' } ]
-            },
-         { token: 'constant.language',
-           regex: '\\b(true|false)\\b'
-            },
-         { token: 'entity.name.type.logicblox',
-           regex: '`[a-zA-Z_:]+(\\d|\\a)*\\b'
-            },
-         { token: 'keyword.start', regex: '->',  comment: 'Constraint' },
-         { token: 'keyword.start', regex: '-->', comment: 'Level 1 Constraint'},
-         { token: 'keyword.start', regex: '<-',  comment: 'Rule' },
-         { token: 'keyword.start', regex: '<--', comment: 'Level 1 Rule' },
-         { token: 'keyword.end',   regex: '\\.', comment: 'Terminator' },
-         { token: 'keyword.other', regex: '!',   comment: 'Negation' },
-         { token: 'keyword.other', regex: ',',   comment: 'Conjunction' },
-         { token: 'keyword.other', regex: ';',   comment: 'Disjunction' },
-         { token: 'keyword.operator', regex: '<=|>=|!=|<|>', comment: 'Equality'},
-         { token: 'keyword.other', regex: '@', comment: 'Equality' },
-         { token: 'keyword.operator', regex: '\\+|-|\\*|/', comment: 'Arithmetic operations'},
-         { token: 'keyword', regex: '::', comment: 'Colon colon' },
-         { token: 'support.function',
-           regex: '\\b(agg\\s*<<)',
-           push: 
-            [ { include: '$self' },
-              { token: 'support.function',
-                regex: '>>',
-                next: 'pop' } ]
-            },
-         { token: 'storage.modifier',
-           regex: '\\b(lang:[\\w:]*)'
-            },
-         { token: [ 'storage.type', 'text' ],
-           regex: '(export|sealed|clauses|block|alias|alias_all)(\\s*\\()(?=`)'
-            },
-         { token: 'entity.name',
-           regex: '[a-zA-Z_][a-zA-Z_0-9:]*(@prev|@init|@final)?(?=(\\(|\\[))'
-            },
-         { token: 'variable.parameter',
-           regex: '([a-zA-Z][a-zA-Z_0-9]*|_)\\s*(?=(,|\\.|<-|->|\\)|\\]|=))'
-            } ] }
-    
-    this.normalizeRules();
-};
+    oop.inherits(LogiQLHighlightRules, TextHighlightRules);
 
-oop.inherits(LogiQLHighlightRules, TextHighlightRules);
-
-exports.LogiQLHighlightRules = LogiQLHighlightRules;
+    exports.LogiQLHighlightRules = LogiQLHighlightRules;
 });
 
-ace.define("ace/mode/folding/coffee",["require","exports","module","ace/lib/oop","ace/mode/folding/fold_mode","ace/range"], function(require, exports, module) {
-"use strict";
+ace.define("ace/mode/folding/coffee",["require","exports","module","ace/lib/oop","ace/mode/folding/fold_mode","ace/range"], (require, exports, module) => {
+    const oop = require("../../lib/oop");
+    const BaseFoldMode = require("./fold_mode").FoldMode;
+    const Range = require("../../range").Range;
 
-var oop = require("../../lib/oop");
-var BaseFoldMode = require("./fold_mode").FoldMode;
-var Range = require("../../range").Range;
+    const FoldMode = exports.FoldMode = () => {};
+    oop.inherits(FoldMode, BaseFoldMode);
 
-var FoldMode = exports.FoldMode = function() {};
-oop.inherits(FoldMode, BaseFoldMode);
+    (function() {
 
-(function() {
+        this.getFoldWidgetRange = function(session, foldStyle, row) {
+            const range = this.indentationBlock(session, row);
+            if (range)
+                return range;
 
-    this.getFoldWidgetRange = function(session, foldStyle, row) {
-        var range = this.indentationBlock(session, row);
-        if (range)
-            return range;
+            const re = /\S/;
+            let line = session.getLine(row);
+            const startLevel = line.search(re);
+            if (startLevel == -1 || line[startLevel] != "#")
+                return;
 
-        var re = /\S/;
-        var line = session.getLine(row);
-        var startLevel = line.search(re);
-        if (startLevel == -1 || line[startLevel] != "#")
-            return;
+            const startColumn = line.length;
+            const maxRow = session.getLength();
+            const startRow = row;
+            let endRow = row;
 
-        var startColumn = line.length;
-        var maxRow = session.getLength();
-        var startRow = row;
-        var endRow = row;
+            while (++row < maxRow) {
+                line = session.getLine(row);
+                const level = line.search(re);
 
-        while (++row < maxRow) {
-            line = session.getLine(row);
-            var level = line.search(re);
+                if (level == -1)
+                    continue;
 
-            if (level == -1)
-                continue;
+                if (line[level] != "#")
+                    break;
 
-            if (line[level] != "#")
-                break;
-
-            endRow = row;
-        }
-
-        if (endRow > startRow) {
-            var endColumn = session.getLine(endRow).length;
-            return new Range(startRow, startColumn, endRow, endColumn);
-        }
-    };
-    this.getFoldWidget = function(session, foldStyle, row) {
-        var line = session.getLine(row);
-        var indent = line.search(/\S/);
-        var next = session.getLine(row + 1);
-        var prev = session.getLine(row - 1);
-        var prevIndent = prev.search(/\S/);
-        var nextIndent = next.search(/\S/);
-
-        if (indent == -1) {
-            session.foldWidgets[row - 1] = prevIndent!= -1 && prevIndent < nextIndent ? "start" : "";
-            return "";
-        }
-        if (prevIndent == -1) {
-            if (indent == nextIndent && line[indent] == "#" && next[indent] == "#") {
-                session.foldWidgets[row - 1] = "";
-                session.foldWidgets[row + 1] = "";
-                return "start";
+                endRow = row;
             }
-        } else if (prevIndent == indent && line[indent] == "#" && prev[indent] == "#") {
-            if (session.getLine(row - 2).search(/\S/) == -1) {
-                session.foldWidgets[row - 1] = "start";
-                session.foldWidgets[row + 1] = "";
+
+            if (endRow > startRow) {
+                const endColumn = session.getLine(endRow).length;
+                return new Range(startRow, startColumn, endRow, endColumn);
+            }
+        };
+        this.getFoldWidget = (session, foldStyle, row) => {
+            const line = session.getLine(row);
+            const indent = line.search(/\S/);
+            const next = session.getLine(row + 1);
+            const prev = session.getLine(row - 1);
+            const prevIndent = prev.search(/\S/);
+            const nextIndent = next.search(/\S/);
+
+            if (indent == -1) {
+                session.foldWidgets[row - 1] = prevIndent!= -1 && prevIndent < nextIndent ? "start" : "";
                 return "";
             }
-        }
+            if (prevIndent == -1) {
+                if (indent == nextIndent && line[indent] == "#" && next[indent] == "#") {
+                    session.foldWidgets[row - 1] = "";
+                    session.foldWidgets[row + 1] = "";
+                    return "start";
+                }
+            } else if (prevIndent == indent && line[indent] == "#" && prev[indent] == "#") {
+                if (session.getLine(row - 2).search(/\S/) == -1) {
+                    session.foldWidgets[row - 1] = "start";
+                    session.foldWidgets[row + 1] = "";
+                    return "";
+                }
+            }
 
-        if (prevIndent!= -1 && prevIndent < indent)
-            session.foldWidgets[row - 1] = "start";
-        else
-            session.foldWidgets[row - 1] = "";
+            if (prevIndent!= -1 && prevIndent < indent)
+                session.foldWidgets[row - 1] = "start";
+            else
+                session.foldWidgets[row - 1] = "";
 
-        if (indent < nextIndent)
-            return "start";
-        else
-            return "";
-    };
+            if (indent < nextIndent)
+                return "start";
+            else
+                return "";
+        };
 
-}).call(FoldMode.prototype);
-
+    }).call(FoldMode.prototype);
 });
 
-ace.define("ace/mode/matching_brace_outdent",["require","exports","module","ace/range"], function(require, exports, module) {
-"use strict";
+ace.define("ace/mode/matching_brace_outdent",["require","exports","module","ace/range"], (require, exports, module) => {
+    const Range = require("../range").Range;
 
-var Range = require("../range").Range;
+    const MatchingBraceOutdent = () => {};
 
-var MatchingBraceOutdent = function() {};
+    (function() {
 
-(function() {
+        this.checkOutdent = (line, input) => {
+            if (! /^\s+$/.test(line))
+                return false;
 
-    this.checkOutdent = function(line, input) {
-        if (! /^\s+$/.test(line))
-            return false;
+            return /^\s*\}/.test(input);
+        };
 
-        return /^\s*\}/.test(input);
-    };
+        this.autoOutdent = function(doc, row) {
+            const line = doc.getLine(row);
+            const match = line.match(/^(\s*\})/);
 
-    this.autoOutdent = function(doc, row) {
-        var line = doc.getLine(row);
-        var match = line.match(/^(\s*\})/);
+            if (!match) return 0;
 
-        if (!match) return 0;
+            const column = match[1].length;
+            const openBracePos = doc.findMatchingBracket({row, column});
 
-        var column = match[1].length;
-        var openBracePos = doc.findMatchingBracket({row: row, column: column});
+            if (!openBracePos || openBracePos.row == row) return 0;
 
-        if (!openBracePos || openBracePos.row == row) return 0;
+            const indent = this.$getIndent(doc.getLine(openBracePos.row));
+            doc.replace(new Range(row, 0, row, column-1), indent);
+        };
 
-        var indent = this.$getIndent(doc.getLine(openBracePos.row));
-        doc.replace(new Range(row, 0, row, column-1), indent);
-    };
+        this.$getIndent = line => line.match(/^\s*/)[0];
 
-    this.$getIndent = function(line) {
-        return line.match(/^\s*/)[0];
-    };
+    }).call(MatchingBraceOutdent.prototype);
 
-}).call(MatchingBraceOutdent.prototype);
-
-exports.MatchingBraceOutdent = MatchingBraceOutdent;
+    exports.MatchingBraceOutdent = MatchingBraceOutdent;
 });
 
-ace.define("ace/mode/logiql",["require","exports","module","ace/lib/oop","ace/mode/text","ace/mode/logiql_highlight_rules","ace/mode/folding/coffee","ace/token_iterator","ace/range","ace/mode/behaviour/cstyle","ace/mode/matching_brace_outdent"], function(require, exports, module) {
-"use strict";
+ace.define("ace/mode/logiql",["require","exports","module","ace/lib/oop","ace/mode/text","ace/mode/logiql_highlight_rules","ace/mode/folding/coffee","ace/token_iterator","ace/range","ace/mode/behaviour/cstyle","ace/mode/matching_brace_outdent"], (require, exports, module) => {
+    const oop = require("../lib/oop");
+    const TextMode = require("./text").Mode;
+    const LogiQLHighlightRules = require("./logiql_highlight_rules").LogiQLHighlightRules;
+    const FoldMode = require("./folding/coffee").FoldMode;
+    const TokenIterator = require("../token_iterator").TokenIterator;
+    const Range = require("../range").Range;
+    const CstyleBehaviour = require("./behaviour/cstyle").CstyleBehaviour;
+    const MatchingBraceOutdent = require("./matching_brace_outdent").MatchingBraceOutdent;
 
-var oop = require("../lib/oop");
-var TextMode = require("./text").Mode;
-var LogiQLHighlightRules = require("./logiql_highlight_rules").LogiQLHighlightRules;
-var FoldMode = require("./folding/coffee").FoldMode;
-var TokenIterator = require("../token_iterator").TokenIterator;
-var Range = require("../range").Range;
-var CstyleBehaviour = require("./behaviour/cstyle").CstyleBehaviour;
-var MatchingBraceOutdent = require("./matching_brace_outdent").MatchingBraceOutdent;
-
-var Mode = function() {
-    this.HighlightRules = LogiQLHighlightRules;
-    this.foldingRules = new FoldMode();
-    this.$outdent = new MatchingBraceOutdent();
-    this.$behaviour = new CstyleBehaviour();
-};
-oop.inherits(Mode, TextMode);
-
-(function() {
-    this.lineCommentStart = "//";
-    this.blockComment = {start: "/*", end: "*/"};
-
-    this.getNextLineIndent = function(state, line, tab) {
-        var indent = this.$getIndent(line);
-
-        var tokenizedLine = this.getTokenizer().getLineTokens(line, state);
-        var tokens = tokenizedLine.tokens;
-        var endState = tokenizedLine.state;
-        if (/comment|string/.test(endState))  
-            return indent;
-        if (tokens.length && tokens[tokens.length - 1].type == "comment.single")
-            return indent;
-
-        var match = line.match();
-        if (/(-->|<--|<-|->|{)\s*$/.test(line))
-            indent += tab;
-        return indent;
+    const Mode = function() {
+        this.HighlightRules = LogiQLHighlightRules;
+        this.foldingRules = new FoldMode();
+        this.$outdent = new MatchingBraceOutdent();
+        this.$behaviour = new CstyleBehaviour();
     };
+    oop.inherits(Mode, TextMode);
 
-    this.checkOutdent = function(state, line, input) {
-        if (this.$outdent.checkOutdent(line, input))
+    (function() {
+        this.lineCommentStart = "//";
+        this.blockComment = {start: "/*", end: "*/"};
+
+        this.getNextLineIndent = function(state, line, tab) {
+            let indent = this.$getIndent(line);
+
+            const tokenizedLine = this.getTokenizer().getLineTokens(line, state);
+            const tokens = tokenizedLine.tokens;
+            const endState = tokenizedLine.state;
+            if (/comment|string/.test(endState))  
+                return indent;
+            if (tokens.length && tokens[tokens.length - 1].type == "comment.single")
+                return indent;
+
+            const match = line.match();
+            if (/(-->|<--|<-|->|{)\s*$/.test(line))
+                indent += tab;
+            return indent;
+        };
+
+        this.checkOutdent = function(state, line, input) {
+            if (this.$outdent.checkOutdent(line, input))
+                return true;
+
+            if (input !== "\n" && input !== "\r\n")
+                return false;
+                
+            if (!/^\s+/.test(line))
+                return false;
+
             return true;
+        };
 
-        if (input !== "\n" && input !== "\r\n")
-            return false;
-            
-        if (!/^\s+/.test(line))
-            return false;
+        this.autoOutdent = function(state, doc, row) {
+            if (this.$outdent.autoOutdent(doc, row))
+                return;
+            const prevLine = doc.getLine(row);
+            const match = prevLine.match(/^\s+/);
+            let column = prevLine.lastIndexOf(".") + 1;
+            if (!match || !row || !column) return 0;
 
-        return true;
-    };
+            const line = doc.getLine(row + 1);
+            const startRange = this.getMatching(doc, {row, column});
+            if (!startRange || startRange.start.row == row) return 0;
 
-    this.autoOutdent = function(state, doc, row) {
-        if (this.$outdent.autoOutdent(doc, row))
-            return;
-        var prevLine = doc.getLine(row);
-        var match = prevLine.match(/^\s+/);
-        var column = prevLine.lastIndexOf(".") + 1;
-        if (!match || !row || !column) return 0;
+            column = match[0].length;
+            const indent = this.$getIndent(doc.getLine(startRange.start.row));
+            doc.replace(new Range(row + 1, 0, row + 1, column), indent);
+        };
 
-        var line = doc.getLine(row + 1);
-        var startRange = this.getMatching(doc, {row: row, column: column});
-        if (!startRange || startRange.start.row == row) return 0;
+        this.getMatching = (session, row, column) => {
+            if (row == undefined)
+                row = session.selection.lead
+            if (typeof row == "object") {
+                column = row.column;
+                row = row.row;
+            }
 
-        column = match[0].length;
-        var indent = this.$getIndent(doc.getLine(startRange.start.row));
-        doc.replace(new Range(row + 1, 0, row + 1, column), indent);
-    };
+            const startToken = session.getTokenAt(row, column);
+            const KW_START = "keyword.start";
+            const KW_END = "keyword.end";
+            let tok;
+            if (!startToken)
+                return;
+            if (startToken.type == KW_START) {
+                var it = new TokenIterator(session, row, column);
+                it.step = it.stepForward;
+            } else if (startToken.type == KW_END) {
+                var it = new TokenIterator(session, row, column);
+                it.step = it.stepBackward;
+            } else
+                return;
 
-    this.getMatching = function(session, row, column) {
-        if (row == undefined)
-            row = session.selection.lead
-        if (typeof row == "object") {
-            column = row.column;
-            row = row.row;
-        }
+            while (tok = it.step()) {
+                if (tok.type == KW_START || tok.type == KW_END)
+                    break;
+            }
+            if (!tok || tok.type == startToken.type)
+                return;
 
-        var startToken = session.getTokenAt(row, column);
-        var KW_START = "keyword.start", KW_END = "keyword.end";
-        var tok;
-        if (!startToken)
-            return;
-        if (startToken.type == KW_START) {
-            var it = new TokenIterator(session, row, column);
-            it.step = it.stepForward;
-        } else if (startToken.type == KW_END) {
-            var it = new TokenIterator(session, row, column);
-            it.step = it.stepBackward;
-        } else
-            return;
+            const col = it.getCurrentTokenColumn();
+            var row = it.getCurrentTokenRow();
+            return new Range(row, col, row, col + tok.value.length);
+        };
+        this.$id = "ace/mode/logiql";
+    }).call(Mode.prototype);
 
-        while (tok = it.step()) {
-            if (tok.type == KW_START || tok.type == KW_END)
-                break;
-        }
-        if (!tok || tok.type == startToken.type)
-            return;
-
-        var col = it.getCurrentTokenColumn();
-        var row = it.getCurrentTokenRow();
-        return new Range(row, col, row, col + tok.value.length);
-    };
-    this.$id = "ace/mode/logiql";
-}).call(Mode.prototype);
-
-exports.Mode = Mode;
+    exports.Mode = Mode;
 });

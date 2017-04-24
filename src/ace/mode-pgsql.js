@@ -1,675 +1,304 @@
-ace.define("ace/mode/doc_comment_highlight_rules",["require","exports","module","ace/lib/oop","ace/mode/text_highlight_rules"], function(require, exports, module) {
-"use strict";
+ace.define("ace/mode/doc_comment_highlight_rules",["require","exports","module","ace/lib/oop","ace/mode/text_highlight_rules"], (require, exports, module) => {
+    const oop = require("../lib/oop");
+    const TextHighlightRules = require("./text_highlight_rules").TextHighlightRules;
 
-var oop = require("../lib/oop");
-var TextHighlightRules = require("./text_highlight_rules").TextHighlightRules;
+    class DocCommentHighlightRules {
+        constructor() {
+            this.$rules = {
+                "start" : [ {
+                    token : "comment.doc.tag",
+                    regex : "@[\\w\\d_]+" // TODO: fix email addresses
+                }, 
+                DocCommentHighlightRules.getTagRule(),
+                {
+                    defaultToken : "comment.doc",
+                    caseInsensitive: true
+                }]
+            };
+        }
 
-var DocCommentHighlightRules = function() {
-    this.$rules = {
-        "start" : [ {
-            token : "comment.doc.tag",
-            regex : "@[\\w\\d_]+" // TODO: fix email addresses
-        }, 
-        DocCommentHighlightRules.getTagRule(),
-        {
-            defaultToken : "comment.doc",
-            caseInsensitive: true
-        }]
-    };
-};
+        static getTagRule(start) {
+            return {
+                token : "comment.doc.tag.storage.type",
+                regex : "\\b(?:TODO|FIXME|XXX|HACK)\\b"
+            };
+        }
 
-oop.inherits(DocCommentHighlightRules, TextHighlightRules);
+        static getStartRule(start) {
+            return {
+                token : "comment.doc", // doc comment
+                regex : "\\/\\*(?=\\*)",
+                next  : start
+            };
+        }
 
-DocCommentHighlightRules.getTagRule = function(start) {
-    return {
-        token : "comment.doc.tag.storage.type",
-        regex : "\\b(?:TODO|FIXME|XXX|HACK)\\b"
-    };
-}
+        static getEndRule(start) {
+            return {
+                token : "comment.doc", // closing comment
+                regex : "\\*\\/",
+                next  : start
+            };
+        }
+    }
 
-DocCommentHighlightRules.getStartRule = function(start) {
-    return {
-        token : "comment.doc", // doc comment
-        regex : "\\/\\*(?=\\*)",
-        next  : start
-    };
-};
-
-DocCommentHighlightRules.getEndRule = function (start) {
-    return {
-        token : "comment.doc", // closing comment
-        regex : "\\*\\/",
-        next  : start
-    };
-};
+    oop.inherits(DocCommentHighlightRules, TextHighlightRules);
 
 
-exports.DocCommentHighlightRules = DocCommentHighlightRules;
-
+    exports.DocCommentHighlightRules = DocCommentHighlightRules;
 });
 
-ace.define("ace/mode/perl_highlight_rules",["require","exports","module","ace/lib/oop","ace/mode/text_highlight_rules"], function(require, exports, module) {
-"use strict";
+ace.define("ace/mode/perl_highlight_rules",["require","exports","module","ace/lib/oop","ace/mode/text_highlight_rules"], (require, exports, module) => {
+    const oop = require("../lib/oop");
+    const TextHighlightRules = require("./text_highlight_rules").TextHighlightRules;
 
-var oop = require("../lib/oop");
-var TextHighlightRules = require("./text_highlight_rules").TextHighlightRules;
+    const PerlHighlightRules = function() {
 
-var PerlHighlightRules = function() {
+        const keywords = (
+            "base|constant|continue|else|elsif|for|foreach|format|goto|if|last|local|my|next|" +
+             "no|package|parent|redo|require|scalar|sub|unless|until|while|use|vars"
+        );
 
-    var keywords = (
-        "base|constant|continue|else|elsif|for|foreach|format|goto|if|last|local|my|next|" +
-         "no|package|parent|redo|require|scalar|sub|unless|until|while|use|vars"
-    );
+        const buildinConstants = ("ARGV|ENV|INC|SIG");
 
-    var buildinConstants = ("ARGV|ENV|INC|SIG");
+        const builtinFunctions = (
+            "getprotobynumber|getprotobyname|getservbyname|gethostbyaddr|" +
+             "gethostbyname|getservbyport|getnetbyaddr|getnetbyname|getsockname|" +
+             "getpeername|setpriority|getprotoent|setprotoent|getpriority|" +
+             "endprotoent|getservent|setservent|endservent|sethostent|socketpair|" +
+             "getsockopt|gethostent|endhostent|setsockopt|setnetent|quotemeta|" +
+             "localtime|prototype|getnetent|endnetent|rewinddir|wantarray|getpwuid|" +
+             "closedir|getlogin|readlink|endgrent|getgrgid|getgrnam|shmwrite|" +
+             "shutdown|readline|endpwent|setgrent|readpipe|formline|truncate|" +
+             "dbmclose|syswrite|setpwent|getpwnam|getgrent|getpwent|ucfirst|sysread|" +
+             "setpgrp|shmread|sysseek|sysopen|telldir|defined|opendir|connect|" +
+             "lcfirst|getppid|binmode|syscall|sprintf|getpgrp|readdir|seekdir|" +
+             "waitpid|reverse|unshift|symlink|dbmopen|semget|msgrcv|rename|listen|" +
+             "chroot|msgsnd|shmctl|accept|unpack|exists|fileno|shmget|system|" +
+             "unlink|printf|gmtime|msgctl|semctl|values|rindex|substr|splice|" +
+             "length|msgget|select|socket|return|caller|delete|alarm|ioctl|index|" +
+             "undef|lstat|times|srand|chown|fcntl|close|write|umask|rmdir|study|" +
+             "sleep|chomp|untie|print|utime|mkdir|atan2|split|crypt|flock|chmod|" +
+             "BEGIN|bless|chdir|semop|shift|reset|link|stat|chop|grep|fork|dump|" +
+             "join|open|tell|pipe|exit|glob|warn|each|bind|sort|pack|eval|push|" +
+             "keys|getc|kill|seek|sqrt|send|wait|rand|tied|read|time|exec|recv|" +
+             "eof|chr|int|ord|exp|pos|pop|sin|log|abs|oct|hex|tie|cos|vec|END|ref|" +
+             "map|die|uc|lc|do"
+        );
 
-    var builtinFunctions = (
-        "getprotobynumber|getprotobyname|getservbyname|gethostbyaddr|" +
-         "gethostbyname|getservbyport|getnetbyaddr|getnetbyname|getsockname|" +
-         "getpeername|setpriority|getprotoent|setprotoent|getpriority|" +
-         "endprotoent|getservent|setservent|endservent|sethostent|socketpair|" +
-         "getsockopt|gethostent|endhostent|setsockopt|setnetent|quotemeta|" +
-         "localtime|prototype|getnetent|endnetent|rewinddir|wantarray|getpwuid|" +
-         "closedir|getlogin|readlink|endgrent|getgrgid|getgrnam|shmwrite|" +
-         "shutdown|readline|endpwent|setgrent|readpipe|formline|truncate|" +
-         "dbmclose|syswrite|setpwent|getpwnam|getgrent|getpwent|ucfirst|sysread|" +
-         "setpgrp|shmread|sysseek|sysopen|telldir|defined|opendir|connect|" +
-         "lcfirst|getppid|binmode|syscall|sprintf|getpgrp|readdir|seekdir|" +
-         "waitpid|reverse|unshift|symlink|dbmopen|semget|msgrcv|rename|listen|" +
-         "chroot|msgsnd|shmctl|accept|unpack|exists|fileno|shmget|system|" +
-         "unlink|printf|gmtime|msgctl|semctl|values|rindex|substr|splice|" +
-         "length|msgget|select|socket|return|caller|delete|alarm|ioctl|index|" +
-         "undef|lstat|times|srand|chown|fcntl|close|write|umask|rmdir|study|" +
-         "sleep|chomp|untie|print|utime|mkdir|atan2|split|crypt|flock|chmod|" +
-         "BEGIN|bless|chdir|semop|shift|reset|link|stat|chop|grep|fork|dump|" +
-         "join|open|tell|pipe|exit|glob|warn|each|bind|sort|pack|eval|push|" +
-         "keys|getc|kill|seek|sqrt|send|wait|rand|tied|read|time|exec|recv|" +
-         "eof|chr|int|ord|exp|pos|pop|sin|log|abs|oct|hex|tie|cos|vec|END|ref|" +
-         "map|die|uc|lc|do"
-    );
+        const keywordMapper = this.createKeywordMapper({
+            "keyword": keywords,
+            "constant.language": buildinConstants,
+            "support.function": builtinFunctions
+        }, "identifier");
 
-    var keywordMapper = this.createKeywordMapper({
-        "keyword": keywords,
-        "constant.language": buildinConstants,
-        "support.function": builtinFunctions
-    }, "identifier");
+        this.$rules = {
+            "start" : [
+                {
+                    token : "comment.doc",
+                    regex : "^=(?:begin|item)\\b",
+                    next : "block_comment"
+                }, {
+                    token : "string.regexp",
+                    regex : "[/](?:(?:\\[(?:\\\\]|[^\\]])+\\])|(?:\\\\/|[^\\]/]))*[/]\\w*\\s*(?=[).,;]|$)"
+                }, {
+                    token : "string", // single line
+                    regex : '["](?:(?:\\\\.)|(?:[^"\\\\]))*?["]'
+                }, {
+                    token : "string", // multi line string start
+                    regex : '["].*\\\\$',
+                    next : "qqstring"
+                }, {
+                    token : "string", // single line
+                    regex : "['](?:(?:\\\\.)|(?:[^'\\\\]))*?[']"
+                }, {
+                    token : "string", // multi line string start
+                    regex : "['].*\\\\$",
+                    next : "qstring"
+                }, {
+                    token : "constant.numeric", // hex
+                    regex : "0x[0-9a-fA-F]+\\b"
+                }, {
+                    token : "constant.numeric", // float
+                    regex : "[+-]?\\d+(?:(?:\\.\\d*)?(?:[eE][+-]?\\d+)?)?\\b"
+                }, {
+                    token : keywordMapper,
+                    regex : "[a-zA-Z_$][a-zA-Z0-9_$]*\\b"
+                }, {
+                    token : "keyword.operator",
+                    regex : "%#|\\$#|\\.\\.\\.|\\|\\|=|>>=|<<=|<=>|&&=|=>|!~|\\^=|&=|\\|=|\\.=|x=|%=|\\/=|\\*=|\\-=|\\+=|=~|\\*\\*|\\-\\-|\\.\\.|\\|\\||&&|\\+\\+|\\->|!=|==|>=|<=|>>|<<|,|=|\\?\\:|\\^|\\||x|%|\\/|\\*|<|&|\\\\|~|!|>|\\.|\\-|\\+|\\-C|\\-b|\\-S|\\-u|\\-t|\\-p|\\-l|\\-d|\\-f|\\-g|\\-s|\\-z|\\-k|\\-e|\\-O|\\-T|\\-B|\\-M|\\-A|\\-X|\\-W|\\-c|\\-R|\\-o|\\-x|\\-w|\\-r|\\b(?:and|cmp|eq|ge|gt|le|lt|ne|not|or|xor)"
+                }, {
+                    token : "comment",
+                    regex : "#.*$"
+                }, {
+                    token : "lparen",
+                    regex : "[[({]"
+                }, {
+                    token : "rparen",
+                    regex : "[\\])}]"
+                }, {
+                    token : "text",
+                    regex : "\\s+"
+                }
+            ],
+            "qqstring" : [
+                {
+                    token : "string",
+                    regex : '(?:(?:\\\\.)|(?:[^"\\\\]))*?"',
+                    next : "start"
+                }, {
+                    token : "string",
+                    regex : '.+'
+                }
+            ],
+            "qstring" : [
+                {
+                    token : "string",
+                    regex : "(?:(?:\\\\.)|(?:[^'\\\\]))*?'",
+                    next : "start"
+                }, {
+                    token : "string",
+                    regex : '.+'
+                }
+            ],
+            "block_comment": [
+                {
+                    token: "comment.doc", 
+                    regex: "^=cut\\b",
+                    next: "start"
+                },
+                {
+                    defaultToken: "comment.doc"
+                }
+            ]
+        };
+    };
 
-    this.$rules = {
-        "start" : [
-            {
-                token : "comment.doc",
-                regex : "^=(?:begin|item)\\b",
-                next : "block_comment"
+    oop.inherits(PerlHighlightRules, TextHighlightRules);
+
+    exports.PerlHighlightRules = PerlHighlightRules;
+});
+
+ace.define("ace/mode/python_highlight_rules",["require","exports","module","ace/lib/oop","ace/mode/text_highlight_rules"], (require, exports, module) => {
+    const oop = require("../lib/oop");
+    const TextHighlightRules = require("./text_highlight_rules").TextHighlightRules;
+
+    const PythonHighlightRules = function() {
+
+        const keywords = (
+            "and|as|assert|break|class|continue|def|del|elif|else|except|exec|" +
+            "finally|for|from|global|if|import|in|is|lambda|not|or|pass|print|" +
+            "raise|return|try|while|with|yield"
+        );
+
+        const builtinConstants = (
+            "True|False|None|NotImplemented|Ellipsis|__debug__"
+        );
+
+        const builtinFunctions = (
+            "abs|divmod|input|open|staticmethod|all|enumerate|int|ord|str|any|" +
+            "eval|isinstance|pow|sum|basestring|execfile|issubclass|print|super|" +
+            "binfile|iter|property|tuple|bool|filter|len|range|type|bytearray|" +
+            "float|list|raw_input|unichr|callable|format|locals|reduce|unicode|" +
+            "chr|frozenset|long|reload|vars|classmethod|getattr|map|repr|xrange|" +
+            "cmp|globals|max|reversed|zip|compile|hasattr|memoryview|round|" +
+            "__import__|complex|hash|min|set|apply|delattr|help|next|setattr|" +
+            "buffer|dict|hex|object|slice|coerce|dir|id|oct|sorted|intern"
+        );
+        const keywordMapper = this.createKeywordMapper({
+            "invalid.deprecated": "debugger",
+            "support.function": builtinFunctions,
+            "constant.language": builtinConstants,
+            "keyword": keywords
+        }, "identifier");
+
+        const strPre = "(?:r|u|ur|R|U|UR|Ur|uR)?";
+
+        const decimalInteger = "(?:(?:[1-9]\\d*)|(?:0))";
+        const octInteger = "(?:0[oO]?[0-7]+)";
+        const hexInteger = "(?:0[xX][\\dA-Fa-f]+)";
+        const binInteger = "(?:0[bB][01]+)";
+        const integer = `(?:${decimalInteger}|${octInteger}|${hexInteger}|${binInteger})`;
+
+        const exponent = "(?:[eE][+-]?\\d+)";
+        const fraction = "(?:\\.\\d+)";
+        const intPart = "(?:\\d+)";
+        const pointFloat = `(?:(?:${intPart}?${fraction})|(?:${intPart}\\.))`;
+        const exponentFloat = `(?:(?:${pointFloat}|${intPart})${exponent})`;
+        const floatNumber = `(?:${exponentFloat}|${pointFloat})`;
+
+        const stringEscape =  "\\\\(x[0-9A-Fa-f]{2}|[0-7]{3}|[\\\\abfnrtv'\"]|U[0-9A-Fa-f]{8}|u[0-9A-Fa-f]{4})";
+
+        this.$rules = {
+            "start" : [ {
+                token : "comment",
+                regex : "#.*$"
             }, {
-                token : "string.regexp",
-                regex : "[/](?:(?:\\[(?:\\\\]|[^\\]])+\\])|(?:\\\\/|[^\\]/]))*[/]\\w*\\s*(?=[).,;]|$)"
+                token : "string",           // multi line """ string start
+                regex : `${strPre}"{3}`,
+                next : "qqstring3"
             }, {
-                token : "string", // single line
-                regex : '["](?:(?:\\\\.)|(?:[^"\\\\]))*?["]'
-            }, {
-                token : "string", // multi line string start
-                regex : '["].*\\\\$',
+                token : "string",           // " string
+                regex : `${strPre}"(?=.)`,
                 next : "qqstring"
             }, {
-                token : "string", // single line
-                regex : "['](?:(?:\\\\.)|(?:[^'\\\\]))*?[']"
+                token : "string",           // multi line ''' string start
+                regex : `${strPre}'{3}`,
+                next : "qstring3"
             }, {
-                token : "string", // multi line string start
-                regex : "['].*\\\\$",
+                token : "string",           // ' string
+                regex : `${strPre}'(?=.)`,
                 next : "qstring"
             }, {
-                token : "constant.numeric", // hex
-                regex : "0x[0-9a-fA-F]+\\b"
+                token : "constant.numeric", // imaginary
+                regex : `(?:${floatNumber}|\\d+)[jJ]\\b`
             }, {
                 token : "constant.numeric", // float
-                regex : "[+-]?\\d+(?:(?:\\.\\d*)?(?:[eE][+-]?\\d+)?)?\\b"
+                regex : floatNumber
+            }, {
+                token : "constant.numeric", // long integer
+                regex : `${integer}[lL]\\b`
+            }, {
+                token : "constant.numeric", // integer
+                regex : `${integer}\\b`
             }, {
                 token : keywordMapper,
                 regex : "[a-zA-Z_$][a-zA-Z0-9_$]*\\b"
             }, {
                 token : "keyword.operator",
-                regex : "%#|\\$#|\\.\\.\\.|\\|\\|=|>>=|<<=|<=>|&&=|=>|!~|\\^=|&=|\\|=|\\.=|x=|%=|\\/=|\\*=|\\-=|\\+=|=~|\\*\\*|\\-\\-|\\.\\.|\\|\\||&&|\\+\\+|\\->|!=|==|>=|<=|>>|<<|,|=|\\?\\:|\\^|\\||x|%|\\/|\\*|<|&|\\\\|~|!|>|\\.|\\-|\\+|\\-C|\\-b|\\-S|\\-u|\\-t|\\-p|\\-l|\\-d|\\-f|\\-g|\\-s|\\-z|\\-k|\\-e|\\-O|\\-T|\\-B|\\-M|\\-A|\\-X|\\-W|\\-c|\\-R|\\-o|\\-x|\\-w|\\-r|\\b(?:and|cmp|eq|ge|gt|le|lt|ne|not|or|xor)"
-            }, {
-                token : "comment",
-                regex : "#.*$"
-            }, {
-                token : "lparen",
-                regex : "[[({]"
-            }, {
-                token : "rparen",
-                regex : "[\\])}]"
-            }, {
-                token : "text",
-                regex : "\\s+"
-            }
-        ],
-        "qqstring" : [
-            {
-                token : "string",
-                regex : '(?:(?:\\\\.)|(?:[^"\\\\]))*?"',
-                next : "start"
-            }, {
-                token : "string",
-                regex : '.+'
-            }
-        ],
-        "qstring" : [
-            {
-                token : "string",
-                regex : "(?:(?:\\\\.)|(?:[^'\\\\]))*?'",
-                next : "start"
-            }, {
-                token : "string",
-                regex : '.+'
-            }
-        ],
-        "block_comment": [
-            {
-                token: "comment.doc", 
-                regex: "^=cut\\b",
-                next: "start"
-            },
-            {
-                defaultToken: "comment.doc"
-            }
-        ]
-    };
-};
-
-oop.inherits(PerlHighlightRules, TextHighlightRules);
-
-exports.PerlHighlightRules = PerlHighlightRules;
-});
-
-ace.define("ace/mode/python_highlight_rules",["require","exports","module","ace/lib/oop","ace/mode/text_highlight_rules"], function(require, exports, module) {
-"use strict";
-
-var oop = require("../lib/oop");
-var TextHighlightRules = require("./text_highlight_rules").TextHighlightRules;
-
-var PythonHighlightRules = function() {
-
-    var keywords = (
-        "and|as|assert|break|class|continue|def|del|elif|else|except|exec|" +
-        "finally|for|from|global|if|import|in|is|lambda|not|or|pass|print|" +
-        "raise|return|try|while|with|yield"
-    );
-
-    var builtinConstants = (
-        "True|False|None|NotImplemented|Ellipsis|__debug__"
-    );
-
-    var builtinFunctions = (
-        "abs|divmod|input|open|staticmethod|all|enumerate|int|ord|str|any|" +
-        "eval|isinstance|pow|sum|basestring|execfile|issubclass|print|super|" +
-        "binfile|iter|property|tuple|bool|filter|len|range|type|bytearray|" +
-        "float|list|raw_input|unichr|callable|format|locals|reduce|unicode|" +
-        "chr|frozenset|long|reload|vars|classmethod|getattr|map|repr|xrange|" +
-        "cmp|globals|max|reversed|zip|compile|hasattr|memoryview|round|" +
-        "__import__|complex|hash|min|set|apply|delattr|help|next|setattr|" +
-        "buffer|dict|hex|object|slice|coerce|dir|id|oct|sorted|intern"
-    );
-    var keywordMapper = this.createKeywordMapper({
-        "invalid.deprecated": "debugger",
-        "support.function": builtinFunctions,
-        "constant.language": builtinConstants,
-        "keyword": keywords
-    }, "identifier");
-
-    var strPre = "(?:r|u|ur|R|U|UR|Ur|uR)?";
-
-    var decimalInteger = "(?:(?:[1-9]\\d*)|(?:0))";
-    var octInteger = "(?:0[oO]?[0-7]+)";
-    var hexInteger = "(?:0[xX][\\dA-Fa-f]+)";
-    var binInteger = "(?:0[bB][01]+)";
-    var integer = "(?:" + decimalInteger + "|" + octInteger + "|" + hexInteger + "|" + binInteger + ")";
-
-    var exponent = "(?:[eE][+-]?\\d+)";
-    var fraction = "(?:\\.\\d+)";
-    var intPart = "(?:\\d+)";
-    var pointFloat = "(?:(?:" + intPart + "?" + fraction + ")|(?:" + intPart + "\\.))";
-    var exponentFloat = "(?:(?:" + pointFloat + "|" +  intPart + ")" + exponent + ")";
-    var floatNumber = "(?:" + exponentFloat + "|" + pointFloat + ")";
-
-    var stringEscape =  "\\\\(x[0-9A-Fa-f]{2}|[0-7]{3}|[\\\\abfnrtv'\"]|U[0-9A-Fa-f]{8}|u[0-9A-Fa-f]{4})";
-
-    this.$rules = {
-        "start" : [ {
-            token : "comment",
-            regex : "#.*$"
-        }, {
-            token : "string",           // multi line """ string start
-            regex : strPre + '"{3}',
-            next : "qqstring3"
-        }, {
-            token : "string",           // " string
-            regex : strPre + '"(?=.)',
-            next : "qqstring"
-        }, {
-            token : "string",           // multi line ''' string start
-            regex : strPre + "'{3}",
-            next : "qstring3"
-        }, {
-            token : "string",           // ' string
-            regex : strPre + "'(?=.)",
-            next : "qstring"
-        }, {
-            token : "constant.numeric", // imaginary
-            regex : "(?:" + floatNumber + "|\\d+)[jJ]\\b"
-        }, {
-            token : "constant.numeric", // float
-            regex : floatNumber
-        }, {
-            token : "constant.numeric", // long integer
-            regex : integer + "[lL]\\b"
-        }, {
-            token : "constant.numeric", // integer
-            regex : integer + "\\b"
-        }, {
-            token : keywordMapper,
-            regex : "[a-zA-Z_$][a-zA-Z0-9_$]*\\b"
-        }, {
-            token : "keyword.operator",
-            regex : "\\+|\\-|\\*|\\*\\*|\\/|\\/\\/|%|<<|>>|&|\\||\\^|~|<|>|<=|=>|==|!=|<>|="
-        }, {
-            token : "paren.lparen",
-            regex : "[\\[\\(\\{]"
-        }, {
-            token : "paren.rparen",
-            regex : "[\\]\\)\\}]"
-        }, {
-            token : "text",
-            regex : "\\s+"
-        } ],
-        "qqstring3" : [ {
-            token : "constant.language.escape",
-            regex : stringEscape
-        }, {
-            token : "string", // multi line """ string end
-            regex : '"{3}',
-            next : "start"
-        }, {
-            defaultToken : "string"
-        } ],
-        "qstring3" : [ {
-            token : "constant.language.escape",
-            regex : stringEscape
-        }, {
-            token : "string",  // multi line ''' string end
-            regex : "'{3}",
-            next : "start"
-        }, {
-            defaultToken : "string"
-        } ],
-        "qqstring" : [{
-            token : "constant.language.escape",
-            regex : stringEscape
-        }, {
-            token : "string",
-            regex : "\\\\$",
-            next  : "qqstring"
-        }, {
-            token : "string",
-            regex : '"|$',
-            next  : "start"
-        }, {
-            defaultToken: "string"
-        }],
-        "qstring" : [{
-            token : "constant.language.escape",
-            regex : stringEscape
-        }, {
-            token : "string",
-            regex : "\\\\$",
-            next  : "qstring"
-        }, {
-            token : "string",
-            regex : "'|$",
-            next  : "start"
-        }, {
-            defaultToken: "string"
-        }]
-    };
-};
-
-oop.inherits(PythonHighlightRules, TextHighlightRules);
-
-exports.PythonHighlightRules = PythonHighlightRules;
-});
-
-ace.define("ace/mode/json_highlight_rules",["require","exports","module","ace/lib/oop","ace/mode/text_highlight_rules"], function(require, exports, module) {
-"use strict";
-
-var oop = require("../lib/oop");
-var TextHighlightRules = require("./text_highlight_rules").TextHighlightRules;
-
-var JsonHighlightRules = function() {
-    this.$rules = {
-        "start" : [
-            {
-                token : "variable", // single line
-                regex : '["](?:(?:\\\\.)|(?:[^"\\\\]))*?["]\\s*(?=:)'
-            }, {
-                token : "string", // single line
-                regex : '"',
-                next  : "string"
-            }, {
-                token : "constant.numeric", // hex
-                regex : "0[xX][0-9a-fA-F]+\\b"
-            }, {
-                token : "constant.numeric", // float
-                regex : "[+-]?\\d+(?:(?:\\.\\d*)?(?:[eE][+-]?\\d+)?)?\\b"
-            }, {
-                token : "constant.language.boolean",
-                regex : "(?:true|false)\\b"
-            }, {
-                token : "invalid.illegal", // single quoted strings are not allowed
-                regex : "['](?:(?:\\\\.)|(?:[^'\\\\]))*?[']"
-            }, {
-                token : "invalid.illegal", // comments are not allowed
-                regex : "\\/\\/.*$"
+                regex : "\\+|\\-|\\*|\\*\\*|\\/|\\/\\/|%|<<|>>|&|\\||\\^|~|<|>|<=|=>|==|!=|<>|="
             }, {
                 token : "paren.lparen",
-                regex : "[[({]"
+                regex : "[\\[\\(\\{]"
             }, {
                 token : "paren.rparen",
-                regex : "[\\])}]"
+                regex : "[\\]\\)\\}]"
             }, {
                 token : "text",
                 regex : "\\s+"
-            }
-        ],
-        "string" : [
-            {
+            } ],
+            "qqstring3" : [ {
                 token : "constant.language.escape",
-                regex : /\\(?:x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|["\\\/bfnrt])/
+                regex : stringEscape
             }, {
-                token : "string",
-                regex : '[^"\\\\]+'
-            }, {
-                token : "string",
-                regex : '"',
-                next  : "start"
-            }, {
-                token : "string",
-                regex : "",
-                next  : "start"
-            }
-        ]
-    };
-    
-};
-
-oop.inherits(JsonHighlightRules, TextHighlightRules);
-
-exports.JsonHighlightRules = JsonHighlightRules;
-});
-
-ace.define("ace/mode/javascript_highlight_rules",["require","exports","module","ace/lib/oop","ace/mode/doc_comment_highlight_rules","ace/mode/text_highlight_rules"], function(require, exports, module) {
-"use strict";
-
-var oop = require("../lib/oop");
-var DocCommentHighlightRules = require("./doc_comment_highlight_rules").DocCommentHighlightRules;
-var TextHighlightRules = require("./text_highlight_rules").TextHighlightRules;
-var identifierRe = "[a-zA-Z\\$_\u00a1-\uffff][a-zA-Z\\d\\$_\u00a1-\uffff]*";
-
-var JavaScriptHighlightRules = function(options) {
-    var keywordMapper = this.createKeywordMapper({
-        "variable.language":
-            "Array|Boolean|Date|Function|Iterator|Number|Object|RegExp|String|Proxy|"  + // Constructors
-            "Namespace|QName|XML|XMLList|"                                             + // E4X
-            "ArrayBuffer|Float32Array|Float64Array|Int16Array|Int32Array|Int8Array|"   +
-            "Uint16Array|Uint32Array|Uint8Array|Uint8ClampedArray|"                    +
-            "Error|EvalError|InternalError|RangeError|ReferenceError|StopIteration|"   + // Errors
-            "SyntaxError|TypeError|URIError|"                                          +
-            "decodeURI|decodeURIComponent|encodeURI|encodeURIComponent|eval|isFinite|" + // Non-constructor functions
-            "isNaN|parseFloat|parseInt|"                                               +
-            "JSON|Math|"                                                               + // Other
-            "this|arguments|prototype|window|document"                                 , // Pseudo
-        "keyword":
-            "const|yield|import|get|set|async|await|" +
-            "break|case|catch|continue|default|delete|do|else|finally|for|function|" +
-            "if|in|instanceof|new|return|switch|throw|try|typeof|let|var|while|with|debugger|" +
-            "__parent__|__count__|escape|unescape|with|__proto__|" +
-            "class|enum|extends|super|export|implements|private|public|interface|package|protected|static",
-        "storage.type":
-            "const|let|var|function",
-        "constant.language":
-            "null|Infinity|NaN|undefined",
-        "support.function":
-            "alert",
-        "constant.language.boolean": "true|false"
-    }, "identifier");
-    var kwBeforeRe = "case|do|else|finally|in|instanceof|return|throw|try|typeof|yield|void";
-
-    var escapedRe = "\\\\(?:x[0-9a-fA-F]{2}|" + // hex
-        "u[0-9a-fA-F]{4}|" + // unicode
-        "u{[0-9a-fA-F]{1,6}}|" + // es6 unicode
-        "[0-2][0-7]{0,2}|" + // oct
-        "3[0-7][0-7]?|" + // oct
-        "[4-7][0-7]?|" + //oct
-        ".)";
-
-    this.$rules = {
-        "no_regex" : [
-            DocCommentHighlightRules.getStartRule("doc-start"),
-            comments("no_regex"),
-            {
-                token : "string",
-                regex : "'(?=.)",
-                next  : "qstring"
-            }, {
-                token : "string",
-                regex : '"(?=.)',
-                next  : "qqstring"
-            }, {
-                token : "constant.numeric", // hex
-                regex : /0(?:[xX][0-9a-fA-F]+|[bB][01]+)\b/
-            }, {
-                token : "constant.numeric", // float
-                regex : /[+-]?\d[\d_]*(?:(?:\.\d*)?(?:[eE][+-]?\d+)?)?\b/
-            }, {
-                token : [
-                    "storage.type", "punctuation.operator", "support.function",
-                    "punctuation.operator", "entity.name.function", "text","keyword.operator"
-                ],
-                regex : "(" + identifierRe + ")(\\.)(prototype)(\\.)(" + identifierRe +")(\\s*)(=)",
-                next: "function_arguments"
-            }, {
-                token : [
-                    "storage.type", "punctuation.operator", "entity.name.function", "text",
-                    "keyword.operator", "text", "storage.type", "text", "paren.lparen"
-                ],
-                regex : "(" + identifierRe + ")(\\.)(" + identifierRe +")(\\s*)(=)(\\s*)(function)(\\s*)(\\()",
-                next: "function_arguments"
-            }, {
-                token : [
-                    "entity.name.function", "text", "keyword.operator", "text", "storage.type",
-                    "text", "paren.lparen"
-                ],
-                regex : "(" + identifierRe +")(\\s*)(=)(\\s*)(function)(\\s*)(\\()",
-                next: "function_arguments"
-            }, {
-                token : [
-                    "storage.type", "punctuation.operator", "entity.name.function", "text",
-                    "keyword.operator", "text",
-                    "storage.type", "text", "entity.name.function", "text", "paren.lparen"
-                ],
-                regex : "(" + identifierRe + ")(\\.)(" + identifierRe +")(\\s*)(=)(\\s*)(function)(\\s+)(\\w+)(\\s*)(\\()",
-                next: "function_arguments"
-            }, {
-                token : [
-                    "storage.type", "text", "entity.name.function", "text", "paren.lparen"
-                ],
-                regex : "(function)(\\s+)(" + identifierRe + ")(\\s*)(\\()",
-                next: "function_arguments"
-            }, {
-                token : [
-                    "entity.name.function", "text", "punctuation.operator",
-                    "text", "storage.type", "text", "paren.lparen"
-                ],
-                regex : "(" + identifierRe + ")(\\s*)(:)(\\s*)(function)(\\s*)(\\()",
-                next: "function_arguments"
-            }, {
-                token : [
-                    "text", "text", "storage.type", "text", "paren.lparen"
-                ],
-                regex : "(:)(\\s*)(function)(\\s*)(\\()",
-                next: "function_arguments"
-            }, {
-                token : "keyword",
-                regex : "(?:" + kwBeforeRe + ")\\b",
+                token : "string", // multi line """ string end
+                regex : '"{3}',
                 next : "start"
             }, {
-                token : ["support.constant"],
-                regex : /that\b/
+                defaultToken : "string"
+            } ],
+            "qstring3" : [ {
+                token : "constant.language.escape",
+                regex : stringEscape
             }, {
-                token : ["storage.type", "punctuation.operator", "support.function.firebug"],
-                regex : /(console)(\.)(warn|info|log|error|time|trace|timeEnd|assert)\b/
-            }, {
-                token : keywordMapper,
-                regex : identifierRe
-            }, {
-                token : "punctuation.operator",
-                regex : /[.](?![.])/,
-                next  : "property"
-            }, {
-                token : "keyword.operator",
-                regex : /--|\+\+|\.{3}|===|==|=|!=|!==|<+=?|>+=?|!|&&|\|\||\?:|[!$%&*+\-~\/^]=?/,
-                next  : "start"
-            }, {
-                token : "punctuation.operator",
-                regex : /[?:,;.]/,
-                next  : "start"
-            }, {
-                token : "paren.lparen",
-                regex : /[\[({]/,
-                next  : "start"
-            }, {
-                token : "paren.rparen",
-                regex : /[\])}]/
-            }, {
-                token: "comment",
-                regex: /^#!.*$/
-            }
-        ],
-        property: [{
-                token : "text",
-                regex : "\\s+"
-            }, {
-                token : [
-                    "storage.type", "punctuation.operator", "entity.name.function", "text",
-                    "keyword.operator", "text",
-                    "storage.type", "text", "entity.name.function", "text", "paren.lparen"
-                ],
-                regex : "(" + identifierRe + ")(\\.)(" + identifierRe +")(\\s*)(=)(\\s*)(function)(?:(\\s+)(\\w+))?(\\s*)(\\()",
-                next: "function_arguments"
-            }, {
-                token : "punctuation.operator",
-                regex : /[.](?![.])/
-            }, {
-                token : "support.function",
-                regex : /(s(?:h(?:ift|ow(?:Mod(?:elessDialog|alDialog)|Help))|croll(?:X|By(?:Pages|Lines)?|Y|To)?|t(?:op|rike)|i(?:n|zeToContent|debar|gnText)|ort|u(?:p|b(?:str(?:ing)?)?)|pli(?:ce|t)|e(?:nd|t(?:Re(?:sizable|questHeader)|M(?:i(?:nutes|lliseconds)|onth)|Seconds|Ho(?:tKeys|urs)|Year|Cursor|Time(?:out)?|Interval|ZOptions|Date|UTC(?:M(?:i(?:nutes|lliseconds)|onth)|Seconds|Hours|Date|FullYear)|FullYear|Active)|arch)|qrt|lice|avePreferences|mall)|h(?:ome|andleEvent)|navigate|c(?:har(?:CodeAt|At)|o(?:s|n(?:cat|textual|firm)|mpile)|eil|lear(?:Timeout|Interval)?|a(?:ptureEvents|ll)|reate(?:StyleSheet|Popup|EventObject))|t(?:o(?:GMTString|S(?:tring|ource)|U(?:TCString|pperCase)|Lo(?:caleString|werCase))|est|a(?:n|int(?:Enabled)?))|i(?:s(?:NaN|Finite)|ndexOf|talics)|d(?:isableExternalCapture|ump|etachEvent)|u(?:n(?:shift|taint|escape|watch)|pdateCommands)|j(?:oin|avaEnabled)|p(?:o(?:p|w)|ush|lugins.refresh|a(?:ddings|rse(?:Int|Float)?)|r(?:int|ompt|eference))|e(?:scape|nableExternalCapture|val|lementFromPoint|x(?:p|ec(?:Script|Command)?))|valueOf|UTC|queryCommand(?:State|Indeterm|Enabled|Value)|f(?:i(?:nd|le(?:ModifiedDate|Size|CreatedDate|UpdatedDate)|xed)|o(?:nt(?:size|color)|rward)|loor|romCharCode)|watch|l(?:ink|o(?:ad|g)|astIndexOf)|a(?:sin|nchor|cos|t(?:tachEvent|ob|an(?:2)?)|pply|lert|b(?:s|ort))|r(?:ou(?:nd|teEvents)|e(?:size(?:By|To)|calc|turnValue|place|verse|l(?:oad|ease(?:Capture|Events)))|andom)|g(?:o|et(?:ResponseHeader|M(?:i(?:nutes|lliseconds)|onth)|Se(?:conds|lection)|Hours|Year|Time(?:zoneOffset)?|Da(?:y|te)|UTC(?:M(?:i(?:nutes|lliseconds)|onth)|Seconds|Hours|Da(?:y|te)|FullYear)|FullYear|A(?:ttention|llResponseHeaders)))|m(?:in|ove(?:B(?:y|elow)|To(?:Absolute)?|Above)|ergeAttributes|a(?:tch|rgins|x))|b(?:toa|ig|o(?:ld|rderWidths)|link|ack))\b(?=\()/
-            }, {
-                token : "support.function.dom",
-                regex : /(s(?:ub(?:stringData|mit)|plitText|e(?:t(?:NamedItem|Attribute(?:Node)?)|lect))|has(?:ChildNodes|Feature)|namedItem|c(?:l(?:ick|o(?:se|neNode))|reate(?:C(?:omment|DATASection|aption)|T(?:Head|extNode|Foot)|DocumentFragment|ProcessingInstruction|E(?:ntityReference|lement)|Attribute))|tabIndex|i(?:nsert(?:Row|Before|Cell|Data)|tem)|open|delete(?:Row|C(?:ell|aption)|T(?:Head|Foot)|Data)|focus|write(?:ln)?|a(?:dd|ppend(?:Child|Data))|re(?:set|place(?:Child|Data)|move(?:NamedItem|Child|Attribute(?:Node)?)?)|get(?:NamedItem|Element(?:sBy(?:Name|TagName|ClassName)|ById)|Attribute(?:Node)?)|blur)\b(?=\()/
-            }, {
-                token :  "support.constant",
-                regex : /(s(?:ystemLanguage|cr(?:ipts|ollbars|een(?:X|Y|Top|Left))|t(?:yle(?:Sheets)?|atus(?:Text|bar)?)|ibling(?:Below|Above)|ource|uffixes|e(?:curity(?:Policy)?|l(?:ection|f)))|h(?:istory|ost(?:name)?|as(?:h|Focus))|y|X(?:MLDocument|SLDocument)|n(?:ext|ame(?:space(?:s|URI)|Prop))|M(?:IN_VALUE|AX_VALUE)|c(?:haracterSet|o(?:n(?:structor|trollers)|okieEnabled|lorDepth|mp(?:onents|lete))|urrent|puClass|l(?:i(?:p(?:boardData)?|entInformation)|osed|asses)|alle(?:e|r)|rypto)|t(?:o(?:olbar|p)|ext(?:Transform|Indent|Decoration|Align)|ags)|SQRT(?:1_2|2)|i(?:n(?:ner(?:Height|Width)|put)|ds|gnoreCase)|zIndex|o(?:scpu|n(?:readystatechange|Line)|uter(?:Height|Width)|p(?:sProfile|ener)|ffscreenBuffering)|NEGATIVE_INFINITY|d(?:i(?:splay|alog(?:Height|Top|Width|Left|Arguments)|rectories)|e(?:scription|fault(?:Status|Ch(?:ecked|arset)|View)))|u(?:ser(?:Profile|Language|Agent)|n(?:iqueID|defined)|pdateInterval)|_content|p(?:ixelDepth|ort|ersonalbar|kcs11|l(?:ugins|atform)|a(?:thname|dding(?:Right|Bottom|Top|Left)|rent(?:Window|Layer)?|ge(?:X(?:Offset)?|Y(?:Offset)?))|r(?:o(?:to(?:col|type)|duct(?:Sub)?|mpter)|e(?:vious|fix)))|e(?:n(?:coding|abledPlugin)|x(?:ternal|pando)|mbeds)|v(?:isibility|endor(?:Sub)?|Linkcolor)|URLUnencoded|P(?:I|OSITIVE_INFINITY)|f(?:ilename|o(?:nt(?:Size|Family|Weight)|rmName)|rame(?:s|Element)|gColor)|E|whiteSpace|l(?:i(?:stStyleType|n(?:eHeight|kColor))|o(?:ca(?:tion(?:bar)?|lName)|wsrc)|e(?:ngth|ft(?:Context)?)|a(?:st(?:M(?:odified|atch)|Index|Paren)|yer(?:s|X)|nguage))|a(?:pp(?:MinorVersion|Name|Co(?:deName|re)|Version)|vail(?:Height|Top|Width|Left)|ll|r(?:ity|guments)|Linkcolor|bove)|r(?:ight(?:Context)?|e(?:sponse(?:XML|Text)|adyState))|global|x|m(?:imeTypes|ultiline|enubar|argin(?:Right|Bottom|Top|Left))|L(?:N(?:10|2)|OG(?:10E|2E))|b(?:o(?:ttom|rder(?:Width|RightWidth|BottomWidth|Style|Color|TopWidth|LeftWidth))|ufferDepth|elow|ackground(?:Color|Image)))\b/
-            }, {
-                token : "identifier",
-                regex : identifierRe
-            }, {
-                regex: "",
-                token: "empty",
-                next: "no_regex"
-            }
-        ],
-        "start": [
-            DocCommentHighlightRules.getStartRule("doc-start"),
-            comments("start"),
-            {
-                token: "string.regexp",
-                regex: "\\/",
-                next: "regex"
-            }, {
-                token : "text",
-                regex : "\\s+|^$",
+                token : "string",  // multi line ''' string end
+                regex : "'{3}",
                 next : "start"
             }, {
-                token: "empty",
-                regex: "",
-                next: "no_regex"
-            }
-        ],
-        "regex": [
-            {
-                token: "regexp.keyword.operator",
-                regex: "\\\\(?:u[\\da-fA-F]{4}|x[\\da-fA-F]{2}|.)"
-            }, {
-                token: "string.regexp",
-                regex: "/[sxngimy]*",
-                next: "no_regex"
-            }, {
-                token : "invalid",
-                regex: /\{\d+\b,?\d*\}[+*]|[+*$^?][+*]|[$^][?]|\?{3,}/
-            }, {
+                defaultToken : "string"
+            } ],
+            "qqstring" : [{
                 token : "constant.language.escape",
-                regex: /\(\?[:=!]|\)|\{\d+\b,?\d*\}|[+*]\?|[()$^+*?.]/
-            }, {
-                token : "constant.language.delimiter",
-                regex: /\|/
-            }, {
-                token: "constant.language.escape",
-                regex: /\[\^?/,
-                next: "regex_character_class"
-            }, {
-                token: "empty",
-                regex: "$",
-                next: "no_regex"
-            }, {
-                defaultToken: "string.regexp"
-            }
-        ],
-        "regex_character_class": [
-            {
-                token: "regexp.charclass.keyword.operator",
-                regex: "\\\\(?:u[\\da-fA-F]{4}|x[\\da-fA-F]{2}|.)"
-            }, {
-                token: "constant.language.escape",
-                regex: "]",
-                next: "regex"
-            }, {
-                token: "constant.language.escape",
-                regex: "-"
-            }, {
-                token: "empty",
-                regex: "$",
-                next: "no_regex"
-            }, {
-                defaultToken: "string.regexp.charachterclass"
-            }
-        ],
-        "function_arguments": [
-            {
-                token: "variable.parameter",
-                regex: identifierRe
-            }, {
-                token: "punctuation.operator",
-                regex: "[, ]+"
-            }, {
-                token: "punctuation.operator",
-                regex: "$"
-            }, {
-                token: "empty",
-                regex: "",
-                next: "no_regex"
-            }
-        ],
-        "qqstring" : [
-            {
-                token : "constant.language.escape",
-                regex : escapedRe
+                regex : stringEscape
             }, {
                 token : "string",
                 regex : "\\\\$",
@@ -677,15 +306,13 @@ var JavaScriptHighlightRules = function(options) {
             }, {
                 token : "string",
                 regex : '"|$',
-                next  : "no_regex"
+                next  : "start"
             }, {
                 defaultToken: "string"
-            }
-        ],
-        "qstring" : [
-            {
+            }],
+            "qstring" : [{
                 token : "constant.language.escape",
-                regex : escapedRe
+                regex : stringEscape
             }, {
                 token : "string",
                 regex : "\\\\$",
@@ -693,198 +320,562 @@ var JavaScriptHighlightRules = function(options) {
             }, {
                 token : "string",
                 regex : "'|$",
-                next  : "no_regex"
+                next  : "start"
             }, {
                 defaultToken: "string"
-            }
-        ]
-    };
-    
-    
-    if (!options || !options.noES6) {
-        this.$rules.no_regex.unshift({
-            regex: "[{}]", onMatch: function(val, state, stack) {
-                this.next = val == "{" ? this.nextState : "";
-                if (val == "{" && stack.length) {
-                    stack.unshift("start", state);
-                }
-                else if (val == "}" && stack.length) {
-                    stack.shift();
-                    this.next = stack.shift();
-                    if (this.next.indexOf("string") != -1 || this.next.indexOf("jsx") != -1)
-                        return "paren.quasi.end";
-                }
-                return val == "{" ? "paren.lparen" : "paren.rparen";
-            },
-            nextState: "start"
-        }, {
-            token : "string.quasi.start",
-            regex : /`/,
-            push  : [{
-                token : "constant.language.escape",
-                regex : escapedRe
-            }, {
-                token : "paren.quasi.start",
-                regex : /\${/,
-                push  : "start"
-            }, {
-                token : "string.quasi.end",
-                regex : /`/,
-                next  : "pop"
-            }, {
-                defaultToken: "string.quasi"
             }]
-        });
-        
-        if (!options || options.jsx != false)
-            JSX.call(this);
-    }
-    
-    this.embedRules(DocCommentHighlightRules, "doc-",
-        [ DocCommentHighlightRules.getEndRule("no_regex") ]);
-    
-    this.normalizeRules();
-};
-
-oop.inherits(JavaScriptHighlightRules, TextHighlightRules);
-
-function JSX() {
-    var tagRegex = identifierRe.replace("\\d", "\\d\\-");
-    var jsxTag = {
-        onMatch : function(val, state, stack) {
-            var offset = val.charAt(1) == "/" ? 2 : 1;
-            if (offset == 1) {
-                if (state != this.nextState)
-                    stack.unshift(this.next, this.nextState, 0);
-                else
-                    stack.unshift(this.next);
-                stack[2]++;
-            } else if (offset == 2) {
-                if (state == this.nextState) {
-                    stack[1]--;
-                    if (!stack[1] || stack[1] < 0) {
-                        stack.shift();
-                        stack.shift();
-                    }
-                }
-            }
-            return [{
-                type: "meta.tag.punctuation." + (offset == 1 ? "" : "end-") + "tag-open.xml",
-                value: val.slice(0, offset)
-            }, {
-                type: "meta.tag.tag-name.xml",
-                value: val.substr(offset)
-            }];
-        },
-        regex : "</?" + tagRegex + "",
-        next: "jsxAttributes",
-        nextState: "jsx"
+        };
     };
-    this.$rules.start.unshift(jsxTag);
-    var jsxJsRule = {
-        regex: "{",
-        token: "paren.quasi.start",
-        push: "start"
-    };
-    this.$rules.jsx = [
-        jsxJsRule,
-        jsxTag,
-        {include : "reference"},
-        {defaultToken: "string"}
-    ];
-    this.$rules.jsxAttributes = [{
-        token : "meta.tag.punctuation.tag-close.xml", 
-        regex : "/?>", 
-        onMatch : function(value, currentState, stack) {
-            if (currentState == stack[0])
-                stack.shift();
-            if (value.length == 2) {
-                if (stack[0] == this.nextState)
-                    stack[1]--;
-                if (!stack[1] || stack[1] < 0) {
-                    stack.splice(0, 2);
-                }
-            }
-            this.next = stack[0] || "start";
-            return [{type: this.token, value: value}];
-        },
-        nextState: "jsx"
-    }, 
-    jsxJsRule,
-    comments("jsxAttributes"),
-    {
-        token : "entity.other.attribute-name.xml",
-        regex : tagRegex
-    }, {
-        token : "keyword.operator.attribute-equals.xml",
-        regex : "="
-    }, {
-        token : "text.tag-whitespace.xml",
-        regex : "\\s+"
-    }, {
-        token : "string.attribute-value.xml",
-        regex : "'",
-        stateName : "jsx_attr_q",
-        push : [
-            {token : "string.attribute-value.xml", regex: "'", next: "pop"},
-            {include : "reference"},
-            {defaultToken : "string.attribute-value.xml"}
-        ]
-    }, {
-        token : "string.attribute-value.xml",
-        regex : '"',
-        stateName : "jsx_attr_qq",
-        push : [
-            {token : "string.attribute-value.xml", regex: '"', next: "pop"},
-            {include : "reference"},
-            {defaultToken : "string.attribute-value.xml"}
-        ]
-    },
-    jsxTag
-    ];
-    this.$rules.reference = [{
-        token : "constant.language.escape.reference.xml",
-        regex : "(?:&#[0-9]+;)|(?:&#x[0-9a-fA-F]+;)|(?:&[a-zA-Z0-9_:\\.-]+;)"
-    }];
-}
 
-function comments(next) {
-    return [
-        {
-            token : "comment", // multi line comment
-            regex : /\/\*/,
-            next: [
-                DocCommentHighlightRules.getTagRule(),
-                {token : "comment", regex : "\\*\\/", next : next || "pop"},
-                {defaultToken : "comment", caseInsensitive: true}
-            ]
-        }, {
-            token : "comment",
-            regex : "\\/\\/",
-            next: [
-                DocCommentHighlightRules.getTagRule(),
-                {token : "comment", regex : "$|^", next : next || "pop"},
-                {defaultToken : "comment", caseInsensitive: true}
-            ]
-        }
-    ];
-}
-exports.JavaScriptHighlightRules = JavaScriptHighlightRules;
+    oop.inherits(PythonHighlightRules, TextHighlightRules);
+
+    exports.PythonHighlightRules = PythonHighlightRules;
 });
 
-ace.define("ace/mode/pgsql_highlight_rules",["require","exports","module","ace/lib/oop","ace/lib/lang","ace/mode/doc_comment_highlight_rules","ace/mode/text_highlight_rules","ace/mode/perl_highlight_rules","ace/mode/python_highlight_rules","ace/mode/json_highlight_rules","ace/mode/javascript_highlight_rules"], function(require, exports, module) {
+ace.define("ace/mode/json_highlight_rules",["require","exports","module","ace/lib/oop","ace/mode/text_highlight_rules"], (require, exports, module) => {
+    const oop = require("../lib/oop");
+    const TextHighlightRules = require("./text_highlight_rules").TextHighlightRules;
 
-var oop = require("../lib/oop");
-var lang = require("../lib/lang");
-var DocCommentHighlightRules = require("./doc_comment_highlight_rules").DocCommentHighlightRules;
-var TextHighlightRules = require("./text_highlight_rules").TextHighlightRules;
-var PerlHighlightRules = require("./perl_highlight_rules").PerlHighlightRules;
-var PythonHighlightRules = require("./python_highlight_rules").PythonHighlightRules;
-var JsonHighlightRules = require("./json_highlight_rules").JsonHighlightRules;
-var JavaScriptHighlightRules = require("./javascript_highlight_rules").JavaScriptHighlightRules;
+    const JsonHighlightRules = function() {
+        this.$rules = {
+            "start" : [
+                {
+                    token : "variable", // single line
+                    regex : '["](?:(?:\\\\.)|(?:[^"\\\\]))*?["]\\s*(?=:)'
+                }, {
+                    token : "string", // single line
+                    regex : '"',
+                    next  : "string"
+                }, {
+                    token : "constant.numeric", // hex
+                    regex : "0[xX][0-9a-fA-F]+\\b"
+                }, {
+                    token : "constant.numeric", // float
+                    regex : "[+-]?\\d+(?:(?:\\.\\d*)?(?:[eE][+-]?\\d+)?)?\\b"
+                }, {
+                    token : "constant.language.boolean",
+                    regex : "(?:true|false)\\b"
+                }, {
+                    token : "invalid.illegal", // single quoted strings are not allowed
+                    regex : "['](?:(?:\\\\.)|(?:[^'\\\\]))*?[']"
+                }, {
+                    token : "invalid.illegal", // comments are not allowed
+                    regex : "\\/\\/.*$"
+                }, {
+                    token : "paren.lparen",
+                    regex : "[[({]"
+                }, {
+                    token : "paren.rparen",
+                    regex : "[\\])}]"
+                }, {
+                    token : "text",
+                    regex : "\\s+"
+                }
+            ],
+            "string" : [
+                {
+                    token : "constant.language.escape",
+                    regex : /\\(?:x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|["\\\/bfnrt])/
+                }, {
+                    token : "string",
+                    regex : '[^"\\\\]+'
+                }, {
+                    token : "string",
+                    regex : '"',
+                    next  : "start"
+                }, {
+                    token : "string",
+                    regex : "",
+                    next  : "start"
+                }
+            ]
+        };
+        
+    };
 
-var PgsqlHighlightRules = function() {
-    var keywords = (
+    oop.inherits(JsonHighlightRules, TextHighlightRules);
+
+    exports.JsonHighlightRules = JsonHighlightRules;
+});
+
+ace.define("ace/mode/javascript_highlight_rules",["require","exports","module","ace/lib/oop","ace/mode/doc_comment_highlight_rules","ace/mode/text_highlight_rules"], (require, exports, module) => {
+    const oop = require("../lib/oop");
+    const DocCommentHighlightRules = require("./doc_comment_highlight_rules").DocCommentHighlightRules;
+    const TextHighlightRules = require("./text_highlight_rules").TextHighlightRules;
+    const identifierRe = "[a-zA-Z\\$_\u00a1-\uffff][a-zA-Z\\d\\$_\u00a1-\uffff]*";
+
+    const JavaScriptHighlightRules = function(options) {
+        const keywordMapper = this.createKeywordMapper({
+            "variable.language":
+                "Array|Boolean|Date|Function|Iterator|Number|Object|RegExp|String|Proxy|"  + // Constructors
+                "Namespace|QName|XML|XMLList|"                                             + // E4X
+                "ArrayBuffer|Float32Array|Float64Array|Int16Array|Int32Array|Int8Array|"   +
+                "Uint16Array|Uint32Array|Uint8Array|Uint8ClampedArray|"                    +
+                "Error|EvalError|InternalError|RangeError|ReferenceError|StopIteration|"   + // Errors
+                "SyntaxError|TypeError|URIError|"                                          +
+                "decodeURI|decodeURIComponent|encodeURI|encodeURIComponent|eval|isFinite|" + // Non-constructor functions
+                "isNaN|parseFloat|parseInt|"                                               +
+                "JSON|Math|"                                                               + // Other
+                "this|arguments|prototype|window|document"                                 , // Pseudo
+            "keyword":
+                "const|yield|import|get|set|async|await|" +
+                "break|case|catch|continue|default|delete|do|else|finally|for|function|" +
+                "if|in|instanceof|new|return|switch|throw|try|typeof|let|var|while|with|debugger|" +
+                "__parent__|__count__|escape|unescape|with|__proto__|" +
+                "class|enum|extends|super|export|implements|private|public|interface|package|protected|static",
+            "storage.type":
+                "const|let|var|function",
+            "constant.language":
+                "null|Infinity|NaN|undefined",
+            "support.function":
+                "alert",
+            "constant.language.boolean": "true|false"
+        }, "identifier");
+        const kwBeforeRe = "case|do|else|finally|in|instanceof|return|throw|try|typeof|yield|void";
+
+        const escapedRe = "\\\\(?:x[0-9a-fA-F]{2}|" + // hex
+            "u[0-9a-fA-F]{4}|" + // unicode
+            "u{[0-9a-fA-F]{1,6}}|" + // es6 unicode
+            "[0-2][0-7]{0,2}|" + // oct
+            "3[0-7][0-7]?|" + // oct
+            "[4-7][0-7]?|" + //oct
+            ".)";
+
+        this.$rules = {
+            "no_regex" : [
+                DocCommentHighlightRules.getStartRule("doc-start"),
+                comments("no_regex"),
+                {
+                    token : "string",
+                    regex : "'(?=.)",
+                    next  : "qstring"
+                }, {
+                    token : "string",
+                    regex : '"(?=.)',
+                    next  : "qqstring"
+                }, {
+                    token : "constant.numeric", // hex
+                    regex : /0(?:[xX][0-9a-fA-F]+|[bB][01]+)\b/
+                }, {
+                    token : "constant.numeric", // float
+                    regex : /[+-]?\d[\d_]*(?:(?:\.\d*)?(?:[eE][+-]?\d+)?)?\b/
+                }, {
+                    token : [
+                        "storage.type", "punctuation.operator", "support.function",
+                        "punctuation.operator", "entity.name.function", "text","keyword.operator"
+                    ],
+                    regex : `(${identifierRe})(\\.)(prototype)(\\.)(${identifierRe})(\\s*)(=)`,
+                    next: "function_arguments"
+                }, {
+                    token : [
+                        "storage.type", "punctuation.operator", "entity.name.function", "text",
+                        "keyword.operator", "text", "storage.type", "text", "paren.lparen"
+                    ],
+                    regex : `(${identifierRe})(\\.)(${identifierRe})(\\s*)(=)(\\s*)(function)(\\s*)(\\()`,
+                    next: "function_arguments"
+                }, {
+                    token : [
+                        "entity.name.function", "text", "keyword.operator", "text", "storage.type",
+                        "text", "paren.lparen"
+                    ],
+                    regex : `(${identifierRe})(\\s*)(=)(\\s*)(function)(\\s*)(\\()`,
+                    next: "function_arguments"
+                }, {
+                    token : [
+                        "storage.type", "punctuation.operator", "entity.name.function", "text",
+                        "keyword.operator", "text",
+                        "storage.type", "text", "entity.name.function", "text", "paren.lparen"
+                    ],
+                    regex : `(${identifierRe})(\\.)(${identifierRe})(\\s*)(=)(\\s*)(function)(\\s+)(\\w+)(\\s*)(\\()`,
+                    next: "function_arguments"
+                }, {
+                    token : [
+                        "storage.type", "text", "entity.name.function", "text", "paren.lparen"
+                    ],
+                    regex : `(function)(\\s+)(${identifierRe})(\\s*)(\\()`,
+                    next: "function_arguments"
+                }, {
+                    token : [
+                        "entity.name.function", "text", "punctuation.operator",
+                        "text", "storage.type", "text", "paren.lparen"
+                    ],
+                    regex : `(${identifierRe})(\\s*)(:)(\\s*)(function)(\\s*)(\\()`,
+                    next: "function_arguments"
+                }, {
+                    token : [
+                        "text", "text", "storage.type", "text", "paren.lparen"
+                    ],
+                    regex : "(:)(\\s*)(function)(\\s*)(\\()",
+                    next: "function_arguments"
+                }, {
+                    token : "keyword",
+                    regex : `(?:${kwBeforeRe})\\b`,
+                    next : "start"
+                }, {
+                    token : ["support.constant"],
+                    regex : /that\b/
+                }, {
+                    token : ["storage.type", "punctuation.operator", "support.function.firebug"],
+                    regex : /(console)(\.)(warn|info|log|error|time|trace|timeEnd|assert)\b/
+                }, {
+                    token : keywordMapper,
+                    regex : identifierRe
+                }, {
+                    token : "punctuation.operator",
+                    regex : /[.](?![.])/,
+                    next  : "property"
+                }, {
+                    token : "keyword.operator",
+                    regex : /--|\+\+|\.{3}|===|==|=|!=|!==|<+=?|>+=?|!|&&|\|\||\?:|[!$%&*+\-~\/^]=?/,
+                    next  : "start"
+                }, {
+                    token : "punctuation.operator",
+                    regex : /[?:,;.]/,
+                    next  : "start"
+                }, {
+                    token : "paren.lparen",
+                    regex : /[\[({]/,
+                    next  : "start"
+                }, {
+                    token : "paren.rparen",
+                    regex : /[\])}]/
+                }, {
+                    token: "comment",
+                    regex: /^#!.*$/
+                }
+            ],
+            property: [{
+                    token : "text",
+                    regex : "\\s+"
+                }, {
+                    token : [
+                        "storage.type", "punctuation.operator", "entity.name.function", "text",
+                        "keyword.operator", "text",
+                        "storage.type", "text", "entity.name.function", "text", "paren.lparen"
+                    ],
+                    regex : `(${identifierRe})(\\.)(${identifierRe})(\\s*)(=)(\\s*)(function)(?:(\\s+)(\\w+))?(\\s*)(\\()`,
+                    next: "function_arguments"
+                }, {
+                    token : "punctuation.operator",
+                    regex : /[.](?![.])/
+                }, {
+                    token : "support.function",
+                    regex : /(s(?:h(?:ift|ow(?:Mod(?:elessDialog|alDialog)|Help))|croll(?:X|By(?:Pages|Lines)?|Y|To)?|t(?:op|rike)|i(?:n|zeToContent|debar|gnText)|ort|u(?:p|b(?:str(?:ing)?)?)|pli(?:ce|t)|e(?:nd|t(?:Re(?:sizable|questHeader)|M(?:i(?:nutes|lliseconds)|onth)|Seconds|Ho(?:tKeys|urs)|Year|Cursor|Time(?:out)?|Interval|ZOptions|Date|UTC(?:M(?:i(?:nutes|lliseconds)|onth)|Seconds|Hours|Date|FullYear)|FullYear|Active)|arch)|qrt|lice|avePreferences|mall)|h(?:ome|andleEvent)|navigate|c(?:har(?:CodeAt|At)|o(?:s|n(?:cat|textual|firm)|mpile)|eil|lear(?:Timeout|Interval)?|a(?:ptureEvents|ll)|reate(?:StyleSheet|Popup|EventObject))|t(?:o(?:GMTString|S(?:tring|ource)|U(?:TCString|pperCase)|Lo(?:caleString|werCase))|est|a(?:n|int(?:Enabled)?))|i(?:s(?:NaN|Finite)|ndexOf|talics)|d(?:isableExternalCapture|ump|etachEvent)|u(?:n(?:shift|taint|escape|watch)|pdateCommands)|j(?:oin|avaEnabled)|p(?:o(?:p|w)|ush|lugins.refresh|a(?:ddings|rse(?:Int|Float)?)|r(?:int|ompt|eference))|e(?:scape|nableExternalCapture|val|lementFromPoint|x(?:p|ec(?:Script|Command)?))|valueOf|UTC|queryCommand(?:State|Indeterm|Enabled|Value)|f(?:i(?:nd|le(?:ModifiedDate|Size|CreatedDate|UpdatedDate)|xed)|o(?:nt(?:size|color)|rward)|loor|romCharCode)|watch|l(?:ink|o(?:ad|g)|astIndexOf)|a(?:sin|nchor|cos|t(?:tachEvent|ob|an(?:2)?)|pply|lert|b(?:s|ort))|r(?:ou(?:nd|teEvents)|e(?:size(?:By|To)|calc|turnValue|place|verse|l(?:oad|ease(?:Capture|Events)))|andom)|g(?:o|et(?:ResponseHeader|M(?:i(?:nutes|lliseconds)|onth)|Se(?:conds|lection)|Hours|Year|Time(?:zoneOffset)?|Da(?:y|te)|UTC(?:M(?:i(?:nutes|lliseconds)|onth)|Seconds|Hours|Da(?:y|te)|FullYear)|FullYear|A(?:ttention|llResponseHeaders)))|m(?:in|ove(?:B(?:y|elow)|To(?:Absolute)?|Above)|ergeAttributes|a(?:tch|rgins|x))|b(?:toa|ig|o(?:ld|rderWidths)|link|ack))\b(?=\()/
+                }, {
+                    token : "support.function.dom",
+                    regex : /(s(?:ub(?:stringData|mit)|plitText|e(?:t(?:NamedItem|Attribute(?:Node)?)|lect))|has(?:ChildNodes|Feature)|namedItem|c(?:l(?:ick|o(?:se|neNode))|reate(?:C(?:omment|DATASection|aption)|T(?:Head|extNode|Foot)|DocumentFragment|ProcessingInstruction|E(?:ntityReference|lement)|Attribute))|tabIndex|i(?:nsert(?:Row|Before|Cell|Data)|tem)|open|delete(?:Row|C(?:ell|aption)|T(?:Head|Foot)|Data)|focus|write(?:ln)?|a(?:dd|ppend(?:Child|Data))|re(?:set|place(?:Child|Data)|move(?:NamedItem|Child|Attribute(?:Node)?)?)|get(?:NamedItem|Element(?:sBy(?:Name|TagName|ClassName)|ById)|Attribute(?:Node)?)|blur)\b(?=\()/
+                }, {
+                    token :  "support.constant",
+                    regex : /(s(?:ystemLanguage|cr(?:ipts|ollbars|een(?:X|Y|Top|Left))|t(?:yle(?:Sheets)?|atus(?:Text|bar)?)|ibling(?:Below|Above)|ource|uffixes|e(?:curity(?:Policy)?|l(?:ection|f)))|h(?:istory|ost(?:name)?|as(?:h|Focus))|y|X(?:MLDocument|SLDocument)|n(?:ext|ame(?:space(?:s|URI)|Prop))|M(?:IN_VALUE|AX_VALUE)|c(?:haracterSet|o(?:n(?:structor|trollers)|okieEnabled|lorDepth|mp(?:onents|lete))|urrent|puClass|l(?:i(?:p(?:boardData)?|entInformation)|osed|asses)|alle(?:e|r)|rypto)|t(?:o(?:olbar|p)|ext(?:Transform|Indent|Decoration|Align)|ags)|SQRT(?:1_2|2)|i(?:n(?:ner(?:Height|Width)|put)|ds|gnoreCase)|zIndex|o(?:scpu|n(?:readystatechange|Line)|uter(?:Height|Width)|p(?:sProfile|ener)|ffscreenBuffering)|NEGATIVE_INFINITY|d(?:i(?:splay|alog(?:Height|Top|Width|Left|Arguments)|rectories)|e(?:scription|fault(?:Status|Ch(?:ecked|arset)|View)))|u(?:ser(?:Profile|Language|Agent)|n(?:iqueID|defined)|pdateInterval)|_content|p(?:ixelDepth|ort|ersonalbar|kcs11|l(?:ugins|atform)|a(?:thname|dding(?:Right|Bottom|Top|Left)|rent(?:Window|Layer)?|ge(?:X(?:Offset)?|Y(?:Offset)?))|r(?:o(?:to(?:col|type)|duct(?:Sub)?|mpter)|e(?:vious|fix)))|e(?:n(?:coding|abledPlugin)|x(?:ternal|pando)|mbeds)|v(?:isibility|endor(?:Sub)?|Linkcolor)|URLUnencoded|P(?:I|OSITIVE_INFINITY)|f(?:ilename|o(?:nt(?:Size|Family|Weight)|rmName)|rame(?:s|Element)|gColor)|E|whiteSpace|l(?:i(?:stStyleType|n(?:eHeight|kColor))|o(?:ca(?:tion(?:bar)?|lName)|wsrc)|e(?:ngth|ft(?:Context)?)|a(?:st(?:M(?:odified|atch)|Index|Paren)|yer(?:s|X)|nguage))|a(?:pp(?:MinorVersion|Name|Co(?:deName|re)|Version)|vail(?:Height|Top|Width|Left)|ll|r(?:ity|guments)|Linkcolor|bove)|r(?:ight(?:Context)?|e(?:sponse(?:XML|Text)|adyState))|global|x|m(?:imeTypes|ultiline|enubar|argin(?:Right|Bottom|Top|Left))|L(?:N(?:10|2)|OG(?:10E|2E))|b(?:o(?:ttom|rder(?:Width|RightWidth|BottomWidth|Style|Color|TopWidth|LeftWidth))|ufferDepth|elow|ackground(?:Color|Image)))\b/
+                }, {
+                    token : "identifier",
+                    regex : identifierRe
+                }, {
+                    regex: "",
+                    token: "empty",
+                    next: "no_regex"
+                }
+            ],
+            "start": [
+                DocCommentHighlightRules.getStartRule("doc-start"),
+                comments("start"),
+                {
+                    token: "string.regexp",
+                    regex: "\\/",
+                    next: "regex"
+                }, {
+                    token : "text",
+                    regex : "\\s+|^$",
+                    next : "start"
+                }, {
+                    token: "empty",
+                    regex: "",
+                    next: "no_regex"
+                }
+            ],
+            "regex": [
+                {
+                    token: "regexp.keyword.operator",
+                    regex: "\\\\(?:u[\\da-fA-F]{4}|x[\\da-fA-F]{2}|.)"
+                }, {
+                    token: "string.regexp",
+                    regex: "/[sxngimy]*",
+                    next: "no_regex"
+                }, {
+                    token : "invalid",
+                    regex: /\{\d+\b,?\d*\}[+*]|[+*$^?][+*]|[$^][?]|\?{3,}/
+                }, {
+                    token : "constant.language.escape",
+                    regex: /\(\?[:=!]|\)|\{\d+\b,?\d*\}|[+*]\?|[()$^+*?.]/
+                }, {
+                    token : "constant.language.delimiter",
+                    regex: /\|/
+                }, {
+                    token: "constant.language.escape",
+                    regex: /\[\^?/,
+                    next: "regex_character_class"
+                }, {
+                    token: "empty",
+                    regex: "$",
+                    next: "no_regex"
+                }, {
+                    defaultToken: "string.regexp"
+                }
+            ],
+            "regex_character_class": [
+                {
+                    token: "regexp.charclass.keyword.operator",
+                    regex: "\\\\(?:u[\\da-fA-F]{4}|x[\\da-fA-F]{2}|.)"
+                }, {
+                    token: "constant.language.escape",
+                    regex: "]",
+                    next: "regex"
+                }, {
+                    token: "constant.language.escape",
+                    regex: "-"
+                }, {
+                    token: "empty",
+                    regex: "$",
+                    next: "no_regex"
+                }, {
+                    defaultToken: "string.regexp.charachterclass"
+                }
+            ],
+            "function_arguments": [
+                {
+                    token: "variable.parameter",
+                    regex: identifierRe
+                }, {
+                    token: "punctuation.operator",
+                    regex: "[, ]+"
+                }, {
+                    token: "punctuation.operator",
+                    regex: "$"
+                }, {
+                    token: "empty",
+                    regex: "",
+                    next: "no_regex"
+                }
+            ],
+            "qqstring" : [
+                {
+                    token : "constant.language.escape",
+                    regex : escapedRe
+                }, {
+                    token : "string",
+                    regex : "\\\\$",
+                    next  : "qqstring"
+                }, {
+                    token : "string",
+                    regex : '"|$',
+                    next  : "no_regex"
+                }, {
+                    defaultToken: "string"
+                }
+            ],
+            "qstring" : [
+                {
+                    token : "constant.language.escape",
+                    regex : escapedRe
+                }, {
+                    token : "string",
+                    regex : "\\\\$",
+                    next  : "qstring"
+                }, {
+                    token : "string",
+                    regex : "'|$",
+                    next  : "no_regex"
+                }, {
+                    defaultToken: "string"
+                }
+            ]
+        };
+        
+        
+        if (!options || !options.noES6) {
+            this.$rules.no_regex.unshift({
+                regex: "[{}]", onMatch(val, state, stack) {
+                    this.next = val == "{" ? this.nextState : "";
+                    if (val == "{" && stack.length) {
+                        stack.unshift("start", state);
+                    }
+                    else if (val == "}" && stack.length) {
+                        stack.shift();
+                        this.next = stack.shift();
+                        if (this.next.includes("string") || this.next.includes("jsx"))
+                            return "paren.quasi.end";
+                    }
+                    return val == "{" ? "paren.lparen" : "paren.rparen";
+                },
+                nextState: "start"
+            }, {
+                token : "string.quasi.start",
+                regex : /`/,
+                push  : [{
+                    token : "constant.language.escape",
+                    regex : escapedRe
+                }, {
+                    token : "paren.quasi.start",
+                    regex : /\${/,
+                    push  : "start"
+                }, {
+                    token : "string.quasi.end",
+                    regex : /`/,
+                    next  : "pop"
+                }, {
+                    defaultToken: "string.quasi"
+                }]
+            });
+            
+            if (!options || options.jsx != false)
+                JSX.call(this);
+        }
+        
+        this.embedRules(DocCommentHighlightRules, "doc-",
+            [ DocCommentHighlightRules.getEndRule("no_regex") ]);
+        
+        this.normalizeRules();
+    };
+
+    oop.inherits(JavaScriptHighlightRules, TextHighlightRules);
+
+    function JSX() {
+        const tagRegex = identifierRe.replace("\\d", "\\d\\-");
+        const jsxTag = {
+            onMatch(val, state, stack) {
+                const offset = val.charAt(1) == "/" ? 2 : 1;
+                if (offset == 1) {
+                    if (state != this.nextState)
+                        stack.unshift(this.next, this.nextState, 0);
+                    else
+                        stack.unshift(this.next);
+                    stack[2]++;
+                } else if (offset == 2) {
+                    if (state == this.nextState) {
+                        stack[1]--;
+                        if (!stack[1] || stack[1] < 0) {
+                            stack.shift();
+                            stack.shift();
+                        }
+                    }
+                }
+                return [{
+                    type: `meta.tag.punctuation.${offset == 1 ? "" : "end-"}tag-open.xml`,
+                    value: val.slice(0, offset)
+                }, {
+                    type: "meta.tag.tag-name.xml",
+                    value: val.substr(offset)
+                }];
+            },
+            regex : `</?${tagRegex}`,
+            next: "jsxAttributes",
+            nextState: "jsx"
+        };
+        this.$rules.start.unshift(jsxTag);
+        const jsxJsRule = {
+            regex: "{",
+            token: "paren.quasi.start",
+            push: "start"
+        };
+        this.$rules.jsx = [
+            jsxJsRule,
+            jsxTag,
+            {include : "reference"},
+            {defaultToken: "string"}
+        ];
+        this.$rules.jsxAttributes = [{
+            token : "meta.tag.punctuation.tag-close.xml", 
+            regex : "/?>", 
+            onMatch(value, currentState, stack) {
+                if (currentState == stack[0])
+                    stack.shift();
+                if (value.length == 2) {
+                    if (stack[0] == this.nextState)
+                        stack[1]--;
+                    if (!stack[1] || stack[1] < 0) {
+                        stack.splice(0, 2);
+                    }
+                }
+                this.next = stack[0] || "start";
+                return [{type: this.token, value}];
+            },
+            nextState: "jsx"
+        }, 
+        jsxJsRule,
+        comments("jsxAttributes"),
+        {
+            token : "entity.other.attribute-name.xml",
+            regex : tagRegex
+        }, {
+            token : "keyword.operator.attribute-equals.xml",
+            regex : "="
+        }, {
+            token : "text.tag-whitespace.xml",
+            regex : "\\s+"
+        }, {
+            token : "string.attribute-value.xml",
+            regex : "'",
+            stateName : "jsx_attr_q",
+            push : [
+                {token : "string.attribute-value.xml", regex: "'", next: "pop"},
+                {include : "reference"},
+                {defaultToken : "string.attribute-value.xml"}
+            ]
+        }, {
+            token : "string.attribute-value.xml",
+            regex : '"',
+            stateName : "jsx_attr_qq",
+            push : [
+                {token : "string.attribute-value.xml", regex: '"', next: "pop"},
+                {include : "reference"},
+                {defaultToken : "string.attribute-value.xml"}
+            ]
+        },
+        jsxTag
+        ];
+        this.$rules.reference = [{
+            token : "constant.language.escape.reference.xml",
+            regex : "(?:&#[0-9]+;)|(?:&#x[0-9a-fA-F]+;)|(?:&[a-zA-Z0-9_:\\.-]+;)"
+        }];
+    }
+
+    function comments(next) {
+        return [
+            {
+                token : "comment", // multi line comment
+                regex : /\/\*/,
+                next: [
+                    DocCommentHighlightRules.getTagRule(),
+                    {token : "comment", regex : "\\*\\/", next : next || "pop"},
+                    {defaultToken : "comment", caseInsensitive: true}
+                ]
+            }, {
+                token : "comment",
+                regex : "\\/\\/",
+                next: [
+                    DocCommentHighlightRules.getTagRule(),
+                    {token : "comment", regex : "$|^", next : next || "pop"},
+                    {defaultToken : "comment", caseInsensitive: true}
+                ]
+            }
+        ];
+    }
+    exports.JavaScriptHighlightRules = JavaScriptHighlightRules;
+});
+
+ace.define("ace/mode/pgsql_highlight_rules",["require","exports","module","ace/lib/oop","ace/lib/lang","ace/mode/doc_comment_highlight_rules","ace/mode/text_highlight_rules","ace/mode/perl_highlight_rules","ace/mode/python_highlight_rules","ace/mode/json_highlight_rules","ace/mode/javascript_highlight_rules"], (require, exports, module) => {
+
+const oop = require("../lib/oop");
+const lang = require("../lib/lang");
+const DocCommentHighlightRules = require("./doc_comment_highlight_rules").DocCommentHighlightRules;
+const TextHighlightRules = require("./text_highlight_rules").TextHighlightRules;
+const PerlHighlightRules = require("./perl_highlight_rules").PerlHighlightRules;
+const PythonHighlightRules = require("./python_highlight_rules").PythonHighlightRules;
+const JsonHighlightRules = require("./json_highlight_rules").JsonHighlightRules;
+const JavaScriptHighlightRules = require("./javascript_highlight_rules").JavaScriptHighlightRules;
+
+const PgsqlHighlightRules = function() {
+    const keywords = (
         "abort|absolute|abstime|access|aclitem|action|add|admin|after|aggregate|all|also|alter|always|" +
         "analyse|analyze|and|any|anyarray|anyelement|anyenum|anynonarray|anyrange|array|as|asc|" +
         "assertion|assignment|asymmetric|at|attribute|authorization|backward|before|begin|between|" +
@@ -930,7 +921,7 @@ var PgsqlHighlightRules = function() {
     );
 
 
-    var builtinFunctions = (
+    const builtinFunctions = (
         "RI_FKey_cascade_del|RI_FKey_cascade_upd|RI_FKey_check_ins|RI_FKey_check_upd|" +
         "RI_FKey_noaction_del|RI_FKey_noaction_upd|RI_FKey_restrict_del|RI_FKey_restrict_upd|" +
         "RI_FKey_setdefault_del|RI_FKey_setdefault_upd|RI_FKey_setnull_del|" +
@@ -1282,13 +1273,13 @@ var PgsqlHighlightRules = function() {
         "xmlagg|xmlcomment|xmlconcat2|xmlexists|xmlvalidate|xpath|xpath_exists"
     );
 
-    var keywordMapper = this.createKeywordMapper({
+    const keywordMapper = this.createKeywordMapper({
         "support.function": builtinFunctions,
         "keyword": keywords
     }, "identifier", true);
 
 
-    var sqlRules = [{
+    const sqlRules = [{
             token : "string", // single line string -- assume dollar strings if multi-line for now
             regex : "['](?:(?:\\\\.)|(?:[^'\\\\]))*?[']"
         }, {
@@ -1458,14 +1449,14 @@ oop.inherits(PgsqlHighlightRules, TextHighlightRules);
 exports.PgsqlHighlightRules = PgsqlHighlightRules;
 });
 
-ace.define("ace/mode/pgsql",["require","exports","module","ace/lib/oop","ace/mode/text","ace/mode/pgsql_highlight_rules","ace/range"], function(require, exports, module) {
+ace.define("ace/mode/pgsql",["require","exports","module","ace/lib/oop","ace/mode/text","ace/mode/pgsql_highlight_rules","ace/range"], (require, exports, module) => {
 
-var oop = require("../lib/oop");
-var TextMode = require("../mode/text").Mode;
-var PgsqlHighlightRules = require("./pgsql_highlight_rules").PgsqlHighlightRules;
-var Range = require("../range").Range;
+const oop = require("../lib/oop");
+const TextMode = require("../mode/text").Mode;
+const PgsqlHighlightRules = require("./pgsql_highlight_rules").PgsqlHighlightRules;
+const Range = require("../range").Range;
 
-var Mode = function() {
+const Mode = function() {
     this.HighlightRules = PgsqlHighlightRules;
 };
 oop.inherits(Mode, TextMode);

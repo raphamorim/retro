@@ -1,9 +1,9 @@
-var fs = require('fs');
-(function() {
+const fs = require('fs');
+((() => {
 
-    var ACE_NAMESPACE = "ace";
+    const ACE_NAMESPACE = "ace";
 
-    var global = (function() {
+    let global = (function() {
         return this;
     })();
     if (!global && typeof window != "undefined") global = window; // strict mode
@@ -13,7 +13,7 @@ var fs = require('fs');
         return;
 
 
-    var define = function(module, deps, payload) {
+    const define = function(module, deps, payload) {
         if (typeof module !== "string") {
             if (define.original)
                 define.original.apply(this, arguments);
@@ -37,44 +37,44 @@ var fs = require('fs');
     /**
      * Get at functionality define()ed using the function above
      */
-    var _require = function(parentId, module, callback) {
+    const _require = (parentId, module, callback) => {
         if (typeof module === "string") {
-            var payload = lookup(parentId, module);
+            const payload = lookup(parentId, module);
             if (payload != undefined) {
                 callback && callback();
                 return payload;
             }
         } else if (Object.prototype.toString.call(module) === "[object Array]") {
-            var params = [];
-            for (var i = 0, l = module.length; i < l; ++i) {
-                var dep = lookup(parentId, module[i]);
+            const params = [];
+            for (let i = 0, l = module.length; i < l; ++i) {
+                const dep = lookup(parentId, module[i]);
                 if (dep == undefined && require.original)
                     return;
                 params.push(dep);
             }
-            return callback && callback.apply(null, params) || true;
+            return callback && callback(...params) || true;
         }
     };
 
     var require = function(module, callback) {
-        var packagedModule = _require("", module, callback);
+        const packagedModule = _require("", module, callback);
         if (packagedModule == undefined && require.original)
             return require.original.apply(this, arguments);
         return packagedModule;
     };
 
-    var normalizeModule = function(parentId, moduleName) {
+    const normalizeModule = (parentId, moduleName) => {
         // normalize plugin requires
-        if (moduleName.indexOf("!") !== -1) {
-            var chunks = moduleName.split("!");
-            return normalizeModule(parentId, chunks[0]) + "!" + normalizeModule(parentId, chunks[1]);
+        if (moduleName.includes("!")) {
+            const chunks = moduleName.split("!");
+            return `${normalizeModule(parentId, chunks[0])}!${normalizeModule(parentId, chunks[1])}`;
         }
         // normalize relative requires
         if (moduleName.charAt(0) == ".") {
-            var base = parentId.split("/").slice(0, -1).join("/");
-            moduleName = base + "/" + moduleName;
+            const base = parentId.split("/").slice(0, -1).join("/");
+            moduleName = `${base}/${moduleName}`;
 
-            while (moduleName.indexOf(".") !== -1 && previous != moduleName) {
+            while (moduleName.includes(".") && previous != moduleName) {
                 var previous = moduleName;
                 moduleName = moduleName.replace(/\/\.\//, "/").replace(/[^\/]+\/\.\.\//, "");
             }
@@ -86,26 +86,24 @@ var fs = require('fs');
      * Internal function to lookup moduleNames and resolve them by calling the
      * definition function if needed.
      */
-    var lookup = function(parentId, moduleName) {
+    var lookup = (parentId, moduleName) => {
         moduleName = normalizeModule(parentId, moduleName);
 
-        var module = define.modules[moduleName];
+        let module = define.modules[moduleName];
         if (!module) {
             module = define.payloads[moduleName];
             if (typeof module === 'function') {
                 var exports = {};
-                var mod = {
+                const mod = {
                     id: moduleName,
                     uri: '',
-                    exports: exports,
+                    exports,
                     packaged: true
                 };
 
-                var req = function(module, callback) {
-                    return _require(moduleName, module, callback);
-                };
+                const req = (module, callback) => _require(moduleName, module, callback);
 
-                var returnValue = module(req, exports, mod);
+                const returnValue = module(req, exports, mod);
                 exports = returnValue || mod.exports;
                 define.modules[moduleName] = exports;
                 delete define.payloads[moduleName];
@@ -116,7 +114,7 @@ var fs = require('fs');
     };
 
     function exportAce(ns) {
-        var root = global;
+        let root = global;
         if (ns) {
             if (!global[ns])
                 global[ns] = {};
@@ -138,42 +136,44 @@ var fs = require('fs');
 
     exportAce(ACE_NAMESPACE);
 
-})();
+}))();
 
-ace.define("ace/lib/regexp", ["require", "exports", "module"], function(require, exports, module) {
-    "use strict";
-
-    var real = {
+ace.define("ace/lib/regexp", ["require", "exports", "module"], (require, exports, module) => {
+    const real = {
             exec: RegExp.prototype.exec,
             test: RegExp.prototype.test,
             match: String.prototype.match,
             replace: String.prototype.replace,
             split: String.prototype.split
-        },
-        compliantExecNpcg = real.exec.call(/()??/, "")[1] === undefined, // check `exec` handling of nonparticipating capturing groups
-        compliantLastIndexIncrement = function() {
-            var x = /^/g;
-            real.test.call(x, "");
-            return !x.lastIndex;
-        }();
+        };
+
+    const // check `exec` handling of nonparticipating capturing groups
+    compliantExecNpcg = real.exec.call(/()??/, "")[1] === undefined;
+
+    const compliantLastIndexIncrement = (() => {
+        const x = /^/g;
+        real.test.call(x, "");
+        return !x.lastIndex;
+    })();
 
     if (compliantLastIndexIncrement && compliantExecNpcg)
         return;
     RegExp.prototype.exec = function(str) {
-        var match = real.exec.apply(this, arguments),
-            name, r2;
+        const match = real.exec.apply(this, arguments);
+        let name;
+        let r2;
         if (typeof(str) == 'string' && match) {
             if (!compliantExecNpcg && match.length > 1 && indexOf(match, "") > -1) {
                 r2 = RegExp(this.source, real.replace.call(getNativeFlags(this), "g", ""));
                 real.replace.call(str.slice(match.index), r2, function() {
-                    for (var i = 1; i < arguments.length - 2; i++) {
+                    for (let i = 1; i < arguments.length - 2; i++) {
                         if (arguments[i] === undefined)
                             match[i] = undefined;
                     }
                 });
             }
             if (this._xregexp && this._xregexp.captureNames) {
-                for (var i = 1; i < match.length; i++) {
+                for (let i = 1; i < match.length; i++) {
                     name = this._xregexp.captureNames[i - 1];
                     if (name)
                         match[name] = match[i];
@@ -186,7 +186,7 @@ ace.define("ace/lib/regexp", ["require", "exports", "module"], function(require,
     };
     if (!compliantLastIndexIncrement) {
         RegExp.prototype.test = function(str) {
-            var match = real.exec.call(this, str);
+            const match = real.exec.call(this, str);
             if (match && this.global && !match[0].length && (this.lastIndex > match.index))
                 this.lastIndex--;
             return !!match;
@@ -204,31 +204,29 @@ ace.define("ace/lib/regexp", ["require", "exports", "module"], function(require,
     function indexOf(array, item, from) {
         if (Array.prototype.indexOf) // Use the native array method if available
             return array.indexOf(item, from);
-        for (var i = from || 0; i < array.length; i++) {
+        for (let i = from || 0; i < array.length; i++) {
             if (array[i] === item)
                 return i;
         }
         return -1;
     }
-
 });
 
-ace.define("ace/lib/es5-shim", ["require", "exports", "module"], function(require, exports, module) {
-
+ace.define("ace/lib/es5-shim", ["require", "exports", "module"], (require, exports, module) => {
     function Empty() {}
 
     if (!Function.prototype.bind) {
         Function.prototype.bind = function bind(that) { // .length is 1
-            var target = this;
+            const target = this;
             if (typeof target != "function") {
-                throw new TypeError("Function.prototype.bind called on incompatible " + target);
+                throw new TypeError(`Function.prototype.bind called on incompatible ${target}`);
             }
-            var args = slice.call(arguments, 1); // for normal call
-            var bound = function() {
+            const args = slice.call(arguments, 1); // for normal call
+            const bound = function() {
 
                 if (this instanceof bound) {
 
-                    var result = target.apply(
+                    const result = target.apply(
                         this,
                         args.concat(slice.call(arguments))
                     );
@@ -254,17 +252,17 @@ ace.define("ace/lib/es5-shim", ["require", "exports", "module"], function(requir
             return bound;
         };
     }
-    var call = Function.prototype.call;
-    var prototypeOfArray = Array.prototype;
-    var prototypeOfObject = Object.prototype;
+    const call = Function.prototype.call;
+    const prototypeOfArray = Array.prototype;
+    const prototypeOfObject = Object.prototype;
     var slice = prototypeOfArray.slice;
-    var _toString = call.bind(prototypeOfObject.toString);
-    var owns = call.bind(prototypeOfObject.hasOwnProperty);
-    var defineGetter;
-    var defineSetter;
-    var lookupGetter;
-    var lookupSetter;
-    var supportsAccessors;
+    const _toString = call.bind(prototypeOfObject.toString);
+    const owns = call.bind(prototypeOfObject.hasOwnProperty);
+    let defineGetter;
+    let defineSetter;
+    let lookupGetter;
+    let lookupSetter;
+    let supportsAccessors;
     if ((supportsAccessors = owns(prototypeOfObject, "__defineGetter__"))) {
         defineGetter = call.bind(prototypeOfObject.__defineGetter__);
         defineSetter = call.bind(prototypeOfObject.__defineSetter__);
@@ -272,28 +270,29 @@ ace.define("ace/lib/es5-shim", ["require", "exports", "module"], function(requir
         lookupSetter = call.bind(prototypeOfObject.__lookupSetter__);
     }
     if ([1, 2].splice(0).length != 2) {
-        if (function() { // test IE < 9 to splice bug - see issue #138
-                function makeArray(l) {
-                    var a = new Array(l + 2);
-                    a[0] = a[1] = 0;
-                    return a;
-                }
-                var array = [],
-                    lengthBefore;
+        if ((() => {
+            // test IE < 9 to splice bug - see issue #138
+            function makeArray(l) {
+                const a = new Array(l + 2);
+                a[0] = a[1] = 0;
+                return a;
+            }
+            const array = [];
+            let lengthBefore;
 
-                array.splice.apply(array, makeArray(20));
-                array.splice.apply(array, makeArray(26));
+            array.splice(...makeArray(20));
+            array.splice(...makeArray(26));
 
-                lengthBefore = array.length; //46
-                array.splice(5, 0, "XXX"); // add one element
+            lengthBefore = array.length; //46
+            array.splice(5, 0, "XXX"); // add one element
 
-                lengthBefore + 1 == array.length
+            lengthBefore + 1 == array.length
 
-                if (lengthBefore + 1 == array.length) {
-                    return true; // has right splice implementation without bugs
-                }
-            }()) { //IE 6/7
-            var array_splice = Array.prototype.splice;
+            if (lengthBefore + 1 == array.length) {
+                return true; // has right splice implementation without bugs
+            }
+        })()) { //IE 6/7
+            const array_splice = Array.prototype.splice;
             Array.prototype.splice = function(start, deleteCount) {
                 if (!arguments.length) {
                     return [];
@@ -306,7 +305,7 @@ ace.define("ace/lib/es5-shim", ["require", "exports", "module"], function(requir
             };
         } else { //IE8
             Array.prototype.splice = function(pos, removeCount) {
-                var length = this.length;
+                const length = this.length;
                 if (pos > 0) {
                     if (pos > length)
                         pos = length;
@@ -319,19 +318,19 @@ ace.define("ace/lib/es5-shim", ["require", "exports", "module"], function(requir
                 if (!(pos + removeCount < length))
                     removeCount = length - pos;
 
-                var removed = this.slice(pos, pos + removeCount);
-                var insert = slice.call(arguments, 2);
-                var add = insert.length;
+                const removed = this.slice(pos, pos + removeCount);
+                const insert = slice.call(arguments, 2);
+                const add = insert.length;
                 if (pos === length) {
                     if (add) {
-                        this.push.apply(this, insert);
+                        this.push(...insert);
                     }
                 } else {
-                    var remove = Math.min(removeCount, length - pos);
-                    var tailOldPos = pos + remove;
-                    var tailNewPos = tailOldPos + add - remove;
-                    var tailCount = length - tailOldPos;
-                    var lengthAfterRemove = length - remove;
+                    const remove = Math.min(removeCount, length - pos);
+                    const tailOldPos = pos + remove;
+                    const tailNewPos = tailOldPos + add - remove;
+                    const tailCount = length - tailOldPos;
+                    const lengthAfterRemove = length - remove;
 
                     if (tailNewPos < tailOldPos) { // case A
                         for (var i = 0; i < tailCount; ++i) {
@@ -345,7 +344,7 @@ ace.define("ace/lib/es5-shim", ["require", "exports", "module"], function(requir
 
                     if (add && pos === lengthAfterRemove) {
                         this.length = lengthAfterRemove; // truncate array
-                        this.push.apply(this, insert);
+                        this.push(...insert);
                     } else {
                         this.length = lengthAfterRemove + add; // reserves space
                         for (i = 0; i < add; ++i) {
@@ -362,18 +361,20 @@ ace.define("ace/lib/es5-shim", ["require", "exports", "module"], function(requir
             return _toString(obj) == "[object Array]";
         };
     }
-    var boxedString = Object("a"),
-        splitString = boxedString[0] != "a" || !(0 in boxedString);
+    const boxedString = Object("a");
+    const splitString = boxedString[0] != "a" || !(0 in boxedString);
 
     if (!Array.prototype.forEach) {
         Array.prototype.forEach = function forEach(fun /*, thisp*/ ) {
-            var object = toObject(this),
-                self = splitString && _toString(this) == "[object String]" ?
-                this.split("") :
-                object,
-                thisp = arguments[1],
-                i = -1,
-                length = self.length >>> 0;
+            const object = toObject(this);
+
+            const self = splitString && _toString(this) == "[object String]" ?
+            this.split("") :
+            object;
+
+            const thisp = arguments[1];
+            let i = -1;
+            const length = self.length >>> 0;
             if (_toString(fun) != "[object Function]") {
                 throw new TypeError(); // TODO message
             }
@@ -387,18 +388,20 @@ ace.define("ace/lib/es5-shim", ["require", "exports", "module"], function(requir
     }
     if (!Array.prototype.map) {
         Array.prototype.map = function map(fun /*, thisp*/ ) {
-            var object = toObject(this),
-                self = splitString && _toString(this) == "[object String]" ?
-                this.split("") :
-                object,
-                length = self.length >>> 0,
-                result = Array(length),
-                thisp = arguments[1];
+            const object = toObject(this);
+
+            const self = splitString && _toString(this) == "[object String]" ?
+            this.split("") :
+            object;
+
+            const length = self.length >>> 0;
+            const result = Array(length);
+            const thisp = arguments[1];
             if (_toString(fun) != "[object Function]") {
-                throw new TypeError(fun + " is not a function");
+                throw new TypeError(`${fun} is not a function`);
             }
 
-            for (var i = 0; i < length; i++) {
+            for (let i = 0; i < length; i++) {
                 if (i in self)
                     result[i] = fun.call(thisp, self[i], i, object);
             }
@@ -407,19 +410,21 @@ ace.define("ace/lib/es5-shim", ["require", "exports", "module"], function(requir
     }
     if (!Array.prototype.filter) {
         Array.prototype.filter = function filter(fun /*, thisp */ ) {
-            var object = toObject(this),
-                self = splitString && _toString(this) == "[object String]" ?
-                this.split("") :
-                object,
-                length = self.length >>> 0,
-                result = [],
-                value,
-                thisp = arguments[1];
+            const object = toObject(this);
+
+            const self = splitString && _toString(this) == "[object String]" ?
+            this.split("") :
+            object;
+
+            const length = self.length >>> 0;
+            const result = [];
+            let value;
+            const thisp = arguments[1];
             if (_toString(fun) != "[object Function]") {
-                throw new TypeError(fun + " is not a function");
+                throw new TypeError(`${fun} is not a function`);
             }
 
-            for (var i = 0; i < length; i++) {
+            for (let i = 0; i < length; i++) {
                 if (i in self) {
                     value = self[i];
                     if (fun.call(thisp, value, i, object)) {
@@ -432,17 +437,19 @@ ace.define("ace/lib/es5-shim", ["require", "exports", "module"], function(requir
     }
     if (!Array.prototype.every) {
         Array.prototype.every = function every(fun /*, thisp */ ) {
-            var object = toObject(this),
-                self = splitString && _toString(this) == "[object String]" ?
-                this.split("") :
-                object,
-                length = self.length >>> 0,
-                thisp = arguments[1];
+            const object = toObject(this);
+
+            const self = splitString && _toString(this) == "[object String]" ?
+            this.split("") :
+            object;
+
+            const length = self.length >>> 0;
+            const thisp = arguments[1];
             if (_toString(fun) != "[object Function]") {
-                throw new TypeError(fun + " is not a function");
+                throw new TypeError(`${fun} is not a function`);
             }
 
-            for (var i = 0; i < length; i++) {
+            for (let i = 0; i < length; i++) {
                 if (i in self && !fun.call(thisp, self[i], i, object)) {
                     return false;
                 }
@@ -452,17 +459,19 @@ ace.define("ace/lib/es5-shim", ["require", "exports", "module"], function(requir
     }
     if (!Array.prototype.some) {
         Array.prototype.some = function some(fun /*, thisp */ ) {
-            var object = toObject(this),
-                self = splitString && _toString(this) == "[object String]" ?
-                this.split("") :
-                object,
-                length = self.length >>> 0,
-                thisp = arguments[1];
+            const object = toObject(this);
+
+            const self = splitString && _toString(this) == "[object String]" ?
+            this.split("") :
+            object;
+
+            const length = self.length >>> 0;
+            const thisp = arguments[1];
             if (_toString(fun) != "[object Function]") {
-                throw new TypeError(fun + " is not a function");
+                throw new TypeError(`${fun} is not a function`);
             }
 
-            for (var i = 0; i < length; i++) {
+            for (let i = 0; i < length; i++) {
                 if (i in self && fun.call(thisp, self[i], i, object)) {
                     return true;
                 }
@@ -472,20 +481,22 @@ ace.define("ace/lib/es5-shim", ["require", "exports", "module"], function(requir
     }
     if (!Array.prototype.reduce) {
         Array.prototype.reduce = function reduce(fun /*, initial*/ ) {
-            var object = toObject(this),
-                self = splitString && _toString(this) == "[object String]" ?
-                this.split("") :
-                object,
-                length = self.length >>> 0;
+            const object = toObject(this);
+
+            const self = splitString && _toString(this) == "[object String]" ?
+            this.split("") :
+            object;
+
+            const length = self.length >>> 0;
             if (_toString(fun) != "[object Function]") {
-                throw new TypeError(fun + " is not a function");
+                throw new TypeError(`${fun} is not a function`);
             }
             if (!length && arguments.length == 1) {
                 throw new TypeError("reduce of empty array with no initial value");
             }
 
-            var i = 0;
-            var result;
+            let i = 0;
+            let result;
             if (arguments.length >= 2) {
                 result = arguments[1];
             } else {
@@ -511,19 +522,22 @@ ace.define("ace/lib/es5-shim", ["require", "exports", "module"], function(requir
     }
     if (!Array.prototype.reduceRight) {
         Array.prototype.reduceRight = function reduceRight(fun /*, initial*/ ) {
-            var object = toObject(this),
-                self = splitString && _toString(this) == "[object String]" ?
-                this.split("") :
-                object,
-                length = self.length >>> 0;
+            const object = toObject(this);
+
+            const self = splitString && _toString(this) == "[object String]" ?
+            this.split("") :
+            object;
+
+            const length = self.length >>> 0;
             if (_toString(fun) != "[object Function]") {
-                throw new TypeError(fun + " is not a function");
+                throw new TypeError(`${fun} is not a function`);
             }
             if (!length && arguments.length == 1) {
                 throw new TypeError("reduceRight of empty array with no initial value");
             }
 
-            var result, i = length - 1;
+            let result;
+            let i = length - 1;
             if (arguments.length >= 2) {
                 result = arguments[1];
             } else {
@@ -549,16 +563,17 @@ ace.define("ace/lib/es5-shim", ["require", "exports", "module"], function(requir
     }
     if (!Array.prototype.indexOf || ([0, 1].indexOf(1, 2) != -1)) {
         Array.prototype.indexOf = function indexOf(sought /*, fromIndex */ ) {
-            var self = splitString && _toString(this) == "[object String]" ?
+            const self = splitString && _toString(this) == "[object String]" ?
                 this.split("") :
-                toObject(this),
-                length = self.length >>> 0;
+                toObject(this);
+
+            const length = self.length >>> 0;
 
             if (!length) {
                 return -1;
             }
 
-            var i = 0;
+            let i = 0;
             if (arguments.length > 1) {
                 i = toInteger(arguments[1]);
             }
@@ -573,15 +588,16 @@ ace.define("ace/lib/es5-shim", ["require", "exports", "module"], function(requir
     }
     if (!Array.prototype.lastIndexOf || ([0, 1].lastIndexOf(0, -3) != -1)) {
         Array.prototype.lastIndexOf = function lastIndexOf(sought /*, fromIndex */ ) {
-            var self = splitString && _toString(this) == "[object String]" ?
+            const self = splitString && _toString(this) == "[object String]" ?
                 this.split("") :
-                toObject(this),
-                length = self.length >>> 0;
+                toObject(this);
+
+            const length = self.length >>> 0;
 
             if (!length) {
                 return -1;
             }
-            var i = length - 1;
+            let i = length - 1;
             if (arguments.length > 1) {
                 i = Math.min(i, toInteger(arguments[1]));
             }
@@ -604,7 +620,7 @@ ace.define("ace/lib/es5-shim", ["require", "exports", "module"], function(requir
         };
     }
     if (!Object.getOwnPropertyDescriptor) {
-        var ERR_NON_OBJECT = "Object.getOwnPropertyDescriptor called on a " +
+        const ERR_NON_OBJECT = "Object.getOwnPropertyDescriptor called on a " +
             "non-object: ";
         Object.getOwnPropertyDescriptor = function getOwnPropertyDescriptor(object, property) {
             if ((typeof object != "object" && typeof object != "function") || object === null)
@@ -612,13 +628,15 @@ ace.define("ace/lib/es5-shim", ["require", "exports", "module"], function(requir
             if (!owns(object, property))
                 return;
 
-            var descriptor, getter, setter;
+            let descriptor;
+            var getter;
+            var setter;
             descriptor = {
                 enumerable: true,
                 configurable: true
             };
             if (supportsAccessors) {
-                var prototype = object.__proto__;
+                const prototype = object.__proto__;
                 object.__proto__ = prototypeOfObject;
 
                 var getter = lookupGetter(object, property);
@@ -641,17 +659,15 @@ ace.define("ace/lib/es5-shim", ["require", "exports", "module"], function(requir
         };
     }
     if (!Object.create) {
-        var createEmpty;
+        let createEmpty;
         if (Object.prototype.__proto__ === null) {
-            createEmpty = function() {
-                return {
-                    "__proto__": null
-                };
-            };
+            createEmpty = () => ({
+                "__proto__": null
+            });
         } else {
-            createEmpty = function() {
-                var empty = {};
-                for (var i in empty)
+            createEmpty = () => {
+                const empty = {};
+                for (const i in empty)
                     empty[i] = null;
                 empty.constructor =
                     empty.hasOwnProperty =
@@ -666,13 +682,13 @@ ace.define("ace/lib/es5-shim", ["require", "exports", "module"], function(requir
         }
 
         Object.create = function create(prototype, properties) {
-            var object;
+            let object;
             if (prototype === null) {
                 object = createEmpty();
             } else {
                 if (typeof prototype != "object")
-                    throw new TypeError("typeof prototype[" + (typeof prototype) + "] != 'object'");
-                var Type = function() {};
+                    throw new TypeError(`typeof prototype[${typeof prototype}] != 'object'`);
+                const Type = () => {};
                 Type.prototype = prototype;
                 object = new Type();
                 object.__proto__ = prototype;
@@ -690,8 +706,8 @@ ace.define("ace/lib/es5-shim", ["require", "exports", "module"], function(requir
         } catch (exception) {}
     }
     if (Object.defineProperty) {
-        var definePropertyWorksOnObject = doesDefinePropertyWork({});
-        var definePropertyWorksOnDom = typeof document == "undefined" ||
+        const definePropertyWorksOnObject = doesDefinePropertyWork({});
+        const definePropertyWorksOnDom = typeof document == "undefined" ||
             doesDefinePropertyWork(document.createElement("div"));
         if (!definePropertyWorksOnObject || !definePropertyWorksOnDom) {
             var definePropertyFallback = Object.defineProperty;
@@ -699,9 +715,9 @@ ace.define("ace/lib/es5-shim", ["require", "exports", "module"], function(requir
     }
 
     if (!Object.defineProperty || definePropertyFallback) {
-        var ERR_NON_OBJECT_DESCRIPTOR = "Property description must be an object: ";
-        var ERR_NON_OBJECT_TARGET = "Object.defineProperty called on non-object: "
-        var ERR_ACCESSORS_NOT_SUPPORTED = "getters & setters can not be defined " +
+        const ERR_NON_OBJECT_DESCRIPTOR = "Property description must be an object: ";
+        const ERR_NON_OBJECT_TARGET = "Object.defineProperty called on non-object: ";
+        const ERR_ACCESSORS_NOT_SUPPORTED = "getters & setters can not be defined " +
             "on this javascript engine";
 
         Object.defineProperty = function defineProperty(object, property, descriptor) {
@@ -718,7 +734,7 @@ ace.define("ace/lib/es5-shim", ["require", "exports", "module"], function(requir
 
                 if (supportsAccessors && (lookupGetter(object, property) ||
                         lookupSetter(object, property))) {
-                    var prototype = object.__proto__;
+                    const prototype = object.__proto__;
                     object.__proto__ = prototypeOfObject;
                     delete object[property];
                     object[property] = descriptor.value;
@@ -740,7 +756,7 @@ ace.define("ace/lib/es5-shim", ["require", "exports", "module"], function(requir
     }
     if (!Object.defineProperties) {
         Object.defineProperties = function defineProperties(object, properties) {
-            for (var property in properties) {
+            for (const property in properties) {
                 if (owns(properties, property))
                     Object.defineProperty(object, property, properties[property]);
             }
@@ -758,7 +774,7 @@ ace.define("ace/lib/es5-shim", ["require", "exports", "module"], function(requir
         };
     }
     try {
-        Object.freeze(function() {});
+        Object.freeze(() => {});
     } catch (exception) {
         Object.freeze = (function freeze(freezeObject) {
             return function freeze(object) {
@@ -790,30 +806,32 @@ ace.define("ace/lib/es5-shim", ["require", "exports", "module"], function(requir
             if (Object(object) === object) {
                 throw new TypeError(); // TODO message
             }
-            var name = '';
+            let name = '';
             while (owns(object, name)) {
                 name += '?';
             }
             object[name] = true;
-            var returnValue = owns(object, name);
+            const returnValue = owns(object, name);
             delete object[name];
             return returnValue;
         };
     }
     if (!Object.keys) {
-        var hasDontEnumBug = true,
-            dontEnums = [
-                "toString",
-                "toLocaleString",
-                "valueOf",
-                "hasOwnProperty",
-                "isPrototypeOf",
-                "propertyIsEnumerable",
-                "constructor"
-            ],
-            dontEnumsLength = dontEnums.length;
+        let hasDontEnumBug = true;
 
-        for (var key in {
+        const dontEnums = [
+            "toString",
+            "toLocaleString",
+            "valueOf",
+            "hasOwnProperty",
+            "isPrototypeOf",
+            "propertyIsEnumerable",
+            "constructor"
+        ];
+
+        const dontEnumsLength = dontEnums.length;
+
+        for (const key in {
                 "toString": null
             }) {
             hasDontEnumBug = false;
@@ -829,15 +847,15 @@ ace.define("ace/lib/es5-shim", ["require", "exports", "module"], function(requir
             }
 
             var keys = [];
-            for (var name in object) {
+            for (const name in object) {
                 if (owns(object, name)) {
                     keys.push(name);
                 }
             }
 
             if (hasDontEnumBug) {
-                for (var i = 0, ii = dontEnumsLength; i < ii; i++) {
-                    var dontEnum = dontEnums[i];
+                for (let i = 0, ii = dontEnumsLength; i < ii; i++) {
+                    const dontEnum = dontEnums[i];
                     if (owns(object, dontEnum)) {
                         keys.push(dontEnum);
                     }
@@ -845,20 +863,19 @@ ace.define("ace/lib/es5-shim", ["require", "exports", "module"], function(requir
             }
             return keys;
         };
-
     }
     if (!Date.now) {
         Date.now = function now() {
             return new Date().getTime();
         };
     }
-    var ws = "\x09\x0A\x0B\x0C\x0D\x20\xA0\u1680\u180E\u2000\u2001\u2002\u2003" +
+    let ws = "\x09\x0A\x0B\x0C\x0D\x20\xA0\u1680\u180E\u2000\u2001\u2002\u2003" +
         "\u2004\u2005\u2006\u2007\u2008\u2009\u200A\u202F\u205F\u3000\u2028" +
         "\u2029\uFEFF";
     if (!String.prototype.trim || ws.trim()) {
-        ws = "[" + ws + "]";
-        var trimBeginRegexp = new RegExp("^" + ws + ws + "*"),
-            trimEndRegexp = new RegExp(ws + ws + "*$");
+        ws = `[${ws}]`;
+        const trimBeginRegexp = new RegExp(`^${ws}${ws}*`);
+        const trimEndRegexp = new RegExp(`${ws + ws}*$`);
         String.prototype.trim = function trim() {
             return String(this).replace(trimBeginRegexp, "").replace(trimEndRegexp, "");
         };
@@ -875,7 +892,7 @@ ace.define("ace/lib/es5-shim", ["require", "exports", "module"], function(requir
     }
 
     function isPrimitive(input) {
-        var type = typeof input;
+        const type = typeof input;
         return (
             input === null ||
             type === "undefined" ||
@@ -886,7 +903,9 @@ ace.define("ace/lib/es5-shim", ["require", "exports", "module"], function(requir
     }
 
     function toPrimitive(input) {
-        var val, valueOf, toString;
+        let val;
+        let valueOf;
+        let toString;
         if (isPrimitive(input)) {
             return input;
         }
@@ -906,53 +925,45 @@ ace.define("ace/lib/es5-shim", ["require", "exports", "module"], function(requir
         }
         throw new TypeError();
     }
-    var toObject = function(o) {
+    var toObject = o => {
         if (o == null) { // this matches both null and undefined
-            throw new TypeError("can't convert " + o + " to object");
+            throw new TypeError(`can't convert ${o} to object`);
         }
         return Object(o);
     };
-
 });
 
-ace.define("ace/lib/fixoldbrowsers", ["require", "exports", "module", "ace/lib/regexp", "ace/lib/es5-shim"], function(require, exports, module) {
-    "use strict";
-
+ace.define("ace/lib/fixoldbrowsers", ["require", "exports", "module", "ace/lib/regexp", "ace/lib/es5-shim"], (require, exports, module) => {
     require("./regexp");
     require("./es5-shim");
-
 });
 
-ace.define("ace/lib/dom", ["require", "exports", "module"], function(require, exports, module) {
-    "use strict";
+ace.define("ace/lib/dom", ["require", "exports", "module"], (require, exports, module) => {
+    const XHTML_NS = "http://www.w3.org/1999/xhtml";
 
-    var XHTML_NS = "http://www.w3.org/1999/xhtml";
-
-    exports.getDocumentHead = function(doc) {
+    exports.getDocumentHead = doc => {
         if (!doc)
             doc = document;
         return doc.head || doc.getElementsByTagName("head")[0] || doc.documentElement;
     }
 
-    exports.createElement = function(tag, ns) {
-        return document.createElementNS ?
-            document.createElementNS(ns || XHTML_NS, tag) :
-            document.createElement(tag);
-    };
+    exports.createElement = (tag, ns) => document.createElementNS ?
+        document.createElementNS(ns || XHTML_NS, tag) :
+        document.createElement(tag);
 
-    exports.hasCssClass = function(el, name) {
-        var classes = (el.className + "").split(/\s+/g);
-        return classes.indexOf(name) !== -1;
+    exports.hasCssClass = (el, name) => {
+        const classes = (`${el.className}`).split(/\s+/g);
+        return classes.includes(name);
     };
-    exports.addCssClass = function(el, name) {
+    exports.addCssClass = (el, name) => {
         if (!exports.hasCssClass(el, name)) {
-            el.className += " " + name;
+            el.className += ` ${name}`;
         }
     };
-    exports.removeCssClass = function(el, name) {
-        var classes = el.className.split(/\s+/g);
+    exports.removeCssClass = (el, name) => {
+        const classes = el.className.split(/\s+/g);
         while (true) {
-            var index = classes.indexOf(name);
+            const index = classes.indexOf(name);
             if (index == -1) {
                 break;
             }
@@ -961,11 +972,11 @@ ace.define("ace/lib/dom", ["require", "exports", "module"], function(require, ex
         el.className = classes.join(" ");
     };
 
-    exports.toggleCssClass = function(el, name) {
-        var classes = el.className.split(/\s+/g),
-            add = true;
+    exports.toggleCssClass = (el, name) => {
+        const classes = el.className.split(/\s+/g);
+        let add = true;
         while (true) {
-            var index = classes.indexOf(name);
+            const index = classes.indexOf(name);
             if (index == -1) {
                 break;
             }
@@ -978,7 +989,7 @@ ace.define("ace/lib/dom", ["require", "exports", "module"], function(require, ex
         el.className = classes.join(" ");
         return add;
     };
-    exports.setCssClass = function(node, className, include) {
+    exports.setCssClass = (node, className, include) => {
         if (include) {
             exports.addCssClass(node, className);
         } else {
@@ -986,9 +997,9 @@ ace.define("ace/lib/dom", ["require", "exports", "module"], function(require, ex
         }
     };
 
-    exports.hasCssString = function(id, doc) {
-        var index = 0,
-            sheets;
+    exports.hasCssString = (id, doc) => {
+        let index = 0;
+        let sheets;
         doc = doc || document;
 
         if (doc.createStyleSheet && (sheets = doc.styleSheets)) {
@@ -1002,15 +1013,14 @@ ace.define("ace/lib/dom", ["require", "exports", "module"], function(require, ex
         return false;
     };
 
-    exports.importCssString = function importCssString(cssText, id, doc) {
-        doc = doc || document;
+    exports.importCssString = function importCssString(cssText, id, doc=document) {
         if (id && exports.hasCssString(id, doc))
             return null;
 
-        var style;
+        let style;
 
         if (id)
-            cssText += "\n/*# sourceURL=ace/css/" + id + " */";
+            cssText += `\n/*# sourceURL=ace/css/${id} */`;
 
         if (doc.createStyleSheet) {
             style = doc.createStyleSheet();
@@ -1027,11 +1037,11 @@ ace.define("ace/lib/dom", ["require", "exports", "module"], function(require, ex
         }
     };
 
-    exports.importCssStylsheet = function(uri, doc) {
+    exports.importCssStylsheet = (uri, doc) => {
         if (doc.createStyleSheet) {
             doc.createStyleSheet(uri);
         } else {
-            var link = exports.createElement('link');
+            const link = exports.createElement('link');
             link.rel = 'stylesheet';
             link.href = uri;
 
@@ -1039,31 +1049,23 @@ ace.define("ace/lib/dom", ["require", "exports", "module"], function(require, ex
         }
     };
 
-    exports.getInnerWidth = function(element) {
-        return (
-            parseInt(exports.computedStyle(element, "paddingLeft"), 10) +
-            parseInt(exports.computedStyle(element, "paddingRight"), 10) +
-            element.clientWidth
-        );
-    };
+    exports.getInnerWidth = element => parseInt(exports.computedStyle(element, "paddingLeft"), 10) +
+    parseInt(exports.computedStyle(element, "paddingRight"), 10) +
+    element.clientWidth;
 
-    exports.getInnerHeight = function(element) {
-        return (
-            parseInt(exports.computedStyle(element, "paddingTop"), 10) +
-            parseInt(exports.computedStyle(element, "paddingBottom"), 10) +
-            element.clientHeight
-        );
-    };
+    exports.getInnerHeight = element => parseInt(exports.computedStyle(element, "paddingTop"), 10) +
+    parseInt(exports.computedStyle(element, "paddingBottom"), 10) +
+    element.clientHeight;
 
-    exports.scrollbarWidth = function(document) {
-        var inner = exports.createElement("ace_inner");
+    exports.scrollbarWidth = document => {
+        const inner = exports.createElement("ace_inner");
         inner.style.width = "100%";
         inner.style.minWidth = "0px";
         inner.style.height = "200px";
         inner.style.display = "block";
 
-        var outer = exports.createElement("ace_outer");
-        var style = outer.style;
+        const outer = exports.createElement("ace_outer");
+        const style = outer.style;
 
         style.position = "absolute";
         style.left = "-10000px";
@@ -1075,13 +1077,13 @@ ace.define("ace/lib/dom", ["require", "exports", "module"], function(require, ex
 
         outer.appendChild(inner);
 
-        var body = document.documentElement;
+        const body = document.documentElement;
         body.appendChild(outer);
 
-        var noScrollbar = inner.offsetWidth;
+        const noScrollbar = inner.offsetWidth;
 
         style.overflow = "scroll";
-        var withScrollbar = inner.offsetWidth;
+        let withScrollbar = inner.offsetWidth;
 
         if (noScrollbar == withScrollbar) {
             withScrollbar = outer.clientWidth;
@@ -1093,75 +1095,58 @@ ace.define("ace/lib/dom", ["require", "exports", "module"], function(require, ex
     };
 
     if (typeof document == "undefined") {
-        exports.importCssString = function() {};
+        exports.importCssString = () => {};
         return;
     }
 
     if (window.pageYOffset !== undefined) {
-        exports.getPageScrollTop = function() {
-            return window.pageYOffset;
-        };
+        exports.getPageScrollTop = () => window.pageYOffset;
 
-        exports.getPageScrollLeft = function() {
-            return window.pageXOffset;
-        };
+        exports.getPageScrollLeft = () => window.pageXOffset;
     } else {
-        exports.getPageScrollTop = function() {
-            return document.body.scrollTop;
-        };
+        exports.getPageScrollTop = () => document.body.scrollTop;
 
-        exports.getPageScrollLeft = function() {
-            return document.body.scrollLeft;
-        };
+        exports.getPageScrollLeft = () => document.body.scrollLeft;
     }
 
     if (window.getComputedStyle)
-        exports.computedStyle = function(element, style) {
+        exports.computedStyle = (element, style) => {
             if (style)
                 return (window.getComputedStyle(element, "") || {})[style] || "";
             return window.getComputedStyle(element, "") || {};
         };
     else
-        exports.computedStyle = function(element, style) {
+        exports.computedStyle = (element, style) => {
             if (style)
                 return element.currentStyle[style];
             return element.currentStyle;
         };
-    exports.setInnerHtml = function(el, innerHtml) {
-        var element = el.cloneNode(false); //document.createElement("div");
+    exports.setInnerHtml = (el, innerHtml) => {
+        const element = el.cloneNode(false); //document.createElement("div");
         element.innerHTML = innerHtml;
         el.parentNode.replaceChild(element, el);
         return element;
     };
 
     if ("textContent" in document.documentElement) {
-        exports.setInnerText = function(el, innerText) {
+        exports.setInnerText = (el, innerText) => {
             el.textContent = innerText;
         };
 
-        exports.getInnerText = function(el) {
-            return el.textContent;
-        };
+        exports.getInnerText = el => el.textContent;
     } else {
-        exports.setInnerText = function(el, innerText) {
+        exports.setInnerText = (el, innerText) => {
             el.innerText = innerText;
         };
 
-        exports.getInnerText = function(el) {
-            return el.innerText;
-        };
+        exports.getInnerText = el => el.innerText;
     }
 
-    exports.getParentWindow = function(document) {
-        return document.defaultView || document.parentWindow;
-    };
-
+    exports.getParentWindow = document => document.defaultView || document.parentWindow;
 });
 
-ace.define("ace/lib/oop", ["require", "exports", "module"], function(require, exports, module) {
-    "use strict";
-
-    exports.inherits = function(ctor, superCtor) {
+ace.define("ace/lib/oop", ["require", "exports", "module"], (require, exports, module) => {
+    exports.inherits = (ctor, superCtor) => {
         ctor.super_ = superCtor;
         ctor.prototype = Object.create(superCtor.prototype, {
             constructor: {
@@ -1173,27 +1158,24 @@ ace.define("ace/lib/oop", ["require", "exports", "module"], function(require, ex
         });
     };
 
-    exports.mixin = function(obj, mixin) {
-        for (var key in mixin) {
+    exports.mixin = (obj, mixin) => {
+        for (const key in mixin) {
             obj[key] = mixin[key];
         }
         return obj;
     };
 
-    exports.implement = function(proto, mixin) {
+    exports.implement = (proto, mixin) => {
         exports.mixin(proto, mixin);
     };
-
 });
 
-ace.define("ace/lib/keys", ["require", "exports", "module", "ace/lib/fixoldbrowsers", "ace/lib/oop"], function(require, exports, module) {
-    "use strict";
-
+ace.define("ace/lib/keys", ["require", "exports", "module", "ace/lib/fixoldbrowsers", "ace/lib/oop"], (require, exports, module) => {
     require("./fixoldbrowsers");
 
-    var oop = require("./oop");
-    var Keys = (function() {
-        var ret = {
+    const oop = require("./oop");
+    const Keys = ((() => {
+        const ret = {
             MODIFIER_KEYS: {
                 16: 'Shift',
                 17: 'Ctrl',
@@ -1315,7 +1297,8 @@ ace.define("ace/lib/keys", ["require", "exports", "module", "ace/lib/fixoldbrows
                 106: '*'
             }
         };
-        var name, i;
+        let name;
+        let i;
         for (i in ret.FUNCTION_KEYS) {
             name = ret.FUNCTION_KEYS[i].toLowerCase();
             ret[name] = parseInt(i, 10);
@@ -1332,39 +1315,35 @@ ace.define("ace/lib/keys", ["require", "exports", "module", "ace/lib/fixoldbrows
         ret.del = ret["delete"];
         ret[173] = '-';
 
-        (function() {
-            var mods = ["cmd", "ctrl", "alt", "shift"];
-            for (var i = Math.pow(2, mods.length); i--;) {
-                ret.KEY_MODS[i] = mods.filter(function(x) {
-                    return i & ret.KEY_MODS[x];
-                }).join("-") + "-";
+        ((() => {
+            const mods = ["cmd", "ctrl", "alt", "shift"];
+            for (let i = 2 ** mods.length; i--;) {
+                ret.KEY_MODS[i] = `${mods.filter(x => i & ret.KEY_MODS[x]).join("-")}-`;
             }
-        })();
+        }))();
 
         ret.KEY_MODS[0] = "";
         ret.KEY_MODS[-1] = "input-";
 
         return ret;
-    })();
+    }))();
     oop.mixin(exports, Keys);
 
-    exports.keyCodeToString = function(keyCode) {
-        var keyString = Keys[keyCode];
+    exports.keyCodeToString = keyCode => {
+        let keyString = Keys[keyCode];
         if (typeof keyString != "string")
             keyString = String.fromCharCode(keyCode);
         return keyString.toLowerCase();
     };
-
 });
 
-ace.define("ace/lib/useragent", ["require", "exports", "module"], function(require, exports, module) {
-    "use strict";
+ace.define("ace/lib/useragent", ["require", "exports", "module"], (require, exports, module) => {
     exports.OS = {
         LINUX: "LINUX",
         MAC: "MAC",
         WINDOWS: "WINDOWS"
     };
-    exports.getOS = function() {
+    exports.getOS = () => {
         if (exports.isMac) {
             return exports.OS.MAC;
         } else if (exports.isLinux) {
@@ -1376,13 +1355,13 @@ ace.define("ace/lib/useragent", ["require", "exports", "module"], function(requi
     if (typeof navigator != "object")
         return;
 
-    var os = (navigator.platform.match(/mac|win|linux/i) || ["other"])[0].toLowerCase();
-    var ua = navigator.userAgent;
+    const os = (navigator.platform.match(/mac|win|linux/i) || ["other"])[0].toLowerCase();
+    const ua = navigator.userAgent;
     exports.isWin = (os == "win");
     exports.isMac = (os == "mac");
     exports.isLinux = (os == "linux");
     exports.isIE =
-        (navigator.appName == "Microsoft Internet Explorer" || navigator.appName.indexOf("MSAppHost") >= 0) ? parseFloat((ua.match(/(?:MSIE |Trident\/[0-9]+[\.0-9]+;.*rv:)([0-9]+[\.0-9]+)/) || [])[1]) : parseFloat((ua.match(/(?:Trident\/[0-9]+[\.0-9]+;.*rv:)([0-9]+[\.0-9]+)/) || [])[1]); // for ie
+        (navigator.appName == "Microsoft Internet Explorer" || navigator.appName.includes("MSAppHost")) ? parseFloat((ua.match(/(?:MSIE |Trident\/[0-9]+[\.0-9]+;.*rv:)([0-9]+[\.0-9]+)/) || [])[1]) : parseFloat((ua.match(/(?:Trident\/[0-9]+[\.0-9]+;.*rv:)([0-9]+[\.0-9]+)/) || [])[1]); // for ie
 
     exports.isOldIE = exports.isIE && exports.isIE < 9;
     exports.isGecko = exports.isMozilla = (window.Controllers || window.controllers) && window.navigator.product === "Gecko";
@@ -1392,66 +1371,63 @@ ace.define("ace/lib/useragent", ["require", "exports", "module"], function(requi
 
     exports.isChrome = parseFloat(ua.split(" Chrome/")[1]) || undefined;
 
-    exports.isAIR = ua.indexOf("AdobeAIR") >= 0;
+    exports.isAIR = ua.includes("AdobeAIR");
 
-    exports.isIPad = ua.indexOf("iPad") >= 0;
+    exports.isIPad = ua.includes("iPad");
 
-    exports.isTouchPad = ua.indexOf("TouchPad") >= 0;
+    exports.isTouchPad = ua.includes("TouchPad");
 
-    exports.isChromeOS = ua.indexOf(" CrOS ") >= 0;
-
+    exports.isChromeOS = ua.includes(" CrOS ");
 });
 
-ace.define("ace/lib/event", ["require", "exports", "module", "ace/lib/keys", "ace/lib/useragent"], function(require, exports, module) {
-    "use strict";
+ace.define("ace/lib/event", ["require", "exports", "module", "ace/lib/keys", "ace/lib/useragent"], (require, exports, module) => {
+    const keys = require("./keys");
+    const useragent = require("./useragent");
 
-    var keys = require("./keys");
-    var useragent = require("./useragent");
+    let pressedKeys = null;
+    let ts = 0;
 
-    var pressedKeys = null;
-    var ts = 0;
-
-    exports.addListener = function(elem, type, callback) {
+    exports.addListener = (elem, type, callback) => {
         if (elem.addEventListener) {
             return elem.addEventListener(type, callback, false);
         }
         if (elem.attachEvent) {
-            var wrapper = function() {
+            const wrapper = () => {
                 callback.call(elem, window.event);
             };
             callback._wrapper = wrapper;
-            elem.attachEvent("on" + type, wrapper);
+            elem.attachEvent(`on${type}`, wrapper);
         }
     };
 
-    exports.removeListener = function(elem, type, callback) {
+    exports.removeListener = (elem, type, callback) => {
         if (elem.removeEventListener) {
             return elem.removeEventListener(type, callback, false);
         }
         if (elem.detachEvent) {
-            elem.detachEvent("on" + type, callback._wrapper || callback);
+            elem.detachEvent(`on${type}`, callback._wrapper || callback);
         }
     };
-    exports.stopEvent = function(e) {
+    exports.stopEvent = e => {
         exports.stopPropagation(e);
         exports.preventDefault(e);
         return false;
     };
 
-    exports.stopPropagation = function(e) {
+    exports.stopPropagation = e => {
         if (e.stopPropagation)
             e.stopPropagation();
         else
             e.cancelBubble = true;
     };
 
-    exports.preventDefault = function(e) {
+    exports.preventDefault = e => {
         if (e.preventDefault)
             e.preventDefault();
         else
             e.returnValue = false;
     };
-    exports.getButton = function(e) {
+    exports.getButton = e => {
         if (e.type == "dblclick")
             return 0;
         if (e.type == "contextmenu" || (useragent.isMac && (e.ctrlKey && !e.altKey && !e.shiftKey)))
@@ -1467,7 +1443,7 @@ ace.define("ace/lib/event", ["require", "exports", "module", "ace/lib/keys", "ac
         }
     };
 
-    exports.capture = function(el, eventHandler, releaseCaptureHandler) {
+    exports.capture = (el, eventHandler, releaseCaptureHandler) => {
         function onMouseUp(e) {
             eventHandler && eventHandler(e);
             releaseCaptureHandler && releaseCaptureHandler(e);
@@ -1484,17 +1460,18 @@ ace.define("ace/lib/event", ["require", "exports", "module", "ace/lib/keys", "ac
         return onMouseUp;
     };
 
-    exports.addTouchMoveListener = function(el, callback) {
+    exports.addTouchMoveListener = (el, callback) => {
         if ("ontouchmove" in el) {
-            var startx, starty;
-            exports.addListener(el, "touchstart", function(e) {
-                var touchObj = e.changedTouches[0];
+            let startx;
+            let starty;
+            exports.addListener(el, "touchstart", e => {
+                const touchObj = e.changedTouches[0];
                 startx = touchObj.clientX;
                 starty = touchObj.clientY;
             });
-            exports.addListener(el, "touchmove", function(e) {
-                var factor = 1,
-                    touchObj = e.changedTouches[0];
+            exports.addListener(el, "touchmove", e => {
+                const factor = 1;
+                const touchObj = e.changedTouches[0];
 
                 e.wheelX = -(touchObj.clientX - startx) / factor;
                 e.wheelY = -(touchObj.clientY - starty) / factor;
@@ -1507,10 +1484,10 @@ ace.define("ace/lib/event", ["require", "exports", "module", "ace/lib/keys", "ac
         }
     };
 
-    exports.addMouseWheelListener = function(el, callback) {
+    exports.addMouseWheelListener = (el, callback) => {
         if ("onmousewheel" in el) {
-            exports.addListener(el, "mousewheel", function(e) {
-                var factor = 8;
+            exports.addListener(el, "mousewheel", e => {
+                const factor = 8;
                 if (e.wheelDeltaX !== undefined) {
                     e.wheelX = -e.wheelDeltaX / factor;
                     e.wheelY = -e.wheelDeltaY / factor;
@@ -1521,8 +1498,8 @@ ace.define("ace/lib/event", ["require", "exports", "module", "ace/lib/keys", "ac
                 callback(e);
             });
         } else if ("onwheel" in el) {
-            exports.addListener(el, "wheel", function(e) {
-                var factor = 0.35;
+            exports.addListener(el, "wheel", e => {
+                const factor = 0.35;
                 switch (e.deltaMode) {
                     case e.DOM_DELTA_PIXEL:
                         e.wheelX = e.deltaX * factor || 0;
@@ -1538,7 +1515,7 @@ ace.define("ace/lib/event", ["require", "exports", "module", "ace/lib/keys", "ac
                 callback(e);
             });
         } else {
-            exports.addListener(el, "DOMMouseScroll", function(e) {
+            exports.addListener(el, "DOMMouseScroll", e => {
                 if (e.axis && e.axis == e.HORIZONTAL_AXIS) {
                     e.wheelX = (e.detail || 0) * 5;
                     e.wheelY = 0;
@@ -1551,10 +1528,12 @@ ace.define("ace/lib/event", ["require", "exports", "module", "ace/lib/keys", "ac
         }
     };
 
-    exports.addMultiMouseDownListener = function(elements, timeouts, eventHandler, callbackName) {
-        var clicks = 0;
-        var startX, startY, timer;
-        var eventNames = {
+    exports.addMultiMouseDownListener = (elements, timeouts, eventHandler, callbackName) => {
+        let clicks = 0;
+        let startX;
+        let startY;
+        let timer;
+        const eventNames = {
             2: "dblclick",
             3: "tripleclick",
             4: "quadclick"
@@ -1571,12 +1550,12 @@ ace.define("ace/lib/event", ["require", "exports", "module", "ace/lib/keys", "ac
                 clicks = 1;
             }
             if (useragent.isIE) {
-                var isNewClick = Math.abs(e.clientX - startX) > 5 || Math.abs(e.clientY - startY) > 5;
+                const isNewClick = Math.abs(e.clientX - startX) > 5 || Math.abs(e.clientY - startY) > 5;
                 if (!timer || isNewClick)
                     clicks = 1;
                 if (timer)
                     clearTimeout(timer);
-                timer = setTimeout(function() {
+                timer = setTimeout(() => {
                     timer = null
                 }, timeouts[clicks - 1] || 600);
 
@@ -1600,7 +1579,7 @@ ace.define("ace/lib/event", ["require", "exports", "module", "ace/lib/keys", "ac
             clicks = 2;
             if (timer)
                 clearTimeout(timer);
-            timer = setTimeout(function() {
+            timer = setTimeout(() => {
                 timer = null
             }, timeouts[clicks - 1] || 600);
             eventHandler[callbackName]("mousedown", e);
@@ -1608,25 +1587,19 @@ ace.define("ace/lib/event", ["require", "exports", "module", "ace/lib/keys", "ac
         }
         if (!Array.isArray(elements))
             elements = [elements];
-        elements.forEach(function(el) {
+        elements.forEach(el => {
             exports.addListener(el, "mousedown", onMousedown);
             if (useragent.isOldIE)
                 exports.addListener(el, "dblclick", onDblclick);
         });
     };
 
-    var getModifierHash = useragent.isMac && useragent.isOpera && !("KeyboardEvent" in window) ? function(e) {
-        return 0 | (e.metaKey ? 1 : 0) | (e.altKey ? 2 : 0) | (e.shiftKey ? 4 : 0) | (e.ctrlKey ? 8 : 0);
-    } : function(e) {
-        return 0 | (e.ctrlKey ? 1 : 0) | (e.altKey ? 2 : 0) | (e.shiftKey ? 4 : 0) | (e.metaKey ? 8 : 0);
-    };
+    const getModifierHash = useragent.isMac && useragent.isOpera && !("KeyboardEvent" in window) ? e => 0 | (e.metaKey ? 1 : 0) | (e.altKey ? 2 : 0) | (e.shiftKey ? 4 : 0) | (e.ctrlKey ? 8 : 0) : e => 0 | (e.ctrlKey ? 1 : 0) | (e.altKey ? 2 : 0) | (e.shiftKey ? 4 : 0) | (e.metaKey ? 8 : 0);
 
-    exports.getModifierString = function(e) {
-        return keys.KEY_MODS[getModifierHash(e)];
-    };
+    exports.getModifierString = e => keys.KEY_MODS[getModifierHash(e)];
 
     function normalizeCommandKeys(callback, e, keyCode) {
-        var hashId = getModifierHash(e);
+        let hashId = getModifierHash(e);
 
         if (!useragent.isMac && pressedKeys) {
             if (e.getModifierState && (e.getModifierState("OS") || e.getModifierState("Win")))
@@ -1643,7 +1616,7 @@ ace.define("ace/lib/event", ["require", "exports", "module", "ace/lib/keys", "ac
                     if (pressedKeys[keyCode] == 1)
                         ts = e.timeStamp;
                 } else if (keyCode === 18 && hashId === 3 && location === 2) {
-                    var dt = e.timeStamp - ts;
+                    const dt = e.timeStamp - ts;
                     if (dt < 50)
                         pressedKeys.altGr = true;
                 }
@@ -1681,34 +1654,32 @@ ace.define("ace/lib/event", ["require", "exports", "module", "ace/lib/keys", "ac
     }
 
 
-    exports.addCommandKeyListener = function(el, callback) {
-        var addListener = exports.addListener;
+    exports.addCommandKeyListener = (el, callback) => {
+        const addListener = exports.addListener;
         if (useragent.isOldGecko || (useragent.isOpera && !("KeyboardEvent" in window))) {
-            var lastKeyDownKeyCode = null;
-            addListener(el, "keydown", function(e) {
+            let lastKeyDownKeyCode = null;
+            addListener(el, "keydown", e => {
                 lastKeyDownKeyCode = e.keyCode;
             });
-            addListener(el, "keypress", function(e) {
-                return normalizeCommandKeys(callback, e, lastKeyDownKeyCode);
-            });
+            addListener(el, "keypress", e => normalizeCommandKeys(callback, e, lastKeyDownKeyCode));
         } else {
-            var lastDefaultPrevented = null;
+            let lastDefaultPrevented = null;
 
-            addListener(el, "keydown", function(e) {
+            addListener(el, "keydown", e => {
                 pressedKeys[e.keyCode] = (pressedKeys[e.keyCode] || 0) + 1;
-                var result = normalizeCommandKeys(callback, e, e.keyCode);
+                const result = normalizeCommandKeys(callback, e, e.keyCode);
                 lastDefaultPrevented = e.defaultPrevented;
                 return result;
             });
 
-            addListener(el, "keypress", function(e) {
+            addListener(el, "keypress", e => {
                 if (lastDefaultPrevented && (e.ctrlKey || e.altKey || e.shiftKey || e.metaKey)) {
                     exports.stopEvent(e);
                     lastDefaultPrevented = null;
                 }
             });
 
-            addListener(el, "keyup", function(e) {
+            addListener(el, "keyup", e => {
                 pressedKeys[e.keyCode] = null;
             });
 
@@ -1724,10 +1695,10 @@ ace.define("ace/lib/event", ["require", "exports", "module", "ace/lib/keys", "ac
     }
 
     if (typeof window == "object" && window.postMessage && !useragent.isOldIE) {
-        var postMessageId = 1;
-        exports.nextTick = function(callback, win) {
+        const postMessageId = 1;
+        exports.nextTick = (callback, win) => {
             win = win || window;
-            var messageName = "zero-timeout-message-" + postMessageId;
+            const messageName = `zero-timeout-message-${postMessageId}`;
             exports.addListener(win, "message", function listener(e) {
                 if (e.data == messageName) {
                     exports.stopPropagation(e);
@@ -1745,24 +1716,18 @@ ace.define("ace/lib/event", ["require", "exports", "module", "ace/lib/keys", "ac
     if (exports.nextFrame)
         exports.nextFrame = exports.nextFrame.bind(window);
     else
-        exports.nextFrame = function(callback) {
+        exports.nextFrame = callback => {
             setTimeout(callback, 17);
         };
 });
 
-ace.define("ace/lib/lang", ["require", "exports", "module"], function(require, exports, module) {
-    "use strict";
+ace.define("ace/lib/lang", ["require", "exports", "module"], (require, exports, module) => {
+    exports.last = a => a[a.length - 1];
 
-    exports.last = function(a) {
-        return a[a.length - 1];
-    };
+    exports.stringReverse = string => string.split("").reverse().join("");
 
-    exports.stringReverse = function(string) {
-        return string.split("").reverse().join("");
-    };
-
-    exports.stringRepeat = function(string, count) {
-        var result = '';
+    exports.stringRepeat = (string, count) => {
+        let result = '';
         while (count > 0) {
             if (count & 1)
                 result += string;
@@ -1773,28 +1738,24 @@ ace.define("ace/lib/lang", ["require", "exports", "module"], function(require, e
         return result;
     };
 
-    var trimBeginRegexp = /^\s\s*/;
-    var trimEndRegexp = /\s\s*$/;
+    const trimBeginRegexp = /^\s\s*/;
+    const trimEndRegexp = /\s\s*$/;
 
-    exports.stringTrimLeft = function(string) {
-        return string.replace(trimBeginRegexp, '');
-    };
+    exports.stringTrimLeft = string => string.replace(trimBeginRegexp, '');
 
-    exports.stringTrimRight = function(string) {
-        return string.replace(trimEndRegexp, '');
-    };
+    exports.stringTrimRight = string => string.replace(trimEndRegexp, '');
 
-    exports.copyObject = function(obj) {
-        var copy = {};
-        for (var key in obj) {
+    exports.copyObject = obj => {
+        const copy = {};
+        for (const key in obj) {
             copy[key] = obj[key];
         }
         return copy;
     };
 
     exports.copyArray = function(array) {
-        var copy = [];
-        for (var i = 0, l = array.length; i < l; i++) {
+        const copy = [];
+        for (let i = 0, l = array.length; i < l; i++) {
             if (array[i] && typeof array[i] == "object")
                 copy[i] = this.copyObject(array[i]);
             else
@@ -1806,7 +1767,7 @@ ace.define("ace/lib/lang", ["require", "exports", "module"], function(require, e
     exports.deepCopy = function deepCopy(obj) {
         if (typeof obj !== "object" || !obj)
             return obj;
-        var copy;
+        let copy;
         if (Array.isArray(obj)) {
             copy = [];
             for (var key = 0; key < obj.length; key++) {
@@ -1823,40 +1784,36 @@ ace.define("ace/lib/lang", ["require", "exports", "module"], function(require, e
         return copy;
     };
 
-    exports.arrayToMap = function(arr) {
-        var map = {};
-        for (var i = 0; i < arr.length; i++) {
+    exports.arrayToMap = arr => {
+        const map = {};
+        for (let i = 0; i < arr.length; i++) {
             map[arr[i]] = 1;
         }
         return map;
 
     };
 
-    exports.createMap = function(props) {
-        var map = Object.create(null);
-        for (var i in props) {
+    exports.createMap = props => {
+        const map = Object.create(null);
+        for (const i in props) {
             map[i] = props[i];
         }
         return map;
     };
-    exports.arrayRemove = function(array, value) {
-        for (var i = 0; i <= array.length; i++) {
+    exports.arrayRemove = (array, value) => {
+        for (let i = 0; i <= array.length; i++) {
             if (value === array[i]) {
                 array.splice(i, 1);
             }
         }
     };
 
-    exports.escapeRegExp = function(str) {
-        return str.replace(/([.*+?^${}()|[\]\/\\])/g, '\\$1');
-    };
+    exports.escapeRegExp = str => str.replace(/([.*+?^${}()|[\]\/\\])/g, '\\$1');
 
-    exports.escapeHTML = function(str) {
-        return str.replace(/&/g, "&#38;").replace(/"/g, "&#34;").replace(/'/g, "&#39;").replace(/</g, "&#60;");
-    };
+    exports.escapeHTML = str => str.replace(/&/g, "&#38;").replace(/"/g, "&#34;").replace(/'/g, "&#39;").replace(/</g, "&#60;");
 
-    exports.getMatchOffsets = function(string, regExp) {
-        var matches = [];
+    exports.getMatchOffsets = (string, regExp) => {
+        const matches = [];
 
         string.replace(regExp, function(str) {
             matches.push({
@@ -1867,89 +1824,92 @@ ace.define("ace/lib/lang", ["require", "exports", "module"], function(require, e
 
         return matches;
     };
-    exports.deferredCall = function(fcn) {
-        var timer = null;
-        var callback = function() {
+    exports.deferredCall = fcn => {
+        let timer = null;
+        const callback = () => {
             timer = null;
             fcn();
         };
 
-        var deferred = function(timeout) {
-            deferred.cancel();
-            timer = setTimeout(callback, timeout || 0);
-            return deferred;
-        };
+        class deferred {
+            constructor(timeout) {
+                deferred.cancel();
+                timer = setTimeout(callback, timeout || 0);
+                return deferred;
+            }
+
+            static call() {
+                this.cancel();
+                fcn();
+                return deferred;
+            }
+
+            static cancel() {
+                clearTimeout(timer);
+                timer = null;
+                return deferred;
+            }
+
+            static isPending() {
+                return timer;
+            }
+        }
 
         deferred.schedule = deferred;
-
-        deferred.call = function() {
-            this.cancel();
-            fcn();
-            return deferred;
-        };
-
-        deferred.cancel = function() {
-            clearTimeout(timer);
-            timer = null;
-            return deferred;
-        };
-
-        deferred.isPending = function() {
-            return timer;
-        };
 
         return deferred;
     };
 
 
-    exports.delayedCall = function(fcn, defaultTimeout) {
-        var timer = null;
-        var callback = function() {
+    exports.delayedCall = (fcn, defaultTimeout) => {
+        let timer = null;
+        const callback = () => {
             timer = null;
             fcn();
         };
 
-        var _self = function(timeout) {
-            if (timer == null)
+        class _self {
+            constructor(timeout) {
+                if (timer == null)
+                    timer = setTimeout(callback, timeout || defaultTimeout);
+            }
+
+            static delay(timeout) {
+                timer && clearTimeout(timer);
                 timer = setTimeout(callback, timeout || defaultTimeout);
-        };
+            }
 
-        _self.delay = function(timeout) {
-            timer && clearTimeout(timer);
-            timer = setTimeout(callback, timeout || defaultTimeout);
-        };
+            static call() {
+                this.cancel();
+                fcn();
+            }
+
+            static cancel() {
+                timer && clearTimeout(timer);
+                timer = null;
+            }
+
+            static isPending() {
+                return timer;
+            }
+        }
+
         _self.schedule = _self;
-
-        _self.call = function() {
-            this.cancel();
-            fcn();
-        };
-
-        _self.cancel = function() {
-            timer && clearTimeout(timer);
-            timer = null;
-        };
-
-        _self.isPending = function() {
-            return timer;
-        };
 
         return _self;
     };
 });
 
-ace.define("ace/keyboard/textinput", ["require", "exports", "module", "ace/lib/event", "ace/lib/useragent", "ace/lib/dom", "ace/lib/lang"], function(require, exports, module) {
-    "use strict";
+ace.define("ace/keyboard/textinput", ["require", "exports", "module", "ace/lib/event", "ace/lib/useragent", "ace/lib/dom", "ace/lib/lang"], (require, exports, module) => {
+    const event = require("../lib/event");
+    const useragent = require("../lib/useragent");
+    const dom = require("../lib/dom");
+    const lang = require("../lib/lang");
+    const BROKEN_SETDATA = useragent.isChrome < 18;
+    const USE_IE_MIME_TYPE = useragent.isIE;
 
-    var event = require("../lib/event");
-    var useragent = require("../lib/useragent");
-    var dom = require("../lib/dom");
-    var lang = require("../lib/lang");
-    var BROKEN_SETDATA = useragent.isChrome < 18;
-    var USE_IE_MIME_TYPE = useragent.isIE;
-
-    var TextInput = function(parentNode, host) {
-        var text = dom.createElement("textarea");
+    const TextInput = function(parentNode, host) {
+        const text = dom.createElement("textarea");
         text.className = "ace_text-input";
 
         if (useragent.isTouchPad)
@@ -1964,48 +1924,46 @@ ace.define("ace/keyboard/textinput", ["require", "exports", "module", "ace/lib/e
         if (useragent.isOldIE) text.style.top = "-1000px";
         parentNode.insertBefore(text, parentNode.firstChild);
 
-        var PLACEHOLDER = "\x01\x01";
+        const PLACEHOLDER = "\x01\x01";
 
-        var copied = false;
-        var pasted = false;
-        var inComposition = false;
-        var tempStyle = '';
-        var isSelectionEmpty = true;
+        let copied = false;
+        let pasted = false;
+        let inComposition = false;
+        let tempStyle = '';
+        let isSelectionEmpty = true;
         try {
             var isFocused = document.activeElement === text;
         } catch (e) {}
 
-        event.addListener(text, "blur", function(e) {
+        event.addListener(text, "blur", e => {
             host.onBlur(e);
             isFocused = false;
         });
-        event.addListener(text, "focus", function(e) {
+        event.addListener(text, "focus", e => {
             isFocused = true;
             host.onFocus(e);
             resetSelection();
         });
-        this.focus = function() {
+        this.focus = () => {
             if (tempStyle) return text.focus();
-            var top = text.style.top;
+            const top = text.style.top;
             text.style.position = "fixed";
             text.style.top = "0px";
             text.focus();
-            setTimeout(function() {
+            setTimeout(() => {
                 text.style.position = "";
                 if (text.style.top == "0px")
                     text.style.top = top;
             }, 0);
         };
-        this.blur = function() {
+        this.blur = () => {
             text.blur();
         };
-        this.isFocused = function() {
-            return isFocused;
-        };
-        var syncSelection = lang.delayedCall(function() {
+        this.isFocused = () => isFocused;
+        const syncSelection = lang.delayedCall(() => {
             isFocused && resetSelection(isSelectionEmpty);
         });
-        var syncValue = lang.delayedCall(function() {
+        const syncValue = lang.delayedCall(() => {
             if (!inComposition) {
                 text.value = PLACEHOLDER;
                 isFocused && resetSelection();
@@ -2039,7 +1997,7 @@ ace.define("ace/keyboard/textinput", ["require", "exports", "module", "ace/lib/e
                 syncValue.schedule();
         }
 
-        useragent.isWebKit || host.addEventListener('changeSelection', function() {
+        useragent.isWebKit || host.addEventListener('changeSelection', () => {
             if (host.selection.isEmpty() != isSelectionEmpty) {
                 isSelectionEmpty = !isSelectionEmpty;
                 syncSelection.schedule();
@@ -2051,18 +2009,16 @@ ace.define("ace/keyboard/textinput", ["require", "exports", "module", "ace/lib/e
             host.onFocus();
 
 
-        var isAllSelected = function(text) {
-            return text.selectionStart === 0 && text.selectionEnd === text.value.length;
-        };
+        let isAllSelected = text => text.selectionStart === 0 && text.selectionEnd === text.value.length;
         if (!text.setSelectionRange && text.createTextRange) {
             text.setSelectionRange = function(selectionStart, selectionEnd) {
-                var range = this.createTextRange();
+                const range = this.createTextRange();
                 range.collapse(true);
                 range.moveStart('character', selectionStart);
                 range.moveEnd('character', selectionEnd);
                 range.select();
             };
-            isAllSelected = function(text) {
+            isAllSelected = text => {
                 try {
                     var range = text.ownerDocument.selection.createRange();
                 } catch (e) {}
@@ -2071,11 +2027,11 @@ ace.define("ace/keyboard/textinput", ["require", "exports", "module", "ace/lib/e
             }
         }
         if (useragent.isOldIE) {
-            var inPropertyChange = false;
-            var onPropertyChange = function(e) {
+            let inPropertyChange = false;
+            const onPropertyChange = e => {
                 if (inPropertyChange)
                     return;
-                var data = text.value;
+                const data = text.value;
                 if (inComposition || !data || data == PLACEHOLDER)
                     return;
                 if (e && data == PLACEHOLDER[0])
@@ -2089,11 +2045,11 @@ ace.define("ace/keyboard/textinput", ["require", "exports", "module", "ace/lib/e
             var syncProperty = lang.delayedCall(onPropertyChange);
             event.addListener(text, "propertychange", onPropertyChange);
 
-            var keytable = {
+            const keytable = {
                 13: 1,
                 27: 1
             };
-            event.addListener(text, "keyup", function(e) {
+            event.addListener(text, "keyup", e => {
                 if (inComposition && (!text.value || keytable[e.keyCode]))
                     setTimeout(onCompositionEnd, 0);
                 if ((text.value.charCodeAt(0) || 0) < 129) {
@@ -2101,12 +2057,12 @@ ace.define("ace/keyboard/textinput", ["require", "exports", "module", "ace/lib/e
                 }
                 inComposition ? onCompositionUpdate() : onCompositionStart();
             });
-            event.addListener(text, "keydown", function(e) {
+            event.addListener(text, "keydown", e => {
                 syncProperty.schedule(50);
             });
         }
 
-        var onSelect = function(e) {
+        const onSelect = e => {
             if (copied) {
                 copied = false;
             } else if (isAllSelected(text)) {
@@ -2118,15 +2074,13 @@ ace.define("ace/keyboard/textinput", ["require", "exports", "module", "ace/lib/e
         };
 
         var inputHandler = null;
-        this.setInputHandler = function(cb) {
+        this.setInputHandler = cb => {
             inputHandler = cb
         };
-        this.getInputHandler = function() {
-            return inputHandler
-        };
-        var afterContextMenu = false;
+        this.getInputHandler = () => inputHandler;
+        let afterContextMenu = false;
 
-        var sendText = function(data) {
+        var sendText = data => {
             if (inputHandler) {
                 data = inputHandler(data);
                 inputHandler = null;
@@ -2161,19 +2115,19 @@ ace.define("ace/keyboard/textinput", ["require", "exports", "module", "ace/lib/e
             if (afterContextMenu)
                 afterContextMenu = false;
         };
-        var onInput = function(e) {
+        const onInput = e => {
             if (inComposition)
                 return;
-            var data = text.value;
+            const data = text.value;
             sendText(data);
             resetValue();
         };
 
-        var handleClipboardData = function(e, data, forceIEMime) {
-            var clipboardData = e.clipboardData || window.clipboardData;
+        const handleClipboardData = (e, data, forceIEMime) => {
+            const clipboardData = e.clipboardData || window.clipboardData;
             if (!clipboardData || BROKEN_SETDATA)
                 return;
-            var mime = USE_IE_MIME_TYPE || forceIEMime ? "Text" : "text/plain";
+            const mime = USE_IE_MIME_TYPE || forceIEMime ? "Text" : "text/plain";
             try {
                 if (data) {
                     return clipboardData.setData(mime, data) !== false;
@@ -2186,8 +2140,8 @@ ace.define("ace/keyboard/textinput", ["require", "exports", "module", "ace/lib/e
             }
         };
 
-        var doCopy = function(e, isCut) {
-            var data = host.getCopyText();
+        const doCopy = (e, isCut) => {
+            const data = host.getCopyText();
             if (!data)
                 return event.preventDefault(e);
 
@@ -2198,7 +2152,7 @@ ace.define("ace/keyboard/textinput", ["require", "exports", "module", "ace/lib/e
                 copied = true;
                 text.value = data;
                 text.select();
-                setTimeout(function() {
+                setTimeout(() => {
                     copied = false;
                     resetValue();
                     resetSelection();
@@ -2207,16 +2161,16 @@ ace.define("ace/keyboard/textinput", ["require", "exports", "module", "ace/lib/e
             }
         };
 
-        var onCut = function(e) {
+        const onCut = e => {
             doCopy(e, true);
         };
 
-        var onCopy = function(e) {
+        const onCopy = e => {
             doCopy(e, false);
         };
 
-        var onPaste = function(e) {
-            var data = handleClipboardData(e);
+        const onPaste = e => {
+            const data = handleClipboardData(e);
             if (typeof data == "string") {
                 if (data)
                     host.onPaste(data, e);
@@ -2239,7 +2193,7 @@ ace.define("ace/keyboard/textinput", ["require", "exports", "module", "ace/lib/e
         event.addListener(text, "copy", onCopy);
         event.addListener(text, "paste", onPaste);
         if (!('oncut' in text) || !('oncopy' in text) || !('onpaste' in text)) {
-            event.addListener(parentNode, "keydown", function(e) {
+            event.addListener(parentNode, "keydown", e => {
                 if ((useragent.isMac && !e.metaKey) || !e.ctrlKey)
                     return;
 
@@ -2256,7 +2210,7 @@ ace.define("ace/keyboard/textinput", ["require", "exports", "module", "ace/lib/e
                 }
             });
         }
-        var onCompositionStart = function(e) {
+        var onCompositionStart = e => {
             if (inComposition || !host.onCompositionStart || host.$readOnly)
                 return;
             inComposition = {};
@@ -2272,10 +2226,10 @@ ace.define("ace/keyboard/textinput", ["require", "exports", "module", "ace/lib/e
             host.session.markUndoGroup();
         };
 
-        var onCompositionUpdate = function() {
+        var onCompositionUpdate = () => {
             if (!inComposition || !host.onCompositionUpdate || host.$readOnly)
                 return;
-            var val = text.value.replace(/\x01/g, "");
+            const val = text.value.replace(/\x01/g, "");
             if (inComposition.lastValue === val) return;
 
             host.onCompositionUpdate(val);
@@ -2284,7 +2238,7 @@ ace.define("ace/keyboard/textinput", ["require", "exports", "module", "ace/lib/e
             if (inComposition.canUndo)
                 inComposition.lastValue = val;
             if (inComposition.lastValue) {
-                var r = host.selection.getRange();
+                const r = host.selection.getRange();
                 host.insert(inComposition.lastValue);
                 host.session.markUndoGroup();
                 inComposition.range = host.selection.getRange();
@@ -2293,13 +2247,13 @@ ace.define("ace/keyboard/textinput", ["require", "exports", "module", "ace/lib/e
             }
         };
 
-        var onCompositionEnd = function(e) {
+        var onCompositionEnd = e => {
             if (!host.onCompositionEnd || host.$readOnly) return;
-            var c = inComposition;
+            const c = inComposition;
             inComposition = false;
-            var timer = setTimeout(function() {
+            let timer = setTimeout(() => {
                 timer = null;
-                var str = text.value.replace(/\x01/g, "");
+                const str = text.value.replace(/\x01/g, "");
                 if (inComposition)
                     return;
                 else if (str == c.lastValue)
@@ -2328,28 +2282,26 @@ ace.define("ace/keyboard/textinput", ["require", "exports", "module", "ace/lib/e
 
 
 
-        var syncComposition = lang.delayedCall(onCompositionUpdate, 50);
+        const syncComposition = lang.delayedCall(onCompositionUpdate, 50);
 
         event.addListener(text, "compositionstart", onCompositionStart);
         if (useragent.isGecko) {
-            event.addListener(text, "text", function() {
+            event.addListener(text, "text", () => {
                 syncComposition.schedule()
             });
         } else {
-            event.addListener(text, "keyup", function() {
+            event.addListener(text, "keyup", () => {
                 syncComposition.schedule()
             });
-            event.addListener(text, "keydown", function() {
+            event.addListener(text, "keydown", () => {
                 syncComposition.schedule()
             });
         }
         event.addListener(text, "compositionend", onCompositionEnd);
 
-        this.getElement = function() {
-            return text;
-        };
+        this.getElement = () => text;
 
-        this.setReadOnly = function(readOnly) {
+        this.setReadOnly = readOnly => {
             text.readOnly = readOnly;
         };
 
@@ -2363,21 +2315,21 @@ ace.define("ace/keyboard/textinput", ["require", "exports", "module", "ace/lib/e
             this.moveToMouse(e, true);
         };
 
-        this.moveToMouse = function(e, bringToFront) {
+        this.moveToMouse = (e, bringToFront) => {
             if (!bringToFront && useragent.isOldIE)
                 return;
             if (!tempStyle)
                 tempStyle = text.style.cssText;
-            text.style.cssText = (bringToFront ? "z-index:100000;" : "") + "height:" + text.style.height + ";" + (useragent.isIE ? "opacity:0.1;" : "");
+            text.style.cssText = `${bringToFront ? "z-index:100000;" : ""}height:${text.style.height};${useragent.isIE ? "opacity:0.1;" : ""}`;
 
-            var rect = host.container.getBoundingClientRect();
-            var style = dom.computedStyle(host.container);
-            var top = rect.top + (parseInt(style.borderTopWidth) || 0);
-            var left = rect.left + (parseInt(rect.borderLeftWidth) || 0);
-            var maxTop = rect.bottom - top - text.clientHeight - 2;
-            var move = function(e) {
-                text.style.left = e.clientX - left - 2 + "px";
-                text.style.top = Math.min(e.clientY - top - 2, maxTop) + "px";
+            const rect = host.container.getBoundingClientRect();
+            const style = dom.computedStyle(host.container);
+            const top = rect.top + (parseInt(style.borderTopWidth) || 0);
+            const left = rect.left + (parseInt(rect.borderLeftWidth) || 0);
+            const maxTop = rect.bottom - top - text.clientHeight - 2;
+            const move = e => {
+                text.style.left = `${e.clientX - left - 2}px`;
+                text.style.top = `${Math.min(e.clientY - top - 2, maxTop)}px`;
             };
             move(e);
 
@@ -2397,7 +2349,7 @@ ace.define("ace/keyboard/textinput", ["require", "exports", "module", "ace/lib/e
 
         function onContextMenuClose() {
             clearTimeout(closeTimeout);
-            closeTimeout = setTimeout(function() {
+            closeTimeout = setTimeout(() => {
                 if (tempStyle) {
                     text.style.cssText = tempStyle;
                     tempStyle = '';
@@ -2409,12 +2361,12 @@ ace.define("ace/keyboard/textinput", ["require", "exports", "module", "ace/lib/e
             }, useragent.isOldIE ? 200 : 0);
         }
 
-        var onContextMenu = function(e) {
+        const onContextMenu = e => {
             host.textInput.onContextMenu(e);
             onContextMenuClose();
         };
         event.addListener(text, "mouseup", onContextMenu);
-        event.addListener(text, "mousedown", function(e) {
+        event.addListener(text, "mousedown", e => {
             e.preventDefault();
             onContextMenuClose();
         });
@@ -2425,19 +2377,17 @@ ace.define("ace/keyboard/textinput", ["require", "exports", "module", "ace/lib/e
     exports.TextInput = TextInput;
 });
 
-ace.define("ace/mouse/default_handlers", ["require", "exports", "module", "ace/lib/dom", "ace/lib/event", "ace/lib/useragent"], function(require, exports, module) {
-    "use strict";
+ace.define("ace/mouse/default_handlers", ["require", "exports", "module", "ace/lib/dom", "ace/lib/event", "ace/lib/useragent"], (require, exports, module) => {
+    const dom = require("../lib/dom");
+    const event = require("../lib/event");
+    const useragent = require("../lib/useragent");
 
-    var dom = require("../lib/dom");
-    var event = require("../lib/event");
-    var useragent = require("../lib/useragent");
-
-    var DRAG_OFFSET = 0; // pixels
+    const DRAG_OFFSET = 0; // pixels
 
     function DefaultHandlers(mouseHandler) {
         mouseHandler.$clickSelection = null;
 
-        var editor = mouseHandler.editor;
+        const editor = mouseHandler.editor;
         editor.setDefaultHandler("mousedown", this.onMouseDown.bind(mouseHandler));
         editor.setDefaultHandler("dblclick", this.onDoubleClick.bind(mouseHandler));
         editor.setDefaultHandler("tripleclick", this.onTripleClick.bind(mouseHandler));
@@ -2445,7 +2395,7 @@ ace.define("ace/mouse/default_handlers", ["require", "exports", "module", "ace/l
         editor.setDefaultHandler("mousewheel", this.onMouseWheel.bind(mouseHandler));
         editor.setDefaultHandler("touchmove", this.onTouchMove.bind(mouseHandler));
 
-        var exports = ["select", "startSelect", "selectEnd", "selectAllEnd", "selectByWordsEnd",
+        const exports = ["select", "startSelect", "selectEnd", "selectAllEnd", "selectByWordsEnd",
             "selectByLinesEnd", "dragWait", "dragWaitEnd", "focusWait"
         ];
 
@@ -2460,15 +2410,15 @@ ace.define("ace/mouse/default_handlers", ["require", "exports", "module", "ace/l
     (function() {
 
         this.onMouseDown = function(ev) {
-            var inSelection = ev.inSelection();
-            var pos = ev.getDocumentPosition();
+            const inSelection = ev.inSelection();
+            const pos = ev.getDocumentPosition();
             this.mousedownEvent = ev;
-            var editor = this.editor;
+            const editor = this.editor;
 
-            var button = ev.getButton();
+            const button = ev.getButton();
             if (button !== 0) {
-                var selectionRange = editor.getSelectionRange();
-                var selectionEmpty = selectionRange.isEmpty();
+                const selectionRange = editor.getSelectionRange();
+                const selectionEmpty = selectionRange.isEmpty();
                 editor.$blockScrolling++;
                 if (selectionEmpty || button == 1)
                     editor.selection.moveToPosition(pos);
@@ -2493,9 +2443,10 @@ ace.define("ace/mouse/default_handlers", ["require", "exports", "module", "ace/l
             return ev.preventDefault();
         };
 
-        this.startSelect = function(pos, waitForClickSelection) {
-            pos = pos || this.editor.renderer.screenToTextCoordinates(this.x, this.y);
-            var editor = this.editor;
+        this.startSelect = function(
+            pos=this.editor.renderer.screenToTextCoordinates(this.x, this.y),
+            waitForClickSelection) {
+            const editor = this.editor;
             editor.$blockScrolling++;
             if (this.mousedownEvent.getShiftKey())
                 editor.selection.selectToPosition(pos);
@@ -2512,18 +2463,19 @@ ace.define("ace/mouse/default_handlers", ["require", "exports", "module", "ace/l
         };
 
         this.select = function() {
-            var anchor, editor = this.editor;
-            var cursor = editor.renderer.screenToTextCoordinates(this.x, this.y);
+            let anchor;
+            const editor = this.editor;
+            let cursor = editor.renderer.screenToTextCoordinates(this.x, this.y);
             editor.$blockScrolling++;
             if (this.$clickSelection) {
-                var cmp = this.$clickSelection.comparePoint(cursor);
+                const cmp = this.$clickSelection.comparePoint(cursor);
 
                 if (cmp == -1) {
                     anchor = this.$clickSelection.end;
                 } else if (cmp == 1) {
                     anchor = this.$clickSelection.start;
                 } else {
-                    var orientedRange = calcRangeOrientation(this.$clickSelection, cursor);
+                    const orientedRange = calcRangeOrientation(this.$clickSelection, cursor);
                     cursor = orientedRange.cursor;
                     anchor = orientedRange.anchor;
                 }
@@ -2535,13 +2487,14 @@ ace.define("ace/mouse/default_handlers", ["require", "exports", "module", "ace/l
         };
 
         this.extendSelectionBy = function(unitName) {
-            var anchor, editor = this.editor;
-            var cursor = editor.renderer.screenToTextCoordinates(this.x, this.y);
-            var range = editor.selection[unitName](cursor.row, cursor.column);
+            let anchor;
+            const editor = this.editor;
+            let cursor = editor.renderer.screenToTextCoordinates(this.x, this.y);
+            const range = editor.selection[unitName](cursor.row, cursor.column);
             editor.$blockScrolling++;
             if (this.$clickSelection) {
-                var cmpStart = this.$clickSelection.comparePoint(range.start);
-                var cmpEnd = this.$clickSelection.comparePoint(range.end);
+                const cmpStart = this.$clickSelection.comparePoint(range.start);
+                const cmpEnd = this.$clickSelection.comparePoint(range.end);
 
                 if (cmpStart == -1 && cmpEnd <= 0) {
                     anchor = this.$clickSelection.end;
@@ -2555,7 +2508,7 @@ ace.define("ace/mouse/default_handlers", ["require", "exports", "module", "ace/l
                     cursor = range.end;
                     anchor = range.start;
                 } else {
-                    var orientedRange = calcRangeOrientation(this.$clickSelection, cursor);
+                    const orientedRange = calcRangeOrientation(this.$clickSelection, cursor);
                     cursor = orientedRange.cursor;
                     anchor = orientedRange.anchor;
                 }
@@ -2578,19 +2531,19 @@ ace.define("ace/mouse/default_handlers", ["require", "exports", "module", "ace/l
             };
 
         this.focusWait = function() {
-            var distance = calcDistance(this.mousedownEvent.x, this.mousedownEvent.y, this.x, this.y);
-            var time = Date.now();
+            const distance = calcDistance(this.mousedownEvent.x, this.mousedownEvent.y, this.x, this.y);
+            const time = Date.now();
 
             if (distance > DRAG_OFFSET || time - this.mousedownEvent.time > this.$focusTimout)
                 this.startSelect(this.mousedownEvent.getDocumentPosition());
         };
 
         this.onDoubleClick = function(ev) {
-            var pos = ev.getDocumentPosition();
-            var editor = this.editor;
-            var session = editor.session;
+            const pos = ev.getDocumentPosition();
+            const editor = this.editor;
+            const session = editor.session;
 
-            var range = session.getBracketRange(pos);
+            let range = session.getBracketRange(pos);
             if (range) {
                 if (range.isEmpty()) {
                     range.start.column--;
@@ -2606,11 +2559,11 @@ ace.define("ace/mouse/default_handlers", ["require", "exports", "module", "ace/l
         };
 
         this.onTripleClick = function(ev) {
-            var pos = ev.getDocumentPosition();
-            var editor = this.editor;
+            const pos = ev.getDocumentPosition();
+            const editor = this.editor;
 
             this.setState("selectByLines");
-            var range = editor.getSelectionRange();
+            const range = editor.getSelectionRange();
             if (range.isMultiLine() && range.contains(pos.row, pos.column)) {
                 this.$clickSelection = editor.selection.getLineRange(range.start.row);
                 this.$clickSelection.end = editor.selection.getLineRange(range.end.row).end;
@@ -2621,7 +2574,7 @@ ace.define("ace/mouse/default_handlers", ["require", "exports", "module", "ace/l
         };
 
         this.onQuadClick = function(ev) {
-            var editor = this.editor;
+            const editor = this.editor;
 
             editor.selectAll();
             this.$clickSelection = editor.getSelectionRange();
@@ -2636,11 +2589,11 @@ ace.define("ace/mouse/default_handlers", ["require", "exports", "module", "ace/l
                 ev.wheelY = 0;
             }
 
-            var t = ev.domEvent.timeStamp;
-            var dt = t - (this.$lastScrollTime || 0);
+            const t = ev.domEvent.timeStamp;
+            const dt = t - (this.$lastScrollTime || 0);
 
-            var editor = this.editor;
-            var isScrolable = editor.renderer.isScrollableBy(ev.wheelX * ev.speed, ev.wheelY * ev.speed);
+            const editor = this.editor;
+            const isScrolable = editor.renderer.isScrollableBy(ev.wheelX * ev.speed, ev.wheelY * ev.speed);
             if (isScrolable || dt < 200) {
                 this.$lastScrollTime = t;
                 editor.renderer.scrollBy(ev.wheelX * ev.speed, ev.wheelY * ev.speed);
@@ -2649,11 +2602,11 @@ ace.define("ace/mouse/default_handlers", ["require", "exports", "module", "ace/l
         };
 
         this.onTouchMove = function(ev) {
-            var t = ev.domEvent.timeStamp;
-            var dt = t - (this.$lastScrollTime || 0);
+            const t = ev.domEvent.timeStamp;
+            const dt = t - (this.$lastScrollTime || 0);
 
-            var editor = this.editor;
-            var isScrolable = editor.renderer.isScrollableBy(ev.wheelX * ev.speed, ev.wheelY * ev.speed);
+            const editor = this.editor;
+            const isScrolable = editor.renderer.isScrollableBy(ev.wheelX * ev.speed, ev.wheelY * ev.speed);
             if (isScrolable || dt < 200) {
                 this.$lastScrollTime = t;
                 editor.renderer.scrollBy(ev.wheelX * ev.speed, ev.wheelY * ev.speed);
@@ -2666,7 +2619,7 @@ ace.define("ace/mouse/default_handlers", ["require", "exports", "module", "ace/l
     exports.DefaultHandlers = DefaultHandlers;
 
     function calcDistance(ax, ay, bx, by) {
-        return Math.sqrt(Math.pow(bx - ax, 2) + Math.pow(by - ay, 2));
+        return Math.sqrt((bx - ax) ** 2 + (by - ay) ** 2);
     }
 
     function calcRangeOrientation(range, cursor) {
@@ -2688,14 +2641,11 @@ ace.define("ace/mouse/default_handlers", ["require", "exports", "module", "ace/l
                 anchor: range.start
             };
     }
-
 });
 
-ace.define("ace/tooltip", ["require", "exports", "module", "ace/lib/oop", "ace/lib/dom"], function(require, exports, module) {
-    "use strict";
-
-    var oop = require("./lib/oop");
-    var dom = require("./lib/dom");
+ace.define("ace/tooltip", ["require", "exports", "module", "ace/lib/oop", "ace/lib/dom"], (require, exports, module) => {
+    const oop = require("./lib/oop");
+    const dom = require("./lib/dom");
 
     function Tooltip(parentNode) {
         this.isOpen = false;
@@ -2721,8 +2671,8 @@ ace.define("ace/tooltip", ["require", "exports", "module", "ace/lib/oop", "ace/l
             this.getElement().innerHTML = html;
         };
         this.setPosition = function(x, y) {
-            this.getElement().style.left = x + "px";
-            this.getElement().style.top = y + "px";
+            this.getElement().style.left = `${x}px`;
+            this.getElement().style.top = `${y}px`;
         };
         this.setClassName = function(className) {
             dom.addCssClass(this.getElement(), className);
@@ -2756,28 +2706,27 @@ ace.define("ace/tooltip", ["require", "exports", "module", "ace/lib/oop", "ace/l
     exports.Tooltip = Tooltip;
 });
 
-ace.define("ace/mouse/default_gutter_handler", ["require", "exports", "module", "ace/lib/dom", "ace/lib/oop", "ace/lib/event", "ace/tooltip"], function(require, exports, module) {
-    "use strict";
-    var dom = require("../lib/dom");
-    var oop = require("../lib/oop");
-    var event = require("../lib/event");
-    var Tooltip = require("../tooltip").Tooltip;
+ace.define("ace/mouse/default_gutter_handler", ["require", "exports", "module", "ace/lib/dom", "ace/lib/oop", "ace/lib/event", "ace/tooltip"], (require, exports, module) => {
+    const dom = require("../lib/dom");
+    const oop = require("../lib/oop");
+    const event = require("../lib/event");
+    const Tooltip = require("../tooltip").Tooltip;
 
     function GutterHandler(mouseHandler) {
-        var editor = mouseHandler.editor;
-        var gutter = editor.renderer.$gutterLayer;
-        var tooltip = new GutterTooltip(editor.container);
+        const editor = mouseHandler.editor;
+        const gutter = editor.renderer.$gutterLayer;
+        const tooltip = new GutterTooltip(editor.container);
 
-        mouseHandler.editor.setDefaultHandler("guttermousedown", function(e) {
+        mouseHandler.editor.setDefaultHandler("guttermousedown", e => {
             if (!editor.isFocused() || e.getButton() != 0)
                 return;
-            var gutterRegion = gutter.getRegion(e);
+            const gutterRegion = gutter.getRegion(e);
 
             if (gutterRegion == "foldWidgets")
                 return;
 
-            var row = e.getDocumentPosition().row;
-            var selection = editor.session.selection;
+            const row = e.getDocumentPosition().row;
+            const selection = editor.session.selection;
 
             if (e.getShiftKey())
                 selection.selectTo(row, 0);
@@ -2794,18 +2743,20 @@ ace.define("ace/mouse/default_gutter_handler", ["require", "exports", "module", 
         });
 
 
-        var tooltipTimeout, mouseEvent, tooltipAnnotation;
+        let tooltipTimeout;
+        let mouseEvent;
+        let tooltipAnnotation;
 
         function showTooltip() {
-            var row = mouseEvent.getDocumentPosition().row;
-            var annotation = gutter.$annotations[row];
+            const row = mouseEvent.getDocumentPosition().row;
+            const annotation = gutter.$annotations[row];
             if (!annotation)
                 return hideTooltip();
 
-            var maxRow = editor.session.getLength();
+            const maxRow = editor.session.getLength();
             if (row == maxRow) {
-                var screenRow = editor.renderer.pixelToScreenCoordinates(0, mouseEvent.y).row;
-                var pos = mouseEvent.$pos;
+                const screenRow = editor.renderer.pixelToScreenCoordinates(0, mouseEvent.y).row;
+                const pos = mouseEvent.$pos;
                 if (screenRow > editor.session.documentToScreenRow(pos.row, pos.column))
                     return hideTooltip();
             }
@@ -2822,11 +2773,11 @@ ace.define("ace/mouse/default_gutter_handler", ["require", "exports", "module", 
             if (mouseHandler.$tooltipFollowsMouse) {
                 moveTooltip(mouseEvent);
             } else {
-                var gutterElement = mouseEvent.domEvent.target;
-                var rect = gutterElement.getBoundingClientRect();
-                var style = tooltip.getElement().style;
-                style.left = rect.right + "px";
-                style.top = rect.bottom + "px";
+                const gutterElement = mouseEvent.domEvent.target;
+                const rect = gutterElement.getBoundingClientRect();
+                const style = tooltip.getElement().style;
+                style.left = `${rect.right}px`;
+                style.top = `${rect.bottom}px`;
             }
         }
 
@@ -2845,8 +2796,8 @@ ace.define("ace/mouse/default_gutter_handler", ["require", "exports", "module", 
             tooltip.setPosition(e.x, e.y);
         }
 
-        mouseHandler.editor.setDefaultHandler("guttermousemove", function(e) {
-            var target = e.domEvent.target || e.domEvent.srcElement;
+        mouseHandler.editor.setDefaultHandler("guttermousemove", e => {
+            const target = e.domEvent.target || e.domEvent.srcElement;
             if (dom.hasCssClass(target, "ace_fold-widget"))
                 return hideTooltip();
 
@@ -2856,7 +2807,7 @@ ace.define("ace/mouse/default_gutter_handler", ["require", "exports", "module", 
             mouseEvent = e;
             if (tooltipTimeout)
                 return;
-            tooltipTimeout = setTimeout(function() {
+            tooltipTimeout = setTimeout(() => {
                 tooltipTimeout = null;
                 if (mouseEvent && !mouseHandler.isMousePressed)
                     showTooltip();
@@ -2865,12 +2816,12 @@ ace.define("ace/mouse/default_gutter_handler", ["require", "exports", "module", 
             }, 50);
         });
 
-        event.addListener(editor.renderer.$gutter, "mouseout", function(e) {
+        event.addListener(editor.renderer.$gutter, "mouseout", e => {
             mouseEvent = null;
             if (!tooltipAnnotation || tooltipTimeout)
                 return;
 
-            tooltipTimeout = setTimeout(function() {
+            tooltipTimeout = setTimeout(() => {
                 tooltipTimeout = null;
                 hideTooltip();
             }, 50);
@@ -2887,10 +2838,10 @@ ace.define("ace/mouse/default_gutter_handler", ["require", "exports", "module", 
 
     (function() {
         this.setPosition = function(x, y) {
-            var windowWidth = window.innerWidth || document.documentElement.clientWidth;
-            var windowHeight = window.innerHeight || document.documentElement.clientHeight;
-            var width = this.getWidth();
-            var height = this.getHeight();
+            const windowWidth = window.innerWidth || document.documentElement.clientWidth;
+            const windowHeight = window.innerHeight || document.documentElement.clientHeight;
+            const width = this.getWidth();
+            const height = this.getHeight();
             x += 15;
             y += 15;
             if (x + width > windowWidth) {
@@ -2907,15 +2858,12 @@ ace.define("ace/mouse/default_gutter_handler", ["require", "exports", "module", 
 
 
     exports.GutterHandler = GutterHandler;
-
 });
 
-ace.define("ace/mouse/mouse_event", ["require", "exports", "module", "ace/lib/event", "ace/lib/useragent"], function(require, exports, module) {
-    "use strict";
-
-    var event = require("../lib/event");
-    var useragent = require("../lib/useragent");
-    var MouseEvent = exports.MouseEvent = function(domEvent, editor) {
+ace.define("ace/mouse/mouse_event", ["require", "exports", "module", "ace/lib/event", "ace/lib/useragent"], (require, exports, module) => {
+    const event = require("../lib/event");
+    const useragent = require("../lib/useragent");
+    const MouseEvent = exports.MouseEvent = function(domEvent, editor) {
         this.domEvent = domEvent;
         this.editor = editor;
 
@@ -2956,14 +2904,14 @@ ace.define("ace/mouse/mouse_event", ["require", "exports", "module", "ace/lib/ev
             if (this.$inSelection !== null)
                 return this.$inSelection;
 
-            var editor = this.editor;
+            const editor = this.editor;
 
 
-            var selectionRange = editor.getSelectionRange();
+            const selectionRange = editor.getSelectionRange();
             if (selectionRange.isEmpty())
                 this.$inSelection = false;
             else {
-                var pos = this.getDocumentPosition();
+                const pos = this.getDocumentPosition();
                 this.$inSelection = selectionRange.contains(pos.row, pos.column);
             }
 
@@ -2983,30 +2931,26 @@ ace.define("ace/mouse/mouse_event", ["require", "exports", "module", "ace/lib/ev
         };
 
     }).call(MouseEvent.prototype);
-
 });
 
-ace.define("ace/mouse/dragdrop_handler", ["require", "exports", "module", "ace/lib/dom", "ace/lib/event", "ace/lib/useragent"], function(require, exports, module) {
-    "use strict";
+ace.define("ace/mouse/dragdrop_handler", ["require", "exports", "module", "ace/lib/dom", "ace/lib/event", "ace/lib/useragent"], (require, exports, module) => {
+    const dom = require("../lib/dom");
+    const event = require("../lib/event");
+    const useragent = require("../lib/useragent");
 
-    var dom = require("../lib/dom");
-    var event = require("../lib/event");
-    var useragent = require("../lib/useragent");
-
-    var AUTOSCROLL_DELAY = 200;
-    var SCROLL_CURSOR_DELAY = 200;
-    var SCROLL_CURSOR_HYSTERESIS = 5;
+    const AUTOSCROLL_DELAY = 200;
+    const SCROLL_CURSOR_DELAY = 200;
+    const SCROLL_CURSOR_HYSTERESIS = 5;
 
     function DragdropHandler(mouseHandler) {
+        const editor = mouseHandler.editor;
 
-        var editor = mouseHandler.editor;
-
-        var blankImage = dom.createElement("img");
+        const blankImage = dom.createElement("img");
         blankImage.src = "data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==";
         if (useragent.isOpera)
             blankImage.style.cssText = "width:1px;height:1px;position:fixed;top:0;left:0;z-index:2147483647;opacity:0;";
 
-        var exports = ["dragWait", "dragWaitEnd", "startDrag", "dragReadyEnd", "onMouseDrag"];
+        const exports = ["dragWait", "dragWaitEnd", "startDrag", "dragReadyEnd", "onMouseDrag"];
 
         exports.forEach(function(x) {
             mouseHandler[x] = this[x];
@@ -3014,20 +2958,24 @@ ace.define("ace/mouse/dragdrop_handler", ["require", "exports", "module", "ace/l
         editor.addEventListener("mousedown", this.onMouseDown.bind(mouseHandler));
 
 
-        var mouseTarget = editor.container;
-        var dragSelectionMarker, x, y;
-        var timerId, range;
-        var dragCursor, counter = 0;
-        var dragOperation;
-        var isInternal;
-        var autoScrollStartTime;
-        var cursorMovedTime;
-        var cursorPointOnCaretMoved;
+        const mouseTarget = editor.container;
+        let dragSelectionMarker;
+        let x;
+        let y;
+        let timerId;
+        let range;
+        let dragCursor;
+        let counter = 0;
+        let dragOperation;
+        let isInternal;
+        let autoScrollStartTime;
+        let cursorMovedTime;
+        let cursorPointOnCaretMoved;
 
         this.onDragStart = function(e) {
             if (this.cancelDrag || !mouseTarget.draggable) {
-                var self = this;
-                setTimeout(function() {
+                const self = this;
+                setTimeout(() => {
                     self.startSelect();
                     self.captureMouse(e);
                 }, 0);
@@ -3035,7 +2983,7 @@ ace.define("ace/mouse/dragdrop_handler", ["require", "exports", "module", "ace/l
             }
             range = editor.getSelectionRange();
 
-            var dataTransfer = e.dataTransfer;
+            const dataTransfer = e.dataTransfer;
             dataTransfer.effectAllowed = editor.getReadOnly() ? "copy" : "copyMove";
             if (useragent.isOpera) {
                 editor.container.appendChild(blankImage);
@@ -3057,7 +3005,7 @@ ace.define("ace/mouse/dragdrop_handler", ["require", "exports", "module", "ace/l
             isInternal = false;
             this.setState(null);
             if (!editor.getReadOnly()) {
-                var dropEffect = e.dataTransfer.dropEffect;
+                const dropEffect = e.dataTransfer.dropEffect;
                 if (!dragOperation && dropEffect == "move")
                     editor.session.remove(editor.getSelectionRange());
                 editor.renderer.$cursorLayer.setBlinking(true);
@@ -3066,7 +3014,7 @@ ace.define("ace/mouse/dragdrop_handler", ["require", "exports", "module", "ace/l
             this.editor.renderer.setCursorStyle("");
         };
 
-        this.onDragEnter = function(e) {
+        this.onDragEnter = e => {
             if (editor.getReadOnly() || !canAccept(e.dataTransfer))
                 return;
             x = e.clientX;
@@ -3078,7 +3026,7 @@ ace.define("ace/mouse/dragdrop_handler", ["require", "exports", "module", "ace/l
             return event.preventDefault(e);
         };
 
-        this.onDragOver = function(e) {
+        this.onDragOver = e => {
             if (editor.getReadOnly() || !canAccept(e.dataTransfer))
                 return;
             x = e.clientX;
@@ -3094,7 +3042,7 @@ ace.define("ace/mouse/dragdrop_handler", ["require", "exports", "module", "ace/l
             return event.preventDefault(e);
         };
 
-        this.onDragLeave = function(e) {
+        this.onDragLeave = e => {
             counter--;
             if (counter <= 0 && dragSelectionMarker) {
                 clearDragMarker();
@@ -3103,10 +3051,10 @@ ace.define("ace/mouse/dragdrop_handler", ["require", "exports", "module", "ace/l
             }
         };
 
-        this.onDrop = function(e) {
+        this.onDrop = e => {
             if (!dragCursor)
                 return;
-            var dataTransfer = e.dataTransfer;
+            const dataTransfer = e.dataTransfer;
             if (isInternal) {
                 switch (dragOperation) {
                     case "move":
@@ -3124,7 +3072,7 @@ ace.define("ace/mouse/dragdrop_handler", ["require", "exports", "module", "ace/l
                         break;
                 }
             } else {
-                var dropData = dataTransfer.getData('Text');
+                const dropData = dataTransfer.getData('Text');
                 range = {
                     start: dragCursor,
                     end: editor.session.insert(dragCursor, dropData)
@@ -3144,20 +3092,20 @@ ace.define("ace/mouse/dragdrop_handler", ["require", "exports", "module", "ace/l
         event.addListener(mouseTarget, "drop", this.onDrop.bind(mouseHandler));
 
         function scrollCursorIntoView(cursor, prevCursor) {
-            var now = Date.now();
-            var vMovement = !prevCursor || cursor.row != prevCursor.row;
-            var hMovement = !prevCursor || cursor.column != prevCursor.column;
+            const now = Date.now();
+            const vMovement = !prevCursor || cursor.row != prevCursor.row;
+            const hMovement = !prevCursor || cursor.column != prevCursor.column;
             if (!cursorMovedTime || vMovement || hMovement) {
                 editor.$blockScrolling += 1;
                 editor.moveCursorToPosition(cursor);
                 editor.$blockScrolling -= 1;
                 cursorMovedTime = now;
                 cursorPointOnCaretMoved = {
-                    x: x,
-                    y: y
+                    x,
+                    y
                 };
             } else {
-                var distance = calcDistance(cursorPointOnCaretMoved.x, cursorPointOnCaretMoved.y, x, y);
+                const distance = calcDistance(cursorPointOnCaretMoved.x, cursorPointOnCaretMoved.y, x, y);
                 if (distance > SCROLL_CURSOR_HYSTERESIS) {
                     cursorMovedTime = null;
                 } else if (now - cursorMovedTime >= SCROLL_CURSOR_DELAY) {
@@ -3168,11 +3116,11 @@ ace.define("ace/mouse/dragdrop_handler", ["require", "exports", "module", "ace/l
         }
 
         function autoScroll(cursor, prevCursor) {
-            var now = Date.now();
-            var lineHeight = editor.renderer.layerConfig.lineHeight;
-            var characterWidth = editor.renderer.layerConfig.characterWidth;
-            var editorRect = editor.renderer.scroller.getBoundingClientRect();
-            var offsets = {
+            const now = Date.now();
+            const lineHeight = editor.renderer.layerConfig.lineHeight;
+            const characterWidth = editor.renderer.layerConfig.characterWidth;
+            const editorRect = editor.renderer.scroller.getBoundingClientRect();
+            const offsets = {
                 x: {
                     left: x - editorRect.left,
                     right: editorRect.right - x
@@ -3182,9 +3130,9 @@ ace.define("ace/mouse/dragdrop_handler", ["require", "exports", "module", "ace/l
                     bottom: editorRect.bottom - y
                 }
             };
-            var nearestXOffset = Math.min(offsets.x.left, offsets.x.right);
-            var nearestYOffset = Math.min(offsets.y.top, offsets.y.bottom);
-            var scrollCursor = {
+            const nearestXOffset = Math.min(offsets.x.left, offsets.x.right);
+            const nearestYOffset = Math.min(offsets.y.top, offsets.y.bottom);
+            const scrollCursor = {
                 row: cursor.row,
                 column: cursor.column
             };
@@ -3194,9 +3142,9 @@ ace.define("ace/mouse/dragdrop_handler", ["require", "exports", "module", "ace/l
             if (nearestYOffset / lineHeight <= 1) {
                 scrollCursor.row += (offsets.y.top < offsets.y.bottom ? -1 : +1);
             }
-            var vScroll = cursor.row != scrollCursor.row;
-            var hScroll = cursor.column != scrollCursor.column;
-            var vMovement = !prevCursor || cursor.row != prevCursor.row;
+            const vScroll = cursor.row != scrollCursor.row;
+            const hScroll = cursor.column != scrollCursor.column;
+            const vMovement = !prevCursor || cursor.row != prevCursor.row;
             if (vScroll || (hScroll && !vMovement)) {
                 if (!autoScrollStartTime)
                     autoScrollStartTime = now;
@@ -3208,7 +3156,7 @@ ace.define("ace/mouse/dragdrop_handler", ["require", "exports", "module", "ace/l
         }
 
         function onDragInterval() {
-            var prevCursor = dragCursor;
+            const prevCursor = dragCursor;
             dragCursor = editor.renderer.screenToTextCoordinates(x, y);
             scrollCursorIntoView(dragCursor, prevCursor);
             autoScroll(dragCursor, prevCursor);
@@ -3247,7 +3195,7 @@ ace.define("ace/mouse/dragdrop_handler", ["require", "exports", "module", "ace/l
 
         function onMouseMove() {
             if (onMouseMoveTimer == null) {
-                onMouseMoveTimer = setTimeout(function() {
+                onMouseMoveTimer = setTimeout(() => {
                     if (onMouseMoveTimer != null && dragSelectionMarker)
                         clearDragMarker();
                 }, 20);
@@ -3255,28 +3203,26 @@ ace.define("ace/mouse/dragdrop_handler", ["require", "exports", "module", "ace/l
         }
 
         function canAccept(dataTransfer) {
-            var types = dataTransfer.types;
-            return !types || Array.prototype.some.call(types, function(type) {
-                return type == 'text/plain' || type == 'Text';
-            });
+            const types = dataTransfer.types;
+            return !types || Array.prototype.some.call(types, type => type == 'text/plain' || type == 'Text');
         }
 
         function getDropEffect(e) {
-            var copyAllowed = ['copy', 'copymove', 'all', 'uninitialized'];
-            var moveAllowed = ['move', 'copymove', 'linkmove', 'all', 'uninitialized'];
+            const copyAllowed = ['copy', 'copymove', 'all', 'uninitialized'];
+            const moveAllowed = ['move', 'copymove', 'linkmove', 'all', 'uninitialized'];
 
-            var copyModifierState = useragent.isMac ? e.altKey : e.ctrlKey;
-            var effectAllowed = "uninitialized";
+            const copyModifierState = useragent.isMac ? e.altKey : e.ctrlKey;
+            let effectAllowed = "uninitialized";
             try {
                 effectAllowed = e.dataTransfer.effectAllowed.toLowerCase();
             } catch (e) {}
-            var dropEffect = "none";
+            let dropEffect = "none";
 
-            if (copyModifierState && copyAllowed.indexOf(effectAllowed) >= 0)
+            if (copyModifierState && copyAllowed.includes(effectAllowed))
                 dropEffect = "copy";
-            else if (moveAllowed.indexOf(effectAllowed) >= 0)
+            else if (moveAllowed.includes(effectAllowed))
                 dropEffect = "move";
-            else if (copyAllowed.indexOf(effectAllowed) >= 0)
+            else if (copyAllowed.includes(effectAllowed))
                 dropEffect = "copy";
 
             return dropEffect;
@@ -3286,13 +3232,13 @@ ace.define("ace/mouse/dragdrop_handler", ["require", "exports", "module", "ace/l
     (function() {
 
         this.dragWait = function() {
-            var interval = Date.now() - this.mousedownEvent.time;
+            const interval = Date.now() - this.mousedownEvent.time;
             if (interval > this.editor.getDragDelay())
                 this.startDrag();
         };
 
         this.dragWaitEnd = function() {
-            var target = this.editor.container;
+            const target = this.editor.container;
             target.draggable = false;
             this.startSelect(this.mousedownEvent.getDocumentPosition());
             this.selectEnd();
@@ -3307,18 +3253,18 @@ ace.define("ace/mouse/dragdrop_handler", ["require", "exports", "module", "ace/l
 
         this.startDrag = function() {
             this.cancelDrag = false;
-            var editor = this.editor;
-            var target = editor.container;
+            const editor = this.editor;
+            const target = editor.container;
             target.draggable = true;
             editor.renderer.$cursorLayer.setBlinking(false);
             editor.setStyle("ace_dragging");
-            var cursorStyle = useragent.isWin ? "default" : "move";
+            const cursorStyle = useragent.isWin ? "default" : "move";
             editor.renderer.setCursorStyle(cursorStyle);
             this.setState("dragReady");
         };
 
         this.onMouseDrag = function(e) {
-            var target = this.editor.container;
+            const target = this.editor.container;
             if (useragent.isIE && this.state == "dragReady") {
                 var distance = calcDistance(this.mousedownEvent.x, this.mousedownEvent.y, this.x, this.y);
                 if (distance > 3)
@@ -3337,22 +3283,22 @@ ace.define("ace/mouse/dragdrop_handler", ["require", "exports", "module", "ace/l
             if (!this.$dragEnabled)
                 return;
             this.mousedownEvent = e;
-            var editor = this.editor;
+            const editor = this.editor;
 
-            var inSelection = e.inSelection();
-            var button = e.getButton();
-            var clickCount = e.domEvent.detail || 1;
+            const inSelection = e.inSelection();
+            const button = e.getButton();
+            const clickCount = e.domEvent.detail || 1;
             if (clickCount === 1 && button === 0 && inSelection) {
                 if (e.editor.inMultiSelectMode && (e.getAccelKey() || e.getShiftKey()))
                     return;
                 this.mousedownEvent.time = Date.now();
-                var eventTarget = e.domEvent.target || e.domEvent.srcElement;
+                const eventTarget = e.domEvent.target || e.domEvent.srcElement;
                 if ("unselectable" in eventTarget)
                     eventTarget.unselectable = "on";
                 if (editor.getDragDelay()) {
                     if (useragent.isWebKit) {
                         this.cancelDrag = true;
-                        var mouseTarget = editor.container;
+                        const mouseTarget = editor.container;
                         mouseTarget.draggable = true;
                     }
                     this.setState("dragWait");
@@ -3368,21 +3314,19 @@ ace.define("ace/mouse/dragdrop_handler", ["require", "exports", "module", "ace/l
 
 
     function calcDistance(ax, ay, bx, by) {
-        return Math.sqrt(Math.pow(bx - ax, 2) + Math.pow(by - ay, 2));
+        return Math.sqrt((bx - ax) ** 2 + (by - ay) ** 2);
     }
 
     exports.DragdropHandler = DragdropHandler;
-
 });
 
-ace.define("ace/lib/net", ["require", "exports", "module", "ace/lib/dom"], function(require, exports, module) {
-    "use strict";
-    var dom = require("./dom");
+ace.define("ace/lib/net", ["require", "exports", "module", "ace/lib/dom"], (require, exports, module) => {
+    const dom = require("./dom");
 
-    exports.get = function(url, callback) {
-        var xhr = new XMLHttpRequest();
+    exports.get = (url, callback) => {
+        const xhr = new XMLHttpRequest();
         xhr.open('GET', url, true);
-        xhr.onreadystatechange = function() {
+        xhr.onreadystatechange = () => {
             if (xhr.readyState === 4) {
                 callback(xhr.responseText);
             }
@@ -3390,14 +3334,14 @@ ace.define("ace/lib/net", ["require", "exports", "module", "ace/lib/dom"], funct
         xhr.send(null);
     };
 
-    exports.loadScript = function(path, callback) {
-        var head = dom.getDocumentHead();
-        var s = document.createElement('script');
+    exports.loadScript = (path, callback) => {
+        const head = dom.getDocumentHead();
+        let s = document.createElement('script');
 
         s.src = path;
         head.appendChild(s);
 
-        s.onload = s.onreadystatechange = function(_, isAbort) {
+        s.onload = s.onreadystatechange = (_, isAbort) => {
             if (isAbort || !s.readyState || s.readyState == "loaded" || s.readyState == "complete") {
                 s = s.onload = s.onreadystatechange = null;
                 if (!isAbort)
@@ -3405,22 +3349,19 @@ ace.define("ace/lib/net", ["require", "exports", "module", "ace/lib/dom"], funct
             }
         };
     };
-    exports.qualifyURL = function(url) {
-        var a = document.createElement('a');
+    exports.qualifyURL = url => {
+        const a = document.createElement('a');
         a.href = url;
         return a.href;
     }
-
 });
 
-ace.define("ace/lib/event_emitter", ["require", "exports", "module"], function(require, exports, module) {
-    "use strict";
-
-    var EventEmitter = {};
-    var stopPropagation = function() {
+ace.define("ace/lib/event_emitter", ["require", "exports", "module"], (require, exports, module) => {
+    const EventEmitter = {};
+    const stopPropagation = function() {
         this.propagationStopped = true;
     };
-    var preventDefault = function() {
+    const preventDefault = function() {
         this.defaultPrevented = true;
     };
 
@@ -3429,8 +3370,8 @@ ace.define("ace/lib/event_emitter", ["require", "exports", "module"], function(r
             this._eventRegistry || (this._eventRegistry = {});
             this._defaultHandlers || (this._defaultHandlers = {});
 
-            var listeners = this._eventRegistry[eventName] || [];
-            var defaultHandler = this._defaultHandlers[eventName];
+            let listeners = this._eventRegistry[eventName] || [];
+            const defaultHandler = this._defaultHandlers[eventName];
             if (!listeners.length && !defaultHandler)
                 return;
 
@@ -3445,7 +3386,7 @@ ace.define("ace/lib/event_emitter", ["require", "exports", "module"], function(r
                 e.preventDefault = preventDefault;
 
             listeners = listeners.slice();
-            for (var i = 0; i < listeners.length; i++) {
+            for (let i = 0; i < listeners.length; i++) {
                 listeners[i](e, this);
                 if (e.propagationStopped)
                     break;
@@ -3457,54 +3398,54 @@ ace.define("ace/lib/event_emitter", ["require", "exports", "module"], function(r
 
 
     EventEmitter._signal = function(eventName, e) {
-        var listeners = (this._eventRegistry || {})[eventName];
+        let listeners = (this._eventRegistry || {})[eventName];
         if (!listeners)
             return;
         listeners = listeners.slice();
-        for (var i = 0; i < listeners.length; i++)
+        for (let i = 0; i < listeners.length; i++)
             listeners[i](e, this);
     };
 
     EventEmitter.once = function(eventName, callback) {
-        var _self = this;
+        const _self = this;
         callback && this.addEventListener(eventName, function newCallback() {
             _self.removeEventListener(eventName, newCallback);
-            callback.apply(null, arguments);
+            callback(...arguments);
         });
     };
 
 
     EventEmitter.setDefaultHandler = function(eventName, callback) {
-        var handlers = this._defaultHandlers
+        let handlers = this._defaultHandlers;
         if (!handlers)
             handlers = this._defaultHandlers = {
                 _disabled_: {}
             };
 
         if (handlers[eventName]) {
-            var old = handlers[eventName];
-            var disabled = handlers._disabled_[eventName];
+            const old = handlers[eventName];
+            let disabled = handlers._disabled_[eventName];
             if (!disabled)
                 handlers._disabled_[eventName] = disabled = [];
             disabled.push(old);
-            var i = disabled.indexOf(callback);
+            const i = disabled.indexOf(callback);
             if (i != -1)
                 disabled.splice(i, 1);
         }
         handlers[eventName] = callback;
     };
     EventEmitter.removeDefaultHandler = function(eventName, callback) {
-        var handlers = this._defaultHandlers
+        const handlers = this._defaultHandlers;
         if (!handlers)
             return;
-        var disabled = handlers._disabled_[eventName];
+        const disabled = handlers._disabled_[eventName];
 
         if (handlers[eventName] == callback) {
-            var old = handlers[eventName];
+            const old = handlers[eventName];
             if (disabled)
                 this.setDefaultHandler(eventName, disabled.pop());
         } else if (disabled) {
-            var i = disabled.indexOf(callback);
+            const i = disabled.indexOf(callback);
             if (i != -1)
                 disabled.splice(i, 1);
         }
@@ -3514,11 +3455,11 @@ ace.define("ace/lib/event_emitter", ["require", "exports", "module"], function(r
         EventEmitter.addEventListener = function(eventName, callback, capturing) {
             this._eventRegistry = this._eventRegistry || {};
 
-            var listeners = this._eventRegistry[eventName];
+            let listeners = this._eventRegistry[eventName];
             if (!listeners)
                 listeners = this._eventRegistry[eventName] = [];
 
-            if (listeners.indexOf(callback) == -1)
+            if (!listeners.includes(callback))
                 listeners[capturing ? "unshift" : "push"](callback);
             return callback;
         };
@@ -3528,11 +3469,11 @@ ace.define("ace/lib/event_emitter", ["require", "exports", "module"], function(r
         EventEmitter.removeEventListener = function(eventName, callback) {
             this._eventRegistry = this._eventRegistry || {};
 
-            var listeners = this._eventRegistry[eventName];
+            const listeners = this._eventRegistry[eventName];
             if (!listeners)
                 return;
 
-            var index = listeners.indexOf(callback);
+            const index = listeners.indexOf(callback);
             if (index !== -1)
                 listeners.splice(index, 1);
         };
@@ -3542,23 +3483,22 @@ ace.define("ace/lib/event_emitter", ["require", "exports", "module"], function(r
     };
 
     exports.EventEmitter = EventEmitter;
-
 });
 
-ace.define("ace/lib/app_config", ["require", "exports", "module", "ace/lib/oop", "ace/lib/event_emitter"], function(require, exports, module) {
+ace.define("ace/lib/app_config", ["require", "exports", "module", "ace/lib/oop", "ace/lib/event_emitter"], (require, exports, module) => {
     "no use strict";
 
-    var oop = require("./oop");
-    var EventEmitter = require("./event_emitter").EventEmitter;
+    const oop = require("./oop");
+    const EventEmitter = require("./event_emitter").EventEmitter;
 
-    var optionsProvider = {
-        setOptions: function(optList) {
+    const optionsProvider = {
+        setOptions(optList) {
             Object.keys(optList).forEach(function(key) {
                 this.setOption(key, optList[key]);
             }, this);
         },
-        getOptions: function(optionNames) {
-            var result = {};
+        getOptions(optionNames) {
+            let result = {};
             if (!optionNames) {
                 optionNames = Object.keys(this.$options);
             } else if (!Array.isArray(optionNames)) {
@@ -3570,48 +3510,48 @@ ace.define("ace/lib/app_config", ["require", "exports", "module", "ace/lib/oop",
             }, this);
             return result;
         },
-        setOption: function(name, value) {
-            if (this["$" + name] === value)
+        setOption(name, value) {
+            if (this[`$${name}`] === value)
                 return;
-            var opt = this.$options[name];
+            const opt = this.$options[name];
             if (!opt) {
-                return warn('misspelled option "' + name + '"');
+                return warn(`misspelled option "${name}"`);
             }
             if (opt.forwardTo)
                 return this[opt.forwardTo] && this[opt.forwardTo].setOption(name, value);
 
             if (!opt.handlesSet)
-                this["$" + name] = value;
+                this[`$${name}`] = value;
             if (opt && opt.set)
                 opt.set.call(this, value);
         },
-        getOption: function(name) {
-            var opt = this.$options[name];
+        getOption(name) {
+            const opt = this.$options[name];
             if (!opt) {
-                return warn('misspelled option "' + name + '"');
+                return warn(`misspelled option "${name}"`);
             }
             if (opt.forwardTo)
                 return this[opt.forwardTo] && this[opt.forwardTo].getOption(name);
-            return opt && opt.get ? opt.get.call(this) : this["$" + name];
+            return opt && opt.get ? opt.get.call(this) : this[`$${name}`];
         }
     };
 
     function warn(message) {
         if (typeof console != "undefined" && console.warn)
-            console.warn.apply(console, arguments);
+            console.warn(...arguments);
     }
 
     function reportError(msg, data) {
-        var e = new Error(msg);
+        const e = new Error(msg);
         e.data = data;
         if (typeof console == "object" && console.error)
             console.error(e);
-        setTimeout(function() {
+        setTimeout(() => {
             throw e;
         });
     }
 
-    var AppConfig = function() {
+    const AppConfig = function() {
         this.$defaultOptions = {};
     };
 
@@ -3621,8 +3561,8 @@ ace.define("ace/lib/app_config", ["require", "exports", "module", "ace/lib/oop",
             if (!obj.$options)
                 this.$defaultOptions[path] = obj.$options = {};
 
-            Object.keys(options).forEach(function(key) {
-                var opt = options[key];
+            Object.keys(options).forEach(key => {
+                let opt = options[key];
                 if (typeof opt == "string")
                     opt = {
                         forwardTo: opt
@@ -3631,23 +3571,23 @@ ace.define("ace/lib/app_config", ["require", "exports", "module", "ace/lib/oop",
                 opt.name || (opt.name = key);
                 obj.$options[opt.name] = opt;
                 if ("initialValue" in opt)
-                    obj["$" + opt.name] = opt.initialValue;
+                    obj[`$${opt.name}`] = opt.initialValue;
             });
             oop.implement(obj, optionsProvider);
 
             return this;
         };
 
-        this.resetOptions = function(obj) {
-            Object.keys(obj.$options).forEach(function(key) {
-                var opt = obj.$options[key];
+        this.resetOptions = obj => {
+            Object.keys(obj.$options).forEach(key => {
+                const opt = obj.$options[key];
                 if ("value" in opt)
                     obj.setOption(key, opt.value);
             });
         };
 
         this.setDefaultValue = function(path, name, value) {
-            var opts = this.$defaultOptions[path] || (this.$defaultOptions[path] = {});
+            const opts = this.$defaultOptions[path] || (this.$defaultOptions[path] = {});
             if (opts[name]) {
                 if (opts.forwardTo)
                     this.setDefaultValue(opts.forwardTo, name, value);
@@ -3671,21 +3611,21 @@ ace.define("ace/lib/app_config", ["require", "exports", "module", "ace/lib/oop",
 
 });
 
-ace.define("ace/config", ["require", "exports", "module", "ace/lib/lang", "ace/lib/oop", "ace/lib/net", "ace/lib/app_config"], function(require, exports, module) {
+ace.define("ace/config", ["require", "exports", "module", "ace/lib/lang", "ace/lib/oop", "ace/lib/net", "ace/lib/app_config"], (require, exports, module) => {
     "no use strict";
 
-    var lang = require("./lib/lang");
-    var oop = require("./lib/oop");
-    var net = require("./lib/net");
-    var AppConfig = require("./lib/app_config").AppConfig;
+    const lang = require("./lib/lang");
+    const oop = require("./lib/oop");
+    const net = require("./lib/net");
+    const AppConfig = require("./lib/app_config").AppConfig;
 
     module.exports = exports = new AppConfig();
 
-    var global = (function() {
+    const global = (function() {
         return this || typeof window != "undefined" && window;
     })();
 
-    var options = {
+    const options = {
         packaged: false,
         workerPath: null,
         modePath: null,
@@ -3695,39 +3635,37 @@ ace.define("ace/config", ["require", "exports", "module", "ace/lib/lang", "ace/l
         $moduleUrls: {}
     };
 
-    exports.get = function(key) {
+    exports.get = key => {
         if (!options.hasOwnProperty(key))
-            throw new Error("Unknown config key: " + key);
+            throw new Error(`Unknown config key: ${key}`);
 
         return options[key];
     };
 
-    exports.set = function(key, value) {
+    exports.set = (key, value) => {
         if (!options.hasOwnProperty(key))
-            throw new Error("Unknown config key: " + key);
+            throw new Error(`Unknown config key: ${key}`);
 
         options[key] = value;
     };
 
-    exports.all = function() {
-        return lang.copyObject(options);
-    };
+    exports.all = () => lang.copyObject(options);
     exports.moduleUrl = function(name, component) {
         if (options.$moduleUrls[name])
             return options.$moduleUrls[name];
 
-        var parts = name.split("/");
+        const parts = name.split("/");
         component = component || parts[parts.length - 2] || "";
-        var sep = component == "snippets" ? "/" : "-";
-        var base = parts[parts.length - 1];
+        let sep = component == "snippets" ? "/" : "-";
+        let base = parts[parts.length - 1];
         if (component == "worker" && sep == "-") {
-            var re = new RegExp("^" + component + "[\\-_]|[\\-_]" + component + "$", "g");
+            const re = new RegExp(`^${component}[\\-_]|[\\-_]${component}$`, "g");
             base = base.replace(re, "");
         }
 
         if ((!base || base == component) && parts.length > 1)
             base = parts[parts.length - 2];
-        var path = options[component + "Path"];
+        let path = options[`${component}Path`];
         if (path == null) {
             path = options.basePath;
         } else if (sep == "/") {
@@ -3738,13 +3676,12 @@ ace.define("ace/config", ["require", "exports", "module", "ace/lib/lang", "ace/l
         return path + component + sep + base + this.get("suffix");
     };
 
-    exports.setModuleUrl = function(name, subst) {
-        return options.$moduleUrls[name] = subst;
-    };
+    exports.setModuleUrl = (name, subst) => options.$moduleUrls[name] = subst;
 
     exports.$loading = {};
-    exports.loadModule = function(moduleName, onLoad) {
-        var module, moduleType;
+    exports.loadModule = (moduleName, onLoad) => {
+        let module;
+        let moduleType;
         if (Array.isArray(moduleName)) {
             moduleType = moduleName[0];
             moduleName = moduleName[1];
@@ -3764,15 +3701,15 @@ ace.define("ace/config", ["require", "exports", "module", "ace/lib/lang", "ace/l
         if (exports.$loading[moduleName].length > 1)
             return;
 
-        var afterLoad = function() {
-            require([moduleName], function(module) {
+        const afterLoad = () => {
+            require([moduleName], module => {
                 exports._emit("load.module", {
                     name: moduleName,
-                    module: module
+                    module
                 });
-                var listeners = exports.$loading[moduleName];
+                const listeners = exports.$loading[moduleName];
                 exports.$loading[moduleName] = null;
-                listeners.forEach(function(onLoad) {
+                listeners.forEach(onLoad => {
                     onLoad && onLoad(module);
                 });
             });
@@ -3785,34 +3722,32 @@ ace.define("ace/config", ["require", "exports", "module", "ace/lib/lang", "ace/l
     init(true);
 
     function init(packaged) {
-
         if (!global || !global.document)
             return;
 
         options.packaged = packaged || require.packaged || module.packaged || (global.define && define.packaged);
 
-        var scriptOptions = {};
-        var scriptUrl = "";
-        var currentScript = (document.currentScript || document._currentScript); // native or polyfill
-        var currentDocument = currentScript && currentScript.ownerDocument || document;
+        const scriptOptions = {};
+        let scriptUrl = "";
+        const currentScript = (document.currentScript || document._currentScript); // native or polyfill
+        const currentDocument = currentScript && currentScript.ownerDocument || document;
 
-        var scripts = currentDocument.getElementsByTagName("script");
-        for (var i = 0; i < scripts.length; i++) {
-            var script = scripts[i];
+        const scripts = currentDocument.getElementsByTagName("script");
 
-            var src = script.src || script.getAttribute("src");
+        for (const script of scripts) {
+            const src = script.src || script.getAttribute("src");
             if (!src)
                 continue;
 
-            var attributes = script.attributes;
-            for (var j = 0, l = attributes.length; j < l; j++) {
-                var attr = attributes[j];
+            const attributes = script.attributes;
+            for (let j = 0, l = attributes.length; j < l; j++) {
+                const attr = attributes[j];
                 if (attr.name.indexOf("data-ace-") === 0) {
                     scriptOptions[deHyphenate(attr.name.replace(/^data-ace-/, ""))] = attr.value;
                 }
             }
 
-            var m = src.match(/^(.*)\/ace(\-\w+)?\.js(\?|$)/);
+            const m = src.match(/^(.*)\/ace(\-\w+)?\.js(\?|$)/);
             if (m)
                 scriptUrl = m[1];
         }
@@ -3828,7 +3763,7 @@ ace.define("ace/config", ["require", "exports", "module", "ace/lib/lang", "ace/l
         scriptOptions.themePath = scriptOptions.themePath || scriptOptions.base;
         delete scriptOptions.base;
 
-        for (var key in scriptOptions)
+        for (const key in scriptOptions)
             if (typeof scriptOptions[key] !== "undefined")
                 exports.set(key, scriptOptions[key]);
     }
@@ -3836,40 +3771,36 @@ ace.define("ace/config", ["require", "exports", "module", "ace/lib/lang", "ace/l
     exports.init = init;
 
     function deHyphenate(str) {
-        return str.replace(/-(.)/g, function(m, m1) {
-            return m1.toUpperCase();
-        });
+        return str.replace(/-(.)/g, (m, m1) => m1.toUpperCase());
     }
 
 });
 
-ace.define("ace/mouse/mouse_handler", ["require", "exports", "module", "ace/lib/event", "ace/lib/useragent", "ace/mouse/default_handlers", "ace/mouse/default_gutter_handler", "ace/mouse/mouse_event", "ace/mouse/dragdrop_handler", "ace/config"], function(require, exports, module) {
-    "use strict";
+ace.define("ace/mouse/mouse_handler", ["require", "exports", "module", "ace/lib/event", "ace/lib/useragent", "ace/mouse/default_handlers", "ace/mouse/default_gutter_handler", "ace/mouse/mouse_event", "ace/mouse/dragdrop_handler", "ace/config"], (require, exports, module) => {
+    const event = require("../lib/event");
+    const useragent = require("../lib/useragent");
+    const DefaultHandlers = require("./default_handlers").DefaultHandlers;
+    const DefaultGutterHandler = require("./default_gutter_handler").GutterHandler;
+    const MouseEvent = require("./mouse_event").MouseEvent;
+    const DragdropHandler = require("./dragdrop_handler").DragdropHandler;
+    const config = require("../config");
 
-    var event = require("../lib/event");
-    var useragent = require("../lib/useragent");
-    var DefaultHandlers = require("./default_handlers").DefaultHandlers;
-    var DefaultGutterHandler = require("./default_gutter_handler").GutterHandler;
-    var MouseEvent = require("./mouse_event").MouseEvent;
-    var DragdropHandler = require("./dragdrop_handler").DragdropHandler;
-    var config = require("../config");
-
-    var MouseHandler = function(editor) {
-        var _self = this;
+    const MouseHandler = function(editor) {
+        const _self = this;
         this.editor = editor;
 
         new DefaultHandlers(this);
         new DefaultGutterHandler(this);
         new DragdropHandler(this);
 
-        var focusEditor = function(e) {
-            var windowBlurred = !document.hasFocus || !document.hasFocus() || !editor.isFocused() && document.activeElement == (editor.textInput && editor.textInput.getElement())
+        const focusEditor = e => {
+            const windowBlurred = !document.hasFocus || !document.hasFocus() || !editor.isFocused() && document.activeElement == (editor.textInput && editor.textInput.getElement());
             if (windowBlurred)
                 window.focus();
             editor.focus();
         };
 
-        var mouseTarget = editor.renderer.getMouseEventTarget();
+        const mouseTarget = editor.renderer.getMouseEventTarget();
         event.addListener(mouseTarget, "click", this.onMouseEvent.bind(this, "click"));
         event.addListener(mouseTarget, "mousemove", this.onMouseMove.bind(this, "mousemove"));
         event.addMultiMouseDownListener([
@@ -3881,7 +3812,7 @@ ace.define("ace/mouse/mouse_handler", ["require", "exports", "module", "ace/lib/
         event.addMouseWheelListener(editor.container, this.onMouseWheel.bind(this, "mousewheel"));
         event.addTouchMoveListener(editor.container, this.onTouchMove.bind(this, "touchmove"));
 
-        var gutterEl = editor.renderer.$gutter;
+        const gutterEl = editor.renderer.$gutter;
         event.addListener(gutterEl, "mousedown", this.onMouseEvent.bind(this, "guttermousedown"));
         event.addListener(gutterEl, "click", this.onMouseEvent.bind(this, "gutterclick"));
         event.addListener(gutterEl, "dblclick", this.onMouseEvent.bind(this, "gutterdblclick"));
@@ -3894,13 +3825,13 @@ ace.define("ace/mouse/mouse_handler", ["require", "exports", "module", "ace/lib/
             event.addListener(editor.renderer.scrollBarH.element, "mousedown", focusEditor);
         }
 
-        editor.on("mousemove", function(e) {
+        editor.on("mousemove", e => {
             if (_self.state || _self.$dragDelay || !_self.$dragEnabled)
                 return;
 
-            var character = editor.renderer.screenToTextCoordinates(e.x, e.y);
-            var range = editor.session.selection.getRange();
-            var renderer = editor.renderer;
+            const character = editor.renderer.screenToTextCoordinates(e.x, e.y);
+            const range = editor.session.selection.getRange();
+            const renderer = editor.renderer;
 
             if (!range.isEmpty() && range.insideStart(character.row, character.column)) {
                 renderer.setCursorStyle("default");
@@ -3916,7 +3847,7 @@ ace.define("ace/mouse/mouse_handler", ["require", "exports", "module", "ace/lib/
         };
 
         this.onMouseMove = function(name, e) {
-            var listeners = this.editor._eventRegistry && this.editor._eventRegistry.mousemove;
+            const listeners = this.editor._eventRegistry && this.editor._eventRegistry.mousemove;
             if (!listeners || !listeners.length)
                 return;
 
@@ -3924,7 +3855,7 @@ ace.define("ace/mouse/mouse_handler", ["require", "exports", "module", "ace/lib/
         };
 
         this.onMouseWheel = function(name, e) {
-            var mouseEvent = new MouseEvent(e, this.editor);
+            const mouseEvent = new MouseEvent(e, this.editor);
             mouseEvent.speed = this.$scrollSpeed * 2;
             mouseEvent.wheelX = e.wheelX;
             mouseEvent.wheelY = e.wheelY;
@@ -3933,7 +3864,7 @@ ace.define("ace/mouse/mouse_handler", ["require", "exports", "module", "ace/lib/
         };
 
         this.onTouchMove = function(name, e) {
-            var mouseEvent = new MouseEvent(e, this.editor);
+            const mouseEvent = new MouseEvent(e, this.editor);
             mouseEvent.speed = 1; //this.$scrollSpeed * 2;
             mouseEvent.wheelX = e.wheelX;
             mouseEvent.wheelY = e.wheelY;
@@ -3949,12 +3880,12 @@ ace.define("ace/mouse/mouse_handler", ["require", "exports", "module", "ace/lib/
             this.y = ev.y;
 
             this.isMousePressed = true;
-            var renderer = this.editor.renderer;
+            const renderer = this.editor.renderer;
             if (renderer.$keepTextAreaAtCursor)
                 renderer.$keepTextAreaAtCursor = null;
 
-            var self = this;
-            var onMouseMove = function(e) {
+            const self = this;
+            const onMouseMove = e => {
                 if (!e) return;
                 if (useragent.isWebKit && !e.which && self.releaseMouse)
                     return self.releaseMouse();
@@ -3966,10 +3897,10 @@ ace.define("ace/mouse/mouse_handler", ["require", "exports", "module", "ace/lib/
                 self.$mouseMoved = true;
             };
 
-            var onCaptureEnd = function(e) {
+            const onCaptureEnd = e => {
                 clearInterval(timerId);
                 onCaptureInterval();
-                self[self.state + "End"] && self[self.state + "End"](e);
+                self[`${self.state}End`] && self[`${self.state}End`](e);
                 self.state = "";
                 if (renderer.$keepTextAreaAtCursor == null) {
                     renderer.$keepTextAreaAtCursor = true;
@@ -3980,13 +3911,13 @@ ace.define("ace/mouse/mouse_handler", ["require", "exports", "module", "ace/lib/
                 e && self.onMouseEvent("mouseup", e);
             };
 
-            var onCaptureInterval = function() {
+            var onCaptureInterval = () => {
                 self[self.state] && self[self.state]();
                 self.$mouseMoved = false;
             };
 
             if (useragent.isOldIE && ev.domEvent.type == "dblclick") {
-                return setTimeout(function() {
+                return setTimeout(() => {
                     onCaptureEnd(ev);
                 });
             }
@@ -3997,13 +3928,13 @@ ace.define("ace/mouse/mouse_handler", ["require", "exports", "module", "ace/lib/
         };
         this.releaseMouse = null;
         this.cancelContextMenu = function() {
-            var stop = function(e) {
+            const stop = e => {
                 if (e && e.domEvent && e.domEvent.type != "contextmenu")
                     return;
                 this.editor.off("nativecontextmenu", stop);
                 if (e && e.domEvent)
                     event.stopEvent(e.domEvent);
-            }.bind(this);
+            };
             setTimeout(stop, 10);
             this.editor.on("nativecontextmenu", stop);
         };
@@ -4031,15 +3962,13 @@ ace.define("ace/mouse/mouse_handler", ["require", "exports", "module", "ace/lib/
     exports.MouseHandler = MouseHandler;
 });
 
-ace.define("ace/mouse/fold_handler", ["require", "exports", "module"], function(require, exports, module) {
-    "use strict";
-
+ace.define("ace/mouse/fold_handler", ["require", "exports", "module"], (require, exports, module) => {
     function FoldHandler(editor) {
 
-        editor.on("click", function(e) {
-            var position = e.getDocumentPosition();
-            var session = editor.session;
-            var fold = session.getFoldAt(position.row, position.column, 1);
+        editor.on("click", e => {
+            const position = e.getDocumentPosition();
+            const session = editor.session;
+            const fold = session.getFoldAt(position.row, position.column, 1);
             if (fold) {
                 if (e.getAccelKey())
                     session.removeFold(fold);
@@ -4050,12 +3979,12 @@ ace.define("ace/mouse/fold_handler", ["require", "exports", "module"], function(
             }
         });
 
-        editor.on("gutterclick", function(e) {
-            var gutterRegion = editor.renderer.$gutterLayer.getRegion(e);
+        editor.on("gutterclick", e => {
+            const gutterRegion = editor.renderer.$gutterLayer.getRegion(e);
 
             if (gutterRegion == "foldWidgets") {
-                var row = e.getDocumentPosition().row;
-                var session = editor.session;
+                const row = e.getDocumentPosition().row;
+                const session = editor.session;
                 if (session.foldWidgets && session.foldWidgets[row])
                     editor.session.onFoldWidgetClick(row, e);
                 if (!editor.isFocused())
@@ -4064,18 +3993,18 @@ ace.define("ace/mouse/fold_handler", ["require", "exports", "module"], function(
             }
         });
 
-        editor.on("gutterdblclick", function(e) {
-            var gutterRegion = editor.renderer.$gutterLayer.getRegion(e);
+        editor.on("gutterdblclick", e => {
+            const gutterRegion = editor.renderer.$gutterLayer.getRegion(e);
 
             if (gutterRegion == "foldWidgets") {
-                var row = e.getDocumentPosition().row;
-                var session = editor.session;
-                var data = session.getParentFoldRangeData(row, true);
-                var range = data.range || data.firstRange;
+                let row = e.getDocumentPosition().row;
+                const session = editor.session;
+                const data = session.getParentFoldRangeData(row, true);
+                const range = data.range || data.firstRange;
 
                 if (range) {
                     row = range.start.row;
-                    var fold = session.getFoldAt(row, session.getLine(row).length, 1);
+                    const fold = session.getFoldAt(row, session.getLine(row).length, 1);
 
                     if (fold) {
                         session.removeFold(fold);
@@ -4093,19 +4022,16 @@ ace.define("ace/mouse/fold_handler", ["require", "exports", "module"], function(
     }
 
     exports.FoldHandler = FoldHandler;
-
 });
 
-ace.define("ace/keyboard/keybinding", ["require", "exports", "module", "ace/lib/keys", "ace/lib/event"], function(require, exports, module) {
-    "use strict";
+ace.define("ace/keyboard/keybinding", ["require", "exports", "module", "ace/lib/keys", "ace/lib/event"], (require, exports, module) => {
+    const keyUtil = require("../lib/keys");
+    const event = require("../lib/event");
 
-    var keyUtil = require("../lib/keys");
-    var event = require("../lib/event");
-
-    var KeyBinding = function(editor) {
+    const KeyBinding = function(editor) {
         this.$editor = editor;
         this.$data = {
-            editor: editor
+            editor
         };
         this.$handlers = [];
         this.setDefaultHandler(editor.commands);
@@ -4119,7 +4045,7 @@ ace.define("ace/keyboard/keybinding", ["require", "exports", "module", "ace/lib/
         };
 
         this.setKeyboardHandler = function(kb) {
-            var h = this.$handlers;
+            const h = this.$handlers;
             if (h[h.length - 1] == kb)
                 return;
 
@@ -4134,7 +4060,7 @@ ace.define("ace/keyboard/keybinding", ["require", "exports", "module", "ace/lib/
                 return;
             if (typeof kb == "function" && !kb.handleKeyboard)
                 kb.handleKeyboard = kb;
-            var i = this.$handlers.indexOf(kb);
+            const i = this.$handlers.indexOf(kb);
             if (i != -1)
                 this.$handlers.splice(i, 1);
 
@@ -4148,7 +4074,7 @@ ace.define("ace/keyboard/keybinding", ["require", "exports", "module", "ace/lib/
         };
 
         this.removeKeyboardHandler = function(kb) {
-            var i = this.$handlers.indexOf(kb);
+            const i = this.$handlers.indexOf(kb);
             if (i == -1)
                 return false;
             this.$handlers.splice(i, 1);
@@ -4161,19 +4087,17 @@ ace.define("ace/keyboard/keybinding", ["require", "exports", "module", "ace/lib/
         };
 
         this.getStatusText = function() {
-            var data = this.$data;
-            var editor = data.editor;
-            return this.$handlers.map(function(h) {
-                return h.getStatusText && h.getStatusText(editor, data) || "";
-            }).filter(Boolean).join(" ");
+            const data = this.$data;
+            const editor = data.editor;
+            return this.$handlers.map(h => h.getStatusText && h.getStatusText(editor, data) || "").filter(Boolean).join(" ");
         };
 
         this.$callKeyboardHandlers = function(hashId, keyString, keyCode, e) {
-            var toExecute;
-            var success = false;
-            var commands = this.$editor.commands;
+            let toExecute;
+            let success = false;
+            const commands = this.$editor.commands;
 
-            for (var i = this.$handlers.length; i--;) {
+            for (let i = this.$handlers.length; i--;) {
                 toExecute = this.$handlers[i].handleKeyboard(
                     this.$data, hashId, keyString, keyCode, e
                 );
@@ -4207,7 +4131,7 @@ ace.define("ace/keyboard/keybinding", ["require", "exports", "module", "ace/lib/
         };
 
         this.onCommandKey = function(e, hashId, keyCode) {
-            var keyString = keyUtil.keyCodeToString(keyCode);
+            const keyString = keyUtil.keyCodeToString(keyCode);
             this.$callKeyboardHandlers(hashId, keyString, keyCode, e);
         };
 
@@ -4220,22 +4144,30 @@ ace.define("ace/keyboard/keybinding", ["require", "exports", "module", "ace/lib/
     exports.KeyBinding = KeyBinding;
 });
 
-ace.define("ace/range", ["require", "exports", "module"], function(require, exports, module) {
-    "use strict";
-    var comparePoints = function(p1, p2) {
-        return p1.row - p2.row || p1.column - p2.column;
-    };
-    var Range = function(startRow, startColumn, endRow, endColumn) {
-        this.start = {
-            row: startRow,
-            column: startColumn
-        };
+ace.define("ace/range", ["require", "exports", "module"], (require, exports, module) => {
+    const comparePoints = (p1, p2) => p1.row - p2.row || p1.column - p2.column;
 
-        this.end = {
-            row: endRow,
-            column: endColumn
-        };
-    };
+    class Range {
+        constructor(startRow, startColumn, endRow, endColumn) {
+            this.start = {
+                row: startRow,
+                column: startColumn
+            };
+
+            this.end = {
+                row: endRow,
+                column: endColumn
+            };
+        }
+
+        static fromPoints(start, end) {
+            return new Range(start.row, start.column, end.row, end.column);
+        }
+
+        static comparePoints(p1, p2) {
+            return p1.row - p2.row || p1.column - p2.column;
+        }
+    }
 
     (function() {
         this.isEqual = function(range) {
@@ -4245,17 +4177,16 @@ ace.define("ace/range", ["require", "exports", "module"], function(require, expo
                 this.end.column === range.end.column;
         };
         this.toString = function() {
-            return ("Range: [" + this.start.row + "/" + this.start.column +
-                "] -> [" + this.end.row + "/" + this.end.column + "]");
+            return (`Range: [${this.start.row}/${this.start.column}] -> [${this.end.row}/${this.end.column}]`);
         };
 
         this.contains = function(row, column) {
             return this.compare(row, column) == 0;
         };
         this.compareRange = function(range) {
-            var cmp,
-                end = range.end,
-                start = range.start;
+            let cmp;
+            const end = range.end;
+            const start = range.start;
 
             cmp = this.compare(end.row, end.column);
             if (cmp == 1) {
@@ -4287,7 +4218,7 @@ ace.define("ace/range", ["require", "exports", "module"], function(require, expo
             return this.comparePoint(range.start) == 0 && this.comparePoint(range.end) == 0;
         };
         this.intersects = function(range) {
-            var cmp = this.compareRange(range);
+            const cmp = this.compareRange(range);
             return (cmp == -1 || cmp == 0 || cmp == 1);
         };
         this.isEnd = function(row, column) {
@@ -4414,19 +4345,19 @@ ace.define("ace/range", ["require", "exports", "module"], function(require, expo
             return Range.fromPoints(start || this.start, end || this.end);
         };
         this.extend = function(row, column) {
-            var cmp = this.compare(row, column);
+            const cmp = this.compare(row, column);
 
             if (cmp == 0)
                 return this;
             else if (cmp == -1)
-                var start = {
-                    row: row,
-                    column: column
+                const start = {
+                    row,
+                    column
                 };
             else
-                var end = {
-                    row: row,
-                    column: column
+                const end = {
+                    row,
+                    column
                 };
 
             return Range.fromPoints(start || this.start, end || this.end);
@@ -4448,8 +4379,8 @@ ace.define("ace/range", ["require", "exports", "module"], function(require, expo
                 return new Range(this.start.row, 0, this.end.row, 0)
         };
         this.toScreenRange = function(session) {
-            var screenPosStart = session.documentToScreenPosition(this.start);
-            var screenPosEnd = session.documentToScreenPosition(this.end);
+            const screenPosStart = session.documentToScreenPosition(this.start);
+            const screenPosEnd = session.documentToScreenPosition(this.end);
 
             return new Range(
                 screenPosStart.row, screenPosStart.column,
@@ -4464,27 +4395,18 @@ ace.define("ace/range", ["require", "exports", "module"], function(require, expo
         };
 
     }).call(Range.prototype);
-    Range.fromPoints = function(start, end) {
-        return new Range(start.row, start.column, end.row, end.column);
-    };
     Range.comparePoints = comparePoints;
-
-    Range.comparePoints = function(p1, p2) {
-        return p1.row - p2.row || p1.column - p2.column;
-    };
 
 
     exports.Range = Range;
 });
 
-ace.define("ace/selection", ["require", "exports", "module", "ace/lib/oop", "ace/lib/lang", "ace/lib/event_emitter", "ace/range"], function(require, exports, module) {
-    "use strict";
-
-    var oop = require("./lib/oop");
-    var lang = require("./lib/lang");
-    var EventEmitter = require("./lib/event_emitter").EventEmitter;
-    var Range = require("./range").Range;
-    var Selection = function(session) {
+ace.define("ace/selection", ["require", "exports", "module", "ace/lib/oop", "ace/lib/lang", "ace/lib/event_emitter", "ace/range"], (require, exports, module) => {
+    const oop = require("./lib/oop");
+    const lang = require("./lib/lang");
+    const EventEmitter = require("./lib/event_emitter").EventEmitter;
+    const Range = require("./range").Range;
+    const Selection = function(session) {
         this.session = session;
         this.doc = session.getDocument();
 
@@ -4492,8 +4414,8 @@ ace.define("ace/selection", ["require", "exports", "module", "ace/lib/oop", "ace
         this.lead = this.selectionLead = this.doc.createAnchor(0, 0);
         this.anchor = this.selectionAnchor = this.doc.createAnchor(0, 0);
 
-        var self = this;
-        this.lead.on("change", function(e) {
+        const self = this;
+        this.lead.on("change", e => {
             self._emit("changeCursor");
             if (!self.$isEmpty)
                 self._emit("changeSelection");
@@ -4501,7 +4423,7 @@ ace.define("ace/selection", ["require", "exports", "module", "ace/lib/oop", "ace
                 self.$desiredColumn = null;
         });
 
-        this.selectionAnchor.on("change", function() {
+        this.selectionAnchor.on("change", () => {
             if (!self.$isEmpty)
                 self._emit("changeSelection");
         });
@@ -4549,10 +4471,10 @@ ace.define("ace/selection", ["require", "exports", "module", "ace/lib/oop", "ace
                 return;
             }
 
-            var anchor = this.getSelectionAnchor();
-            var lead = this.getSelectionLead();
+            const anchor = this.getSelectionAnchor();
+            const lead = this.getSelectionLead();
 
-            var isBackwards = this.isBackwards();
+            const isBackwards = this.isBackwards();
 
             if (!isBackwards || anchor.column !== 0)
                 this.setSelectionAnchor(anchor.row, anchor.column + columns);
@@ -4564,13 +4486,13 @@ ace.define("ace/selection", ["require", "exports", "module", "ace/lib/oop", "ace
             }
         };
         this.isBackwards = function() {
-            var anchor = this.anchor;
-            var lead = this.lead;
+            const anchor = this.anchor;
+            const lead = this.lead;
             return (anchor.row > lead.row || (anchor.row == lead.row && anchor.column > lead.column));
         };
         this.getRange = function() {
-            var anchor = this.anchor;
-            var lead = this.lead;
+            const anchor = this.anchor;
+            const lead = this.lead;
 
             if (this.isEmpty())
                 return Range.fromPoints(lead, lead);
@@ -4588,7 +4510,7 @@ ace.define("ace/selection", ["require", "exports", "module", "ace/lib/oop", "ace
             }
         };
         this.selectAll = function() {
-            var lastRow = this.doc.getLength() - 1;
+            const lastRow = this.doc.getLength() - 1;
             this.setSelectionAnchor(0, 0);
             this.moveCursorTo(lastRow, this.doc.getLine(lastRow).length);
         };
@@ -4607,7 +4529,7 @@ ace.define("ace/selection", ["require", "exports", "module", "ace/lib/oop", "ace
             };
 
         this.$moveSelection = function(mover) {
-            var lead = this.lead;
+            const lead = this.lead;
             if (this.$isEmpty)
                 this.setSelectionAnchor(lead.row, lead.column);
 
@@ -4663,7 +4585,7 @@ ace.define("ace/selection", ["require", "exports", "module", "ace/lib/oop", "ace
         };
         this.getWordRange = function(row, column) {
             if (typeof column == "undefined") {
-                var cursor = row || this.lead;
+                const cursor = row || this.lead;
                 row = cursor.row;
                 column = cursor.column;
             }
@@ -4673,16 +4595,16 @@ ace.define("ace/selection", ["require", "exports", "module", "ace/lib/oop", "ace
             this.setSelectionRange(this.getWordRange());
         };
         this.selectAWord = function() {
-            var cursor = this.getCursor();
-            var range = this.session.getAWordRange(cursor.row, cursor.column);
+            const cursor = this.getCursor();
+            const range = this.session.getAWordRange(cursor.row, cursor.column);
             this.setSelectionRange(range);
         };
 
         this.getLineRange = function(row, excludeLastChar) {
-            var rowStart = typeof row == "number" ? row : this.lead.row;
-            var rowEnd;
+            let rowStart = typeof row == "number" ? row : this.lead.row;
+            let rowEnd;
 
-            var foldLine = this.session.getFoldLine(rowStart);
+            const foldLine = this.session.getFoldLine(rowStart);
             if (foldLine) {
                 rowStart = foldLine.start.row;
                 rowEnd = foldLine.end.row;
@@ -4704,8 +4626,8 @@ ace.define("ace/selection", ["require", "exports", "module", "ace/lib/oop", "ace
             this.moveCursorBy(1, 0);
         };
         this.moveCursorLeft = function() {
-            var cursor = this.lead.getPosition(),
-                fold;
+            const cursor = this.lead.getPosition();
+            let fold;
 
             if (fold = this.session.getFoldAt(cursor.row, cursor.column, -1)) {
                 this.moveCursorTo(fold.start.row, fold.start.column);
@@ -4714,7 +4636,7 @@ ace.define("ace/selection", ["require", "exports", "module", "ace/lib/oop", "ace
                     this.moveCursorTo(cursor.row - 1, this.doc.getLine(cursor.row - 1).length);
                 }
             } else {
-                var tabSize = this.session.getTabSize();
+                const tabSize = this.session.getTabSize();
                 if (this.session.isTabStop(cursor) && this.doc.getLine(cursor.row).slice(cursor.column - tabSize, cursor.column).split(" ").length - 1 == tabSize)
                     this.moveCursorBy(0, -tabSize);
                 else
@@ -4722,8 +4644,8 @@ ace.define("ace/selection", ["require", "exports", "module", "ace/lib/oop", "ace
             }
         };
         this.moveCursorRight = function() {
-            var cursor = this.lead.getPosition(),
-                fold;
+            var cursor = this.lead.getPosition();
+            let fold;
             if (fold = this.session.getFoldAt(cursor.row, cursor.column, 1)) {
                 this.moveCursorTo(fold.end.row, fold.end.column);
             } else if (this.lead.column == this.doc.getLine(this.lead.row).length) {
@@ -4731,7 +4653,7 @@ ace.define("ace/selection", ["require", "exports", "module", "ace/lib/oop", "ace
                     this.moveCursorTo(this.lead.row + 1, 0);
                 }
             } else {
-                var tabSize = this.session.getTabSize();
+                const tabSize = this.session.getTabSize();
                 var cursor = this.lead;
                 if (this.session.isTabStop(cursor) && this.doc.getLine(cursor.row).slice(cursor.column, cursor.column + tabSize).split(" ").length - 1 == tabSize)
                     this.moveCursorBy(0, tabSize);
@@ -4740,27 +4662,27 @@ ace.define("ace/selection", ["require", "exports", "module", "ace/lib/oop", "ace
             }
         };
         this.moveCursorLineStart = function() {
-            var row = this.lead.row;
-            var column = this.lead.column;
-            var screenRow = this.session.documentToScreenRow(row, column);
-            var firstColumnPosition = this.session.screenToDocumentPosition(screenRow, 0);
-            var beforeCursor = this.session.getDisplayLine(
+            const row = this.lead.row;
+            const column = this.lead.column;
+            const screenRow = this.session.documentToScreenRow(row, column);
+            const firstColumnPosition = this.session.screenToDocumentPosition(screenRow, 0);
+            const beforeCursor = this.session.getDisplayLine(
                 row, null, firstColumnPosition.row,
                 firstColumnPosition.column
             );
 
-            var leadingSpace = beforeCursor.match(/^\s*/);
+            const leadingSpace = beforeCursor.match(/^\s*/);
             if (leadingSpace[0].length != column && !this.session.$useEmacsStyleLineStart)
                 firstColumnPosition.column += leadingSpace[0].length;
             this.moveCursorToPosition(firstColumnPosition);
         };
         this.moveCursorLineEnd = function() {
-            var lead = this.lead;
-            var lineEnd = this.session.getDocumentLastRowColumnPosition(lead.row, lead.column);
+            const lead = this.lead;
+            const lineEnd = this.session.getDocumentLastRowColumnPosition(lead.row, lead.column);
             if (this.lead.column == lineEnd.column) {
-                var line = this.session.getLine(lineEnd.row);
+                const line = this.session.getLine(lineEnd.row);
                 if (lineEnd.column == line.length) {
-                    var textEnd = line.search(/\s+$/);
+                    const textEnd = line.search(/\s+$/);
                     if (textEnd > 0)
                         lineEnd.column = textEnd;
                 }
@@ -4769,23 +4691,23 @@ ace.define("ace/selection", ["require", "exports", "module", "ace/lib/oop", "ace
             this.moveCursorTo(lineEnd.row, lineEnd.column);
         };
         this.moveCursorFileEnd = function() {
-            var row = this.doc.getLength() - 1;
-            var column = this.doc.getLine(row).length;
+            const row = this.doc.getLength() - 1;
+            const column = this.doc.getLine(row).length;
             this.moveCursorTo(row, column);
         };
         this.moveCursorFileStart = function() {
             this.moveCursorTo(0, 0);
         };
         this.moveCursorLongWordRight = function() {
-            var row = this.lead.row;
-            var column = this.lead.column;
-            var line = this.doc.getLine(row);
-            var rightOfCursor = line.substring(column);
+            const row = this.lead.row;
+            let column = this.lead.column;
+            const line = this.doc.getLine(row);
+            let rightOfCursor = line.substring(column);
 
-            var match;
+            let match;
             this.session.nonTokenRe.lastIndex = 0;
             this.session.tokenRe.lastIndex = 0;
-            var fold = this.session.getFoldAt(row, column, 1);
+            const fold = this.session.getFoldAt(row, column, 1);
             if (fold) {
                 this.moveCursorTo(fold.end.row, fold.end.column);
                 return;
@@ -4810,21 +4732,21 @@ ace.define("ace/selection", ["require", "exports", "module", "ace/lib/oop", "ace
             this.moveCursorTo(row, column);
         };
         this.moveCursorLongWordLeft = function() {
-            var row = this.lead.row;
-            var column = this.lead.column;
-            var fold;
+            const row = this.lead.row;
+            let column = this.lead.column;
+            let fold;
             if (fold = this.session.getFoldAt(row, column, -1)) {
                 this.moveCursorTo(fold.start.row, fold.start.column);
                 return;
             }
 
-            var str = this.session.getFoldStringAt(row, column, -1);
+            let str = this.session.getFoldStringAt(row, column, -1);
             if (str == null) {
                 str = this.doc.getLine(row).substring(0, column);
             }
 
-            var leftOfCursor = lang.stringReverse(str);
-            var match;
+            let leftOfCursor = lang.stringReverse(str);
+            let match;
             this.session.nonTokenRe.lastIndex = 0;
             this.session.tokenRe.lastIndex = 0;
             if (match = this.session.nonTokenRe.exec(leftOfCursor)) {
@@ -4848,10 +4770,11 @@ ace.define("ace/selection", ["require", "exports", "module", "ace/lib/oop", "ace
         };
 
         this.$shortWordEndIndex = function(rightOfCursor) {
-            var match, index = 0,
-                ch;
-            var whitespaceRe = /\s/;
-            var tokenRe = this.session.tokenRe;
+            let match;
+            let index = 0;
+            let ch;
+            const whitespaceRe = /\s/;
+            const tokenRe = this.session.tokenRe;
 
             tokenRe.lastIndex = 0;
             if (match = this.session.tokenRe.exec(rightOfCursor)) {
@@ -4885,17 +4808,17 @@ ace.define("ace/selection", ["require", "exports", "module", "ace/lib/oop", "ace
         };
 
         this.moveCursorShortWordRight = function() {
-            var row = this.lead.row;
-            var column = this.lead.column;
-            var line = this.doc.getLine(row);
-            var rightOfCursor = line.substring(column);
+            let row = this.lead.row;
+            let column = this.lead.column;
+            const line = this.doc.getLine(row);
+            let rightOfCursor = line.substring(column);
 
-            var fold = this.session.getFoldAt(row, column, 1);
+            const fold = this.session.getFoldAt(row, column, 1);
             if (fold)
                 return this.moveCursorTo(fold.end.row, fold.end.column);
 
             if (column == line.length) {
-                var l = this.doc.getLength();
+                const l = this.doc.getLength();
                 do {
                     row++;
                     rightOfCursor = this.doc.getLine(row);
@@ -4906,20 +4829,20 @@ ace.define("ace/selection", ["require", "exports", "module", "ace/lib/oop", "ace
                 column = 0;
             }
 
-            var index = this.$shortWordEndIndex(rightOfCursor);
+            const index = this.$shortWordEndIndex(rightOfCursor);
 
             this.moveCursorTo(row, column + index);
         };
 
         this.moveCursorShortWordLeft = function() {
-            var row = this.lead.row;
-            var column = this.lead.column;
+            let row = this.lead.row;
+            let column = this.lead.column;
 
-            var fold;
+            let fold;
             if (fold = this.session.getFoldAt(row, column, -1))
                 return this.moveCursorTo(fold.start.row, fold.start.column);
 
-            var line = this.session.getLine(row).substring(0, column);
+            let line = this.session.getLine(row).substring(0, column);
             if (column === 0) {
                 do {
                     row--;
@@ -4931,8 +4854,8 @@ ace.define("ace/selection", ["require", "exports", "module", "ace/lib/oop", "ace
                     line = "";
             }
 
-            var leftOfCursor = lang.stringReverse(line);
-            var index = this.$shortWordEndIndex(leftOfCursor);
+            const leftOfCursor = lang.stringReverse(line);
+            const index = this.$shortWordEndIndex(leftOfCursor);
 
             return this.moveCursorTo(row, column - index);
         };
@@ -4951,7 +4874,7 @@ ace.define("ace/selection", ["require", "exports", "module", "ace/lib/oop", "ace
                 this.moveCursorShortWordLeft();
         };
         this.moveCursorBy = function(rows, chars) {
-            var screenPos = this.session.documentToScreenPosition(
+            const screenPos = this.session.documentToScreenPosition(
                 this.lead.row,
                 this.lead.column
             );
@@ -4963,7 +4886,7 @@ ace.define("ace/selection", ["require", "exports", "module", "ace/lib/oop", "ace
                     this.$desiredColumn = screenPos.column;
             }
 
-            var docPos = this.session.screenToDocumentPosition(screenPos.row + rows, screenPos.column);
+            const docPos = this.session.screenToDocumentPosition(screenPos.row + rows, screenPos.column);
 
             if (rows !== 0 && chars === 0 && docPos.row === this.lead.row && docPos.column === this.lead.column) {
                 if (this.session.lineWidgets && this.session.lineWidgets[docPos.row]) {
@@ -4977,7 +4900,7 @@ ace.define("ace/selection", ["require", "exports", "module", "ace/lib/oop", "ace
             this.moveCursorTo(position.row, position.column);
         };
         this.moveCursorTo = function(row, column, keepDesiredColumn) {
-            var fold = this.session.getFoldAt(row, column, 1);
+            const fold = this.session.getFoldAt(row, column, 1);
             if (fold) {
                 row = fold.start.row;
                 column = fold.start.column;
@@ -4991,7 +4914,7 @@ ace.define("ace/selection", ["require", "exports", "module", "ace/lib/oop", "ace
                 this.$desiredColumn = null;
         };
         this.moveCursorToScreen = function(row, column, keepDesiredColumn) {
-            var pos = this.session.screenToDocumentPosition(row, column);
+            const pos = this.session.screenToDocumentPosition(row, column);
             this.moveCursorTo(pos.row, pos.column, keepDesiredColumn);
         };
         this.detach = function() {
@@ -5006,7 +4929,7 @@ ace.define("ace/selection", ["require", "exports", "module", "ace/lib/oop", "ace
         };
 
         this.toOrientedRange = function(range) {
-            var r = this.getRange();
+            const r = this.getRange();
             if (range) {
                 range.start.column = r.start.column;
                 range.start.row = r.start.row;
@@ -5021,10 +4944,10 @@ ace.define("ace/selection", ["require", "exports", "module", "ace/lib/oop", "ace
             return range;
         };
         this.getRangeOfMovements = function(func) {
-            var start = this.getCursor();
+            const start = this.getCursor();
             try {
                 func(this);
-                var end = this.getCursor();
+                const end = this.getCursor();
                 return Range.fromPoints(start, end);
             } catch (e) {
                 return Range.fromPoints(start, start);
@@ -5035,8 +4958,8 @@ ace.define("ace/selection", ["require", "exports", "module", "ace/lib/oop", "ace
 
         this.toJSON = function() {
             if (this.rangeCount) {
-                var data = this.ranges.map(function(r) {
-                    var r1 = r.clone();
+                var data = this.ranges.map(r => {
+                    const r1 = r.clone();
                     r1.isBackwards = r.cursor == r.start;
                     return r1;
                 });
@@ -5051,8 +4974,8 @@ ace.define("ace/selection", ["require", "exports", "module", "ace/lib/oop", "ace
             if (data.start == undefined) {
                 if (this.rangeList) {
                     this.toSingleRange(data[0]);
-                    for (var i = data.length; i--;) {
-                        var r = Range.fromPoints(data[i].start, data[i].end);
+                    for (let i = data.length; i--;) {
+                        const r = Range.fromPoints(data[i].start, data[i].end);
                         if (data[i].isBackwards)
                             r.cursor = r.start;
                         this.addRange(r, true);
@@ -5072,7 +4995,7 @@ ace.define("ace/selection", ["require", "exports", "module", "ace/lib/oop", "ace
             if (!data.length || !this.ranges)
                 return this.getRange().isEqual(data);
 
-            for (var i = this.ranges.length; i--;) {
+            for (let i = this.ranges.length; i--;) {
                 if (!this.ranges[i].isEqual(data[i]))
                     return false;
             }
@@ -5084,28 +5007,26 @@ ace.define("ace/selection", ["require", "exports", "module", "ace/lib/oop", "ace
     exports.Selection = Selection;
 });
 
-ace.define("ace/tokenizer", ["require", "exports", "module", "ace/config"], function(require, exports, module) {
-    "use strict";
-
-    var config = require("./config");
-    var MAX_TOKEN_COUNT = 2000;
-    var Tokenizer = function(rules) {
+ace.define("ace/tokenizer", ["require", "exports", "module", "ace/config"], (require, exports, module) => {
+    const config = require("./config");
+    let MAX_TOKEN_COUNT = 2000;
+    const Tokenizer = function(rules) {
         this.states = rules;
 
         this.regExps = {};
         this.matchMappings = {};
-        for (var key in this.states) {
-            var state = this.states[key];
-            var ruleRegExps = [];
-            var matchTotal = 0;
-            var mapping = this.matchMappings[key] = {
+        for (const key in this.states) {
+            const state = this.states[key];
+            const ruleRegExps = [];
+            let matchTotal = 0;
+            const mapping = this.matchMappings[key] = {
                 defaultToken: "text"
             };
-            var flag = "g";
+            let flag = "g";
 
-            var splitterRurles = [];
-            for (var i = 0; i < state.length; i++) {
-                var rule = state[i];
+            const splitterRurles = [];
+            for (let i = 0; i < state.length; i++) {
+                const rule = state[i];
                 if (rule.defaultToken)
                     mapping.defaultToken = rule.defaultToken;
                 if (rule.caseInsensitive)
@@ -5115,14 +5036,14 @@ ace.define("ace/tokenizer", ["require", "exports", "module", "ace/config"], func
 
                 if (rule.regex instanceof RegExp)
                     rule.regex = rule.regex.toString().slice(1, -1);
-                var adjustedregex = rule.regex;
-                var matchcount = new RegExp("(?:(" + adjustedregex + ")|(.))").exec("a").length - 2;
+                let adjustedregex = rule.regex;
+                let matchcount = new RegExp(`(?:(${adjustedregex})|(.))`).exec("a").length - 2;
                 if (Array.isArray(rule.token)) {
                     if (rule.token.length == 1 || matchcount == 1) {
                         rule.token = rule.token[0];
                     } else if (matchcount - 1 != rule.token.length) {
                         this.reportError("number of classes and regexp groups doesn't match", {
-                            rule: rule,
+                            rule,
                             groupCount: matchcount - 1
                         });
                         rule.token = rule.token[0];
@@ -5140,9 +5061,7 @@ ace.define("ace/tokenizer", ["require", "exports", "module", "ace/config"], func
 
                 if (matchcount > 1) {
                     if (/\\\d/.test(rule.regex)) {
-                        adjustedregex = rule.regex.replace(/\\([0-9]+)/g, function(match, digit) {
-                            return "\\" + (parseInt(digit, 10) + matchTotal + 1);
-                        });
+                        adjustedregex = rule.regex.replace(/\\([0-9]+)/g, (match, digit) => `\\${parseInt(digit, 10) + matchTotal + 1}`);
                     } else {
                         matchcount = 1;
                         adjustedregex = this.removeCapturingGroups(rule.regex);
@@ -5168,26 +5087,26 @@ ace.define("ace/tokenizer", ["require", "exports", "module", "ace/config"], func
                 rule.splitRegex = this.createSplitterRegexp(rule.regex, flag);
             }, this);
 
-            this.regExps[key] = new RegExp("(" + ruleRegExps.join(")|(") + ")|($)", flag);
+            this.regExps[key] = new RegExp(`(${ruleRegExps.join(")|(")})|($)`, flag);
         }
     };
 
     (function() {
-        this.$setMaxTokenCount = function(m) {
+        this.$setMaxTokenCount = m => {
             MAX_TOKEN_COUNT = m | 0;
         };
 
         this.$applyToken = function(str) {
-            var values = this.splitRegex.exec(str).slice(1);
-            var types = this.token.apply(this, values);
+            const values = this.splitRegex.exec(str).slice(1);
+            const types = this.token(...values);
             if (typeof types === "string")
                 return [{
                     type: types,
                     value: str
                 }];
 
-            var tokens = [];
-            for (var i = 0, l = types.length; i < l; i++) {
+            const tokens = [];
+            for (let i = 0, l = types.length; i < l; i++) {
                 if (values[i])
                     tokens[tokens.length] = {
                         type: types[i],
@@ -5200,12 +5119,12 @@ ace.define("ace/tokenizer", ["require", "exports", "module", "ace/config"], func
         this.$arrayTokens = function(str) {
             if (!str)
                 return [];
-            var values = this.splitRegex.exec(str);
+            const values = this.splitRegex.exec(str);
             if (!values)
                 return "text";
-            var tokens = [];
-            var types = this.tokenArray;
-            for (var i = 0, l = types.length; i < l; i++) {
+            const tokens = [];
+            const types = this.tokenArray;
+            for (let i = 0, l = types.length; i < l; i++) {
                 if (values[i + 1])
                     tokens[tokens.length] = {
                         type: types[i],
@@ -5215,24 +5134,20 @@ ace.define("ace/tokenizer", ["require", "exports", "module", "ace/config"], func
             return tokens;
         };
 
-        this.removeCapturingGroups = function(src) {
-            var r = src.replace(
+        this.removeCapturingGroups = src => {
+            const r = src.replace(
                 /\[(?:\\.|[^\]])*?\]|\\.|\(\?[:=!]|(\()/g,
-                function(x, y) {
-                    return y ? "(?:" : x;
-                }
+                (x, y) => y ? "(?:" : x
             );
             return r;
         };
 
-        this.createSplitterRegexp = function(src, flag) {
-            if (src.indexOf("(?=") != -1) {
-                var stack = 0;
-                var inChClass = false;
-                var lastCapture = {};
-                src.replace(/(\\.)|(\((?:\?[=!])?)|(\))|([\[\]])/g, function(
-                    m, esc, parenOpen, parenClose, square, index
-                ) {
+        this.createSplitterRegexp = (src, flag) => {
+            if (src.includes("(?=")) {
+                let stack = 0;
+                let inChClass = false;
+                const lastCapture = {};
+                src.replace(/(\\.)|(\((?:\?[=!])?)|(\))|([\[\]])/g, (m, esc, parenOpen, parenClose, square, index) => {
                     if (inChClass) {
                         inChClass = square != "]";
                     } else if (square) {
@@ -5256,7 +5171,7 @@ ace.define("ace/tokenizer", ["require", "exports", "module", "ace/config"], func
                 if (lastCapture.end != null && /^\)*$/.test(src.substr(lastCapture.end)))
                     src = src.substring(0, lastCapture.start) + src.substr(lastCapture.end);
             }
-            if (src.charAt(0) != "^") src = "^" + src;
+            if (src.charAt(0) != "^") src = `^${src}`;
             if (src.charAt(src.length - 1) != "$") src += "$";
 
             return new RegExp(src, (flag || "").replace("g", ""));
@@ -5272,40 +5187,41 @@ ace.define("ace/tokenizer", ["require", "exports", "module", "ace/config"], func
             } else
                 var stack = [];
 
-            var currentState = startState || "start";
-            var state = this.states[currentState];
+            let currentState = startState || "start";
+            let state = this.states[currentState];
             if (!state) {
                 currentState = "start";
                 state = this.states[currentState];
             }
-            var mapping = this.matchMappings[currentState];
-            var re = this.regExps[currentState];
+            let mapping = this.matchMappings[currentState];
+            let re = this.regExps[currentState];
             re.lastIndex = 0;
 
-            var match, tokens = [];
-            var lastIndex = 0;
-            var matchAttempts = 0;
+            let match;
+            const tokens = [];
+            let lastIndex = 0;
+            let matchAttempts = 0;
 
-            var token = {
+            let token = {
                 type: null,
                 value: ""
             };
 
             while (match = re.exec(line)) {
-                var type = mapping.defaultToken;
-                var rule = null;
-                var value = match[0];
-                var index = re.lastIndex;
+                let type = mapping.defaultToken;
+                let rule = null;
+                const value = match[0];
+                const index = re.lastIndex;
 
                 if (index - value.length > lastIndex) {
-                    var skipped = line.substring(lastIndex, index - value.length);
+                    const skipped = line.substring(lastIndex, index - value.length);
                     if (token.type == type) {
                         token.value += skipped;
                     } else {
                         if (token.type)
                             tokens.push(token);
                         token = {
-                            type: type,
+                            type,
                             value: skipped
                         };
                     }
@@ -5351,8 +5267,8 @@ ace.define("ace/tokenizer", ["require", "exports", "module", "ace/config"], func
                             if (token.type)
                                 tokens.push(token);
                             token = {
-                                type: type,
-                                value: value
+                                type,
+                                value
                             };
                         }
                     } else if (type) {
@@ -5375,8 +5291,8 @@ ace.define("ace/tokenizer", ["require", "exports", "module", "ace/config"], func
                 if (matchAttempts++ > MAX_TOKEN_COUNT) {
                     if (matchAttempts > 2 * line.length) {
                         this.reportError("infinite loop with in ace tokenizer", {
-                            startState: startState,
-                            line: line
+                            startState,
+                            line
                         });
                     }
                     while (lastIndex < line.length) {
@@ -5401,7 +5317,7 @@ ace.define("ace/tokenizer", ["require", "exports", "module", "ace/config"], func
                     stack.unshift("#tmp", currentState);
             }
             return {
-                tokens: tokens,
+                tokens,
                 state: stack.length ? stack : currentState
             };
         };
@@ -5413,12 +5329,10 @@ ace.define("ace/tokenizer", ["require", "exports", "module", "ace/config"], func
     exports.Tokenizer = Tokenizer;
 });
 
-ace.define("ace/mode/text_highlight_rules", ["require", "exports", "module", "ace/lib/lang"], function(require, exports, module) {
-    "use strict";
+ace.define("ace/mode/text_highlight_rules", ["require", "exports", "module", "ace/lib/lang"], (require, exports, module) => {
+    const lang = require("../lib/lang");
 
-    var lang = require("../lib/lang");
-
-    var TextHighlightRules = function() {
+    const TextHighlightRules = function() {
 
         this.$rules = {
             "start": [{
@@ -5439,9 +5353,9 @@ ace.define("ace/mode/text_highlight_rules", ["require", "exports", "module", "ac
                 return;
             }
             for (var key in rules) {
-                var state = rules[key];
-                for (var i = 0; i < state.length; i++) {
-                    var rule = state[i];
+                const state = rules[key];
+
+                for (const rule of state) {
                     if (rule.next || rule.onMatch) {
                         if (typeof rule.next == "string") {
                             if (rule.next.indexOf(prefix) !== 0)
@@ -5451,6 +5365,7 @@ ace.define("ace/mode/text_highlight_rules", ["require", "exports", "module", "ac
                             rule.nextState = prefix + rule.nextState;
                     }
                 }
+
                 this.$rules[prefix + key] = state;
             }
         };
@@ -5460,20 +5375,20 @@ ace.define("ace/mode/text_highlight_rules", ["require", "exports", "module", "ac
         };
 
         this.embedRules = function(HighlightRules, prefix, escapeRules, states, append) {
-            var embedRules = typeof HighlightRules == "function" ? new HighlightRules().getRules() : HighlightRules;
+            const embedRules = typeof HighlightRules == "function" ? new HighlightRules().getRules() : HighlightRules;
             if (states) {
                 for (var i = 0; i < states.length; i++)
                     states[i] = prefix + states[i];
             } else {
                 states = [];
-                for (var key in embedRules)
+                for (const key in embedRules)
                     states.push(prefix + key);
             }
 
             this.addRules(embedRules, prefix);
 
             if (escapeRules) {
-                var addRules = Array.prototype[append ? "push" : "unshift"];
+                const addRules = Array.prototype[append ? "push" : "unshift"];
                 for (var i = 0; i < states.length; i++)
                     addRules.apply(this.$rules[states[i]], lang.deepCopy(escapeRules));
             }
@@ -5487,26 +5402,26 @@ ace.define("ace/mode/text_highlight_rules", ["require", "exports", "module", "ac
             return this.$embeds;
         };
 
-        var pushState = function(currentState, stack) {
+        const pushState = function(currentState, stack) {
             if (currentState != "start" || stack.length)
                 stack.unshift(this.nextState, currentState);
             return this.nextState;
         };
-        var popState = function(currentState, stack) {
+        const popState = (currentState, stack) => {
             stack.shift();
             return stack.shift() || "start";
         };
 
         this.normalizeRules = function() {
-            var id = 0;
-            var rules = this.$rules;
+            let id = 0;
+            const rules = this.$rules;
 
             function processState(key) {
-                var state = rules[key];
+                const state = rules[key];
                 state.processed = true;
-                for (var i = 0; i < state.length; i++) {
-                    var rule = state[i];
-                    var toInsert = null;
+                for (let i = 0; i < state.length; i++) {
+                    let rule = state[i];
+                    let toInsert = null;
                     if (Array.isArray(rule)) {
                         toInsert = rule;
                         rule = {};
@@ -5518,16 +5433,16 @@ ace.define("ace/mode/text_highlight_rules", ["require", "exports", "module", "ac
                         rule.next.push({
                             defaultToken: rule.token
                         }, {
-                            token: rule.token + ".end",
+                            token: `${rule.token}.end`,
                             regex: rule.end || rule.start,
                             next: "pop"
                         });
-                        rule.token = rule.token + ".start";
+                        rule.token = `${rule.token}.start`;
                         rule.push = true;
                     }
-                    var next = rule.next || rule.push;
+                    const next = rule.next || rule.push;
                     if (next && Array.isArray(next)) {
-                        var stateName = rule.stateName;
+                        let stateName = rule.stateName;
                         if (!stateName) {
                             stateName = rule.token;
                             if (typeof stateName != "string")
@@ -5549,27 +5464,25 @@ ace.define("ace/mode/text_highlight_rules", ["require", "exports", "module", "ac
                     }
 
                     if (rule.rules) {
-                        for (var r in rule.rules) {
+                        for (const r in rule.rules) {
                             if (rules[r]) {
                                 if (rules[r].push)
-                                    rules[r].push.apply(rules[r], rule.rules[r]);
+                                    rules[r].push(...rule.rules[r]);
                             } else {
                                 rules[r] = rule.rules[r];
                             }
                         }
                     }
-                    var includeName = typeof rule == "string" ? rule : typeof rule.include == "string" ? rule.include : "";
+                    const includeName = typeof rule == "string" ? rule : typeof rule.include == "string" ? rule.include : "";
                     if (includeName) {
                         toInsert = rules[includeName];
                     }
 
                     if (toInsert) {
-                        var args = [i, 1].concat(toInsert);
+                        let args = [i, 1].concat(toInsert);
                         if (rule.noEscape)
-                            args = args.filter(function(x) {
-                                return !x.next;
-                            });
-                        state.splice.apply(state, args);
+                            args = args.filter(x => !x.next);
+                        state.splice(...args);
                         i--;
                     }
 
@@ -5585,13 +5498,13 @@ ace.define("ace/mode/text_highlight_rules", ["require", "exports", "module", "ac
         };
 
         this.createKeywordMapper = function(map, defaultToken, ignoreCase, splitChar) {
-            var keywords = Object.create(null);
-            Object.keys(map).forEach(function(className) {
-                var a = map[className];
+            const keywords = Object.create(null);
+            Object.keys(map).forEach(className => {
+                let a = map[className];
                 if (ignoreCase)
                     a = a.toLowerCase();
-                var list = a.split(splitChar || "|");
-                for (var i = list.length; i--;)
+                const list = a.split(splitChar || "|");
+                for (let i = list.length; i--;)
                     keywords[list[i]] = className;
             });
             if (Object.getPrototypeOf(keywords)) {
@@ -5599,11 +5512,7 @@ ace.define("ace/mode/text_highlight_rules", ["require", "exports", "module", "ac
             }
             this.$keywordList = Object.keys(keywords);
             map = null;
-            return ignoreCase ? function(value) {
-                return keywords[value.toLowerCase()] || defaultToken
-            } : function(value) {
-                return keywords[value] || defaultToken
-            };
+            return ignoreCase ? value => keywords[value.toLowerCase()] || defaultToken : value => keywords[value] || defaultToken;
         };
 
         this.getKeywords = function() {
@@ -5615,10 +5524,8 @@ ace.define("ace/mode/text_highlight_rules", ["require", "exports", "module", "ac
     exports.TextHighlightRules = TextHighlightRules;
 });
 
-ace.define("ace/mode/behaviour", ["require", "exports", "module"], function(require, exports, module) {
-    "use strict";
-
-    var Behaviour = function() {
+ace.define("ace/mode/behaviour", ["require", "exports", "module"], (require, exports, module) => {
+    const Behaviour = function() {
         this.$behaviours = {};
     };
 
@@ -5635,8 +5542,8 @@ ace.define("ace/mode/behaviour", ["require", "exports", "module"], function(requ
         }
 
         this.addBehaviours = function(behaviours) {
-            for (var key in behaviours) {
-                for (var action in behaviours[key]) {
+            for (const key in behaviours) {
+                for (const action in behaviours[key]) {
                     this.add(key, action, behaviours[key][action]);
                 }
             }
@@ -5661,8 +5568,8 @@ ace.define("ace/mode/behaviour", ["require", "exports", "module"], function(requ
             if (!filter) {
                 return this.$behaviours;
             } else {
-                var ret = {}
-                for (var i = 0; i < filter.length; i++) {
+                const ret = {};
+                for (let i = 0; i < filter.length; i++) {
                     if (this.$behaviours[filter[i]]) {
                         ret[filter[i]] = this.$behaviours[filter[i]];
                     }
@@ -5676,14 +5583,13 @@ ace.define("ace/mode/behaviour", ["require", "exports", "module"], function(requ
     exports.Behaviour = Behaviour;
 });
 
-ace.define("ace/token_iterator", ["require", "exports", "module"], function(require, exports, module) {
-    "use strict";
-    var TokenIterator = function(session, initialRow, initialColumn) {
+ace.define("ace/token_iterator", ["require", "exports", "module"], (require, exports, module) => {
+    const TokenIterator = function(session, initialRow, initialColumn) {
         this.$session = session;
         this.$row = initialRow;
         this.$rowTokens = session.getTokens(initialRow);
 
-        var token = session.getTokenAt(initialRow, initialColumn);
+        const token = session.getTokenAt(initialRow, initialColumn);
         this.$tokenIndex = token ? token.index : -1;
     };
 
@@ -5706,7 +5612,7 @@ ace.define("ace/token_iterator", ["require", "exports", "module"], function(requ
         };
         this.stepForward = function() {
             this.$tokenIndex += 1;
-            var rowCount;
+            let rowCount;
             while (this.$tokenIndex >= this.$rowTokens.length) {
                 this.$row += 1;
                 if (!rowCount)
@@ -5729,9 +5635,9 @@ ace.define("ace/token_iterator", ["require", "exports", "module"], function(requ
             return this.$row;
         };
         this.getCurrentTokenColumn = function() {
-            var rowTokens = this.$rowTokens;
-            var tokenIndex = this.$tokenIndex;
-            var column = rowTokens[tokenIndex].start;
+            const rowTokens = this.$rowTokens;
+            let tokenIndex = this.$tokenIndex;
+            let column = rowTokens[tokenIndex].start;
             if (column !== undefined)
                 return column;
 
@@ -5755,23 +5661,21 @@ ace.define("ace/token_iterator", ["require", "exports", "module"], function(requ
     exports.TokenIterator = TokenIterator;
 });
 
-ace.define("ace/mode/behaviour/cstyle", ["require", "exports", "module", "ace/lib/oop", "ace/mode/behaviour", "ace/token_iterator", "ace/lib/lang"], function(require, exports, module) {
-    "use strict";
+ace.define("ace/mode/behaviour/cstyle", ["require", "exports", "module", "ace/lib/oop", "ace/mode/behaviour", "ace/token_iterator", "ace/lib/lang"], (require, exports, module) => {
+    const oop = require("../../lib/oop");
+    const Behaviour = require("../behaviour").Behaviour;
+    const TokenIterator = require("../../token_iterator").TokenIterator;
+    const lang = require("../../lib/lang");
 
-    var oop = require("../../lib/oop");
-    var Behaviour = require("../behaviour").Behaviour;
-    var TokenIterator = require("../../token_iterator").TokenIterator;
-    var lang = require("../../lib/lang");
-
-    var SAFE_INSERT_IN_TOKENS =
+    const SAFE_INSERT_IN_TOKENS =
         ["text", "paren.rparen", "punctuation.operator"];
-    var SAFE_INSERT_BEFORE_TOKENS =
+    const SAFE_INSERT_BEFORE_TOKENS =
         ["text", "paren.rparen", "punctuation.operator", "comment"];
 
-    var context;
-    var contextCache = {};
-    var initContext = function(editor) {
-        var id = -1;
+    let context;
+    let contextCache = {};
+    const initContext = editor => {
+        let id = -1;
         if (editor.multiSelect) {
             id = editor.selection.index;
             if (contextCache.rangeCount != editor.multiSelect.rangeCount)
@@ -5792,8 +5696,8 @@ ace.define("ace/mode/behaviour/cstyle", ["require", "exports", "module", "ace/li
         };
     };
 
-    var getWrapped = function(selection, selected, opening, closing) {
-        var rowDiff = selection.end.row - selection.start.row;
+    const getWrapped = (selection, selected, opening, closing) => {
+        const rowDiff = selection.end.row - selection.start.row;
         return {
             text: opening + selected + closing,
             selection: [
@@ -5805,323 +5709,324 @@ ace.define("ace/mode/behaviour/cstyle", ["require", "exports", "module", "ace/li
         };
     };
 
-    var CstyleBehaviour = function() {
-        this.add("braces", "insertion", function(state, action, editor, session, text) {
-            var cursor = editor.getCursorPosition();
-            var line = session.doc.getLine(cursor.row);
-            if (text == '{') {
-                initContext(editor);
-                var selection = editor.getSelectionRange();
-                var selected = session.doc.getTextRange(selection);
-                if (selected !== "" && selected !== "{" && editor.getWrapBehavioursEnabled()) {
-                    return getWrapped(selection, selected, '{', '}');
-                } else if (CstyleBehaviour.isSaneInsertion(editor, session)) {
-                    if (/[\]\}\)]/.test(line[cursor.column]) || editor.inMultiSelectMode) {
-                        CstyleBehaviour.recordAutoInsert(editor, session, "}");
-                        return {
-                            text: '{}',
-                            selection: [1, 1]
-                        };
-                    } else {
-                        CstyleBehaviour.recordMaybeInsert(editor, session, "{");
-                        return {
-                            text: '{',
-                            selection: [1, 1]
-                        };
+    class CstyleBehaviour {
+        constructor() {
+            this.add("braces", "insertion", function(state, action, editor, session, text) {
+                const cursor = editor.getCursorPosition();
+                const line = session.doc.getLine(cursor.row);
+                if (text == '{') {
+                    initContext(editor);
+                    const selection = editor.getSelectionRange();
+                    const selected = session.doc.getTextRange(selection);
+                    if (selected !== "" && selected !== "{" && editor.getWrapBehavioursEnabled()) {
+                        return getWrapped(selection, selected, '{', '}');
+                    } else if (CstyleBehaviour.isSaneInsertion(editor, session)) {
+                        if (/[\]\}\)]/.test(line[cursor.column]) || editor.inMultiSelectMode) {
+                            CstyleBehaviour.recordAutoInsert(editor, session, "}");
+                            return {
+                                text: '{}',
+                                selection: [1, 1]
+                            };
+                        } else {
+                            CstyleBehaviour.recordMaybeInsert(editor, session, "{");
+                            return {
+                                text: '{',
+                                selection: [1, 1]
+                            };
+                        }
                     }
-                }
-            } else if (text == '}') {
-                initContext(editor);
-                var rightChar = line.substring(cursor.column, cursor.column + 1);
-                if (rightChar == '}') {
-                    var matching = session.$findOpeningBracket('}', {
-                        column: cursor.column + 1,
-                        row: cursor.row
-                    });
-                    if (matching !== null && CstyleBehaviour.isAutoInsertedClosing(cursor, line, text)) {
-                        CstyleBehaviour.popAutoInsertedClosing();
-                        return {
-                            text: '',
-                            selection: [1, 1]
-                        };
-                    }
-                }
-            } else if (text == "\n" || text == "\r\n") {
-                initContext(editor);
-                var closing = "";
-                if (CstyleBehaviour.isMaybeInsertedClosing(cursor, line)) {
-                    closing = lang.stringRepeat("}", context.maybeInsertedBrackets);
-                    CstyleBehaviour.clearMaybeInsertedClosing();
-                }
-                var rightChar = line.substring(cursor.column, cursor.column + 1);
-                if (rightChar === '}') {
-                    var openBracePos = session.findMatchingBracket({
-                        row: cursor.row,
-                        column: cursor.column + 1
-                    }, '}');
-                    if (!openBracePos)
-                        return null;
-                    var next_indent = this.$getIndent(session.getLine(openBracePos.row));
-                } else if (closing) {
-                    var next_indent = this.$getIndent(line);
-                } else {
-                    CstyleBehaviour.clearMaybeInsertedClosing();
-                    return;
-                }
-                var indent = next_indent + session.getTabString();
-
-                return {
-                    text: '\n' + indent + '\n' + next_indent + closing,
-                    selection: [1, indent.length, 1, indent.length]
-                };
-            } else {
-                CstyleBehaviour.clearMaybeInsertedClosing();
-            }
-        });
-
-        this.add("braces", "deletion", function(state, action, editor, session, range) {
-            var selected = session.doc.getTextRange(range);
-            if (!range.isMultiLine() && selected == '{') {
-                initContext(editor);
-                var line = session.doc.getLine(range.start.row);
-                var rightChar = line.substring(range.end.column, range.end.column + 1);
-                if (rightChar == '}') {
-                    range.end.column++;
-                    return range;
-                } else {
-                    context.maybeInsertedBrackets--;
-                }
-            }
-        });
-
-        this.add("parens", "insertion", function(state, action, editor, session, text) {
-            if (text == '(') {
-                initContext(editor);
-                var selection = editor.getSelectionRange();
-                var selected = session.doc.getTextRange(selection);
-                if (selected !== "" && editor.getWrapBehavioursEnabled()) {
-                    return getWrapped(selection, selected, '(', ')');
-                } else if (CstyleBehaviour.isSaneInsertion(editor, session)) {
-                    CstyleBehaviour.recordAutoInsert(editor, session, ")");
-                    return {
-                        text: '()',
-                        selection: [1, 1]
-                    };
-                }
-            } else if (text == ')') {
-                initContext(editor);
-                var cursor = editor.getCursorPosition();
-                var line = session.doc.getLine(cursor.row);
-                var rightChar = line.substring(cursor.column, cursor.column + 1);
-                if (rightChar == ')') {
-                    var matching = session.$findOpeningBracket(')', {
-                        column: cursor.column + 1,
-                        row: cursor.row
-                    });
-                    if (matching !== null && CstyleBehaviour.isAutoInsertedClosing(cursor, line, text)) {
-                        CstyleBehaviour.popAutoInsertedClosing();
-                        return {
-                            text: '',
-                            selection: [1, 1]
-                        };
-                    }
-                }
-            }
-        });
-
-        this.add("parens", "deletion", function(state, action, editor, session, range) {
-            var selected = session.doc.getTextRange(range);
-            if (!range.isMultiLine() && selected == '(') {
-                initContext(editor);
-                var line = session.doc.getLine(range.start.row);
-                var rightChar = line.substring(range.start.column + 1, range.start.column + 2);
-                if (rightChar == ')') {
-                    range.end.column++;
-                    return range;
-                }
-            }
-        });
-
-        this.add("brackets", "insertion", function(state, action, editor, session, text) {
-            if (text == '[') {
-                initContext(editor);
-                var selection = editor.getSelectionRange();
-                var selected = session.doc.getTextRange(selection);
-                if (selected !== "" && editor.getWrapBehavioursEnabled()) {
-                    return getWrapped(selection, selected, '[', ']');
-                } else if (CstyleBehaviour.isSaneInsertion(editor, session)) {
-                    CstyleBehaviour.recordAutoInsert(editor, session, "]");
-                    return {
-                        text: '[]',
-                        selection: [1, 1]
-                    };
-                }
-            } else if (text == ']') {
-                initContext(editor);
-                var cursor = editor.getCursorPosition();
-                var line = session.doc.getLine(cursor.row);
-                var rightChar = line.substring(cursor.column, cursor.column + 1);
-                if (rightChar == ']') {
-                    var matching = session.$findOpeningBracket(']', {
-                        column: cursor.column + 1,
-                        row: cursor.row
-                    });
-                    if (matching !== null && CstyleBehaviour.isAutoInsertedClosing(cursor, line, text)) {
-                        CstyleBehaviour.popAutoInsertedClosing();
-                        return {
-                            text: '',
-                            selection: [1, 1]
-                        };
-                    }
-                }
-            }
-        });
-
-        this.add("brackets", "deletion", function(state, action, editor, session, range) {
-            var selected = session.doc.getTextRange(range);
-            if (!range.isMultiLine() && selected == '[') {
-                initContext(editor);
-                var line = session.doc.getLine(range.start.row);
-                var rightChar = line.substring(range.start.column + 1, range.start.column + 2);
-                if (rightChar == ']') {
-                    range.end.column++;
-                    return range;
-                }
-            }
-        });
-
-        this.add("string_dquotes", "insertion", function(state, action, editor, session, text) {
-            if (text == '"' || text == "'") {
-                if (this.lineCommentStart && this.lineCommentStart.indexOf(text) != -1)
-                    return;
-                initContext(editor);
-                var quote = text;
-                var selection = editor.getSelectionRange();
-                var selected = session.doc.getTextRange(selection);
-                if (selected !== "" && selected !== "'" && selected != '"' && editor.getWrapBehavioursEnabled()) {
-                    return getWrapped(selection, selected, quote, quote);
-                } else if (!selected) {
-                    var cursor = editor.getCursorPosition();
-                    var line = session.doc.getLine(cursor.row);
-                    var leftChar = line.substring(cursor.column - 1, cursor.column);
+                } else if (text == '}') {
+                    initContext(editor);
                     var rightChar = line.substring(cursor.column, cursor.column + 1);
-
-                    var token = session.getTokenAt(cursor.row, cursor.column);
-                    var rightToken = session.getTokenAt(cursor.row, cursor.column + 1);
-                    if (leftChar == "\\" && token && /escape/.test(token.type))
-                        return null;
-
-                    var stringBefore = token && /string|escape/.test(token.type);
-                    var stringAfter = !rightToken || /string|escape/.test(rightToken.type);
-
-                    var pair;
-                    if (rightChar == quote) {
-                        pair = stringBefore !== stringAfter;
-                        if (pair && /string\.end/.test(rightToken.type))
-                            pair = false;
-                    } else {
-                        if (stringBefore && !stringAfter)
-                            return null; // wrap string with different quote
-                        if (stringBefore && stringAfter)
-                            return null; // do not pair quotes inside strings
-                        var wordRe = session.$mode.tokenRe;
-                        wordRe.lastIndex = 0;
-                        var isWordBefore = wordRe.test(leftChar);
-                        wordRe.lastIndex = 0;
-                        var isWordAfter = wordRe.test(leftChar);
-                        if (isWordBefore || isWordAfter)
-                            return null; // before or after alphanumeric
-                        if (rightChar && !/[\s;,.})\]\\]/.test(rightChar))
-                            return null; // there is rightChar and it isn't closing
-                        pair = true;
+                    if (rightChar == '}') {
+                        const matching = session.$findOpeningBracket('}', {
+                            column: cursor.column + 1,
+                            row: cursor.row
+                        });
+                        if (matching !== null && CstyleBehaviour.isAutoInsertedClosing(cursor, line, text)) {
+                            CstyleBehaviour.popAutoInsertedClosing();
+                            return {
+                                text: '',
+                                selection: [1, 1]
+                            };
+                        }
                     }
+                } else if (text == "\n" || text == "\r\n") {
+                    initContext(editor);
+                    let closing = "";
+                    if (CstyleBehaviour.isMaybeInsertedClosing(cursor, line)) {
+                        closing = lang.stringRepeat("}", context.maybeInsertedBrackets);
+                        CstyleBehaviour.clearMaybeInsertedClosing();
+                    }
+                    var rightChar = line.substring(cursor.column, cursor.column + 1);
+                    if (rightChar === '}') {
+                        const openBracePos = session.findMatchingBracket({
+                            row: cursor.row,
+                            column: cursor.column + 1
+                        }, '}');
+                        if (!openBracePos)
+                            return null;
+                        var next_indent = this.$getIndent(session.getLine(openBracePos.row));
+                    } else if (closing) {
+                        var next_indent = this.$getIndent(line);
+                    } else {
+                        CstyleBehaviour.clearMaybeInsertedClosing();
+                        return;
+                    }
+                    const indent = next_indent + session.getTabString();
+
                     return {
-                        text: pair ? quote + quote : "",
-                        selection: [1, 1]
+                        text: `\n${indent}\n${next_indent}${closing}`,
+                        selection: [1, indent.length, 1, indent.length]
                     };
+                } else {
+                    CstyleBehaviour.clearMaybeInsertedClosing();
                 }
-            }
-        });
+            });
 
-        this.add("string_dquotes", "deletion", function(state, action, editor, session, range) {
-            var selected = session.doc.getTextRange(range);
-            if (!range.isMultiLine() && (selected == '"' || selected == "'")) {
-                initContext(editor);
-                var line = session.doc.getLine(range.start.row);
-                var rightChar = line.substring(range.start.column + 1, range.start.column + 2);
-                if (rightChar == selected) {
-                    range.end.column++;
-                    return range;
+            this.add("braces", "deletion", (state, action, editor, session, range) => {
+                const selected = session.doc.getTextRange(range);
+                if (!range.isMultiLine() && selected == '{') {
+                    initContext(editor);
+                    const line = session.doc.getLine(range.start.row);
+                    const rightChar = line.substring(range.end.column, range.end.column + 1);
+                    if (rightChar == '}') {
+                        range.end.column++;
+                        return range;
+                    } else {
+                        context.maybeInsertedBrackets--;
+                    }
                 }
+            });
+
+            this.add("parens", "insertion", (state, action, editor, session, text) => {
+                if (text == '(') {
+                    initContext(editor);
+                    const selection = editor.getSelectionRange();
+                    const selected = session.doc.getTextRange(selection);
+                    if (selected !== "" && editor.getWrapBehavioursEnabled()) {
+                        return getWrapped(selection, selected, '(', ')');
+                    } else if (CstyleBehaviour.isSaneInsertion(editor, session)) {
+                        CstyleBehaviour.recordAutoInsert(editor, session, ")");
+                        return {
+                            text: '()',
+                            selection: [1, 1]
+                        };
+                    }
+                } else if (text == ')') {
+                    initContext(editor);
+                    const cursor = editor.getCursorPosition();
+                    const line = session.doc.getLine(cursor.row);
+                    const rightChar = line.substring(cursor.column, cursor.column + 1);
+                    if (rightChar == ')') {
+                        const matching = session.$findOpeningBracket(')', {
+                            column: cursor.column + 1,
+                            row: cursor.row
+                        });
+                        if (matching !== null && CstyleBehaviour.isAutoInsertedClosing(cursor, line, text)) {
+                            CstyleBehaviour.popAutoInsertedClosing();
+                            return {
+                                text: '',
+                                selection: [1, 1]
+                            };
+                        }
+                    }
+                }
+            });
+
+            this.add("parens", "deletion", (state, action, editor, session, range) => {
+                const selected = session.doc.getTextRange(range);
+                if (!range.isMultiLine() && selected == '(') {
+                    initContext(editor);
+                    const line = session.doc.getLine(range.start.row);
+                    const rightChar = line.substring(range.start.column + 1, range.start.column + 2);
+                    if (rightChar == ')') {
+                        range.end.column++;
+                        return range;
+                    }
+                }
+            });
+
+            this.add("brackets", "insertion", (state, action, editor, session, text) => {
+                if (text == '[') {
+                    initContext(editor);
+                    const selection = editor.getSelectionRange();
+                    const selected = session.doc.getTextRange(selection);
+                    if (selected !== "" && editor.getWrapBehavioursEnabled()) {
+                        return getWrapped(selection, selected, '[', ']');
+                    } else if (CstyleBehaviour.isSaneInsertion(editor, session)) {
+                        CstyleBehaviour.recordAutoInsert(editor, session, "]");
+                        return {
+                            text: '[]',
+                            selection: [1, 1]
+                        };
+                    }
+                } else if (text == ']') {
+                    initContext(editor);
+                    const cursor = editor.getCursorPosition();
+                    const line = session.doc.getLine(cursor.row);
+                    const rightChar = line.substring(cursor.column, cursor.column + 1);
+                    if (rightChar == ']') {
+                        const matching = session.$findOpeningBracket(']', {
+                            column: cursor.column + 1,
+                            row: cursor.row
+                        });
+                        if (matching !== null && CstyleBehaviour.isAutoInsertedClosing(cursor, line, text)) {
+                            CstyleBehaviour.popAutoInsertedClosing();
+                            return {
+                                text: '',
+                                selection: [1, 1]
+                            };
+                        }
+                    }
+                }
+            });
+
+            this.add("brackets", "deletion", (state, action, editor, session, range) => {
+                const selected = session.doc.getTextRange(range);
+                if (!range.isMultiLine() && selected == '[') {
+                    initContext(editor);
+                    const line = session.doc.getLine(range.start.row);
+                    const rightChar = line.substring(range.start.column + 1, range.start.column + 2);
+                    if (rightChar == ']') {
+                        range.end.column++;
+                        return range;
+                    }
+                }
+            });
+
+            this.add("string_dquotes", "insertion", function(state, action, editor, session, text) {
+                if (text == '"' || text == "'") {
+                    if (this.lineCommentStart && this.lineCommentStart.includes(text))
+                        return;
+                    initContext(editor);
+                    const quote = text;
+                    const selection = editor.getSelectionRange();
+                    const selected = session.doc.getTextRange(selection);
+                    if (selected !== "" && selected !== "'" && selected != '"' && editor.getWrapBehavioursEnabled()) {
+                        return getWrapped(selection, selected, quote, quote);
+                    } else if (!selected) {
+                        const cursor = editor.getCursorPosition();
+                        const line = session.doc.getLine(cursor.row);
+                        const leftChar = line.substring(cursor.column - 1, cursor.column);
+                        const rightChar = line.substring(cursor.column, cursor.column + 1);
+
+                        const token = session.getTokenAt(cursor.row, cursor.column);
+                        const rightToken = session.getTokenAt(cursor.row, cursor.column + 1);
+                        if (leftChar == "\\" && token && /escape/.test(token.type))
+                            return null;
+
+                        const stringBefore = token && /string|escape/.test(token.type);
+                        const stringAfter = !rightToken || /string|escape/.test(rightToken.type);
+
+                        let pair;
+                        if (rightChar == quote) {
+                            pair = stringBefore !== stringAfter;
+                            if (pair && /string\.end/.test(rightToken.type))
+                                pair = false;
+                        } else {
+                            if (stringBefore && !stringAfter)
+                                return null; // wrap string with different quote
+                            if (stringBefore && stringAfter)
+                                return null; // do not pair quotes inside strings
+                            const wordRe = session.$mode.tokenRe;
+                            wordRe.lastIndex = 0;
+                            const isWordBefore = wordRe.test(leftChar);
+                            wordRe.lastIndex = 0;
+                            const isWordAfter = wordRe.test(leftChar);
+                            if (isWordBefore || isWordAfter)
+                                return null; // before or after alphanumeric
+                            if (rightChar && !/[\s;,.})\]\\]/.test(rightChar))
+                                return null; // there is rightChar and it isn't closing
+                            pair = true;
+                        }
+                        return {
+                            text: pair ? quote + quote : "",
+                            selection: [1, 1]
+                        };
+                    }
+                }
+            });
+
+            this.add("string_dquotes", "deletion", (state, action, editor, session, range) => {
+                const selected = session.doc.getTextRange(range);
+                if (!range.isMultiLine() && (selected == '"' || selected == "'")) {
+                    initContext(editor);
+                    const line = session.doc.getLine(range.start.row);
+                    const rightChar = line.substring(range.start.column + 1, range.start.column + 2);
+                    if (rightChar == selected) {
+                        range.end.column++;
+                        return range;
+                    }
+                }
+            });
+
+        }
+
+        static isSaneInsertion(editor, session) {
+            const cursor = editor.getCursorPosition();
+            const iterator = new TokenIterator(session, cursor.row, cursor.column);
+            if (!this.$matchTokenType(iterator.getCurrentToken() || "text", SAFE_INSERT_IN_TOKENS)) {
+                const iterator2 = new TokenIterator(session, cursor.row, cursor.column + 1);
+                if (!this.$matchTokenType(iterator2.getCurrentToken() || "text", SAFE_INSERT_IN_TOKENS))
+                    return false;
             }
-        });
-
-    };
-
-
-    CstyleBehaviour.isSaneInsertion = function(editor, session) {
-        var cursor = editor.getCursorPosition();
-        var iterator = new TokenIterator(session, cursor.row, cursor.column);
-        if (!this.$matchTokenType(iterator.getCurrentToken() || "text", SAFE_INSERT_IN_TOKENS)) {
-            var iterator2 = new TokenIterator(session, cursor.row, cursor.column + 1);
-            if (!this.$matchTokenType(iterator2.getCurrentToken() || "text", SAFE_INSERT_IN_TOKENS))
-                return false;
+            iterator.stepForward();
+            return iterator.getCurrentTokenRow() !== cursor.row ||
+                this.$matchTokenType(iterator.getCurrentToken() || "text", SAFE_INSERT_BEFORE_TOKENS);
         }
-        iterator.stepForward();
-        return iterator.getCurrentTokenRow() !== cursor.row ||
-            this.$matchTokenType(iterator.getCurrentToken() || "text", SAFE_INSERT_BEFORE_TOKENS);
-    };
 
-    CstyleBehaviour.$matchTokenType = function(token, types) {
-        return types.indexOf(token.type || token) > -1;
-    };
-
-    CstyleBehaviour.recordAutoInsert = function(editor, session, bracket) {
-        var cursor = editor.getCursorPosition();
-        var line = session.doc.getLine(cursor.row);
-        if (!this.isAutoInsertedClosing(cursor, line, context.autoInsertedLineEnd[0]))
-            context.autoInsertedBrackets = 0;
-        context.autoInsertedRow = cursor.row;
-        context.autoInsertedLineEnd = bracket + line.substr(cursor.column);
-        context.autoInsertedBrackets++;
-    };
-
-    CstyleBehaviour.recordMaybeInsert = function(editor, session, bracket) {
-        var cursor = editor.getCursorPosition();
-        var line = session.doc.getLine(cursor.row);
-        if (!this.isMaybeInsertedClosing(cursor, line))
-            context.maybeInsertedBrackets = 0;
-        context.maybeInsertedRow = cursor.row;
-        context.maybeInsertedLineStart = line.substr(0, cursor.column) + bracket;
-        context.maybeInsertedLineEnd = line.substr(cursor.column);
-        context.maybeInsertedBrackets++;
-    };
-
-    CstyleBehaviour.isAutoInsertedClosing = function(cursor, line, bracket) {
-        return context.autoInsertedBrackets > 0 &&
-            cursor.row === context.autoInsertedRow &&
-            bracket === context.autoInsertedLineEnd[0] &&
-            line.substr(cursor.column) === context.autoInsertedLineEnd;
-    };
-
-    CstyleBehaviour.isMaybeInsertedClosing = function(cursor, line) {
-        return context.maybeInsertedBrackets > 0 &&
-            cursor.row === context.maybeInsertedRow &&
-            line.substr(cursor.column) === context.maybeInsertedLineEnd &&
-            line.substr(0, cursor.column) == context.maybeInsertedLineStart;
-    };
-
-    CstyleBehaviour.popAutoInsertedClosing = function() {
-        context.autoInsertedLineEnd = context.autoInsertedLineEnd.substr(1);
-        context.autoInsertedBrackets--;
-    };
-
-    CstyleBehaviour.clearMaybeInsertedClosing = function() {
-        if (context) {
-            context.maybeInsertedBrackets = 0;
-            context.maybeInsertedRow = -1;
+        static $matchTokenType(token, types) {
+            return types.includes(token.type || token);
         }
-    };
+
+        static recordAutoInsert(editor, session, bracket) {
+            const cursor = editor.getCursorPosition();
+            const line = session.doc.getLine(cursor.row);
+            if (!this.isAutoInsertedClosing(cursor, line, context.autoInsertedLineEnd[0]))
+                context.autoInsertedBrackets = 0;
+            context.autoInsertedRow = cursor.row;
+            context.autoInsertedLineEnd = bracket + line.substr(cursor.column);
+            context.autoInsertedBrackets++;
+        }
+
+        static recordMaybeInsert(editor, session, bracket) {
+            const cursor = editor.getCursorPosition();
+            const line = session.doc.getLine(cursor.row);
+            if (!this.isMaybeInsertedClosing(cursor, line))
+                context.maybeInsertedBrackets = 0;
+            context.maybeInsertedRow = cursor.row;
+            context.maybeInsertedLineStart = line.substr(0, cursor.column) + bracket;
+            context.maybeInsertedLineEnd = line.substr(cursor.column);
+            context.maybeInsertedBrackets++;
+        }
+
+        static isAutoInsertedClosing(cursor, line, bracket) {
+            return context.autoInsertedBrackets > 0 &&
+                cursor.row === context.autoInsertedRow &&
+                bracket === context.autoInsertedLineEnd[0] &&
+                line.substr(cursor.column) === context.autoInsertedLineEnd;
+        }
+
+        static isMaybeInsertedClosing(cursor, line) {
+            return context.maybeInsertedBrackets > 0 &&
+                cursor.row === context.maybeInsertedRow &&
+                line.substr(cursor.column) === context.maybeInsertedLineEnd &&
+                line.substr(0, cursor.column) == context.maybeInsertedLineStart;
+        }
+
+        static popAutoInsertedClosing() {
+            context.autoInsertedLineEnd = context.autoInsertedLineEnd.substr(1);
+            context.autoInsertedBrackets--;
+        }
+
+        static clearMaybeInsertedClosing() {
+            if (context) {
+                context.maybeInsertedBrackets = 0;
+                context.maybeInsertedRow = -1;
+            }
+        }
+    }
 
 
 
@@ -6130,8 +6035,7 @@ ace.define("ace/mode/behaviour/cstyle", ["require", "exports", "module", "ace/li
     exports.CstyleBehaviour = CstyleBehaviour;
 });
 
-ace.define("ace/unicode", ["require", "exports", "module"], function(require, exports, module) {
-    "use strict";
+ace.define("ace/unicode", ["require", "exports", "module"], (require, exports, module) => {
     exports.packages = {};
 
     addUnicodePackage({
@@ -6175,34 +6079,31 @@ ace.define("ace/unicode", ["require", "exports", "module"], function(require, ex
     });
 
     function addUnicodePackage(pack) {
-        var codePoint = /\w{4}/g;
-        for (var name in pack)
+        const codePoint = /\w{4}/g;
+        for (const name in pack)
             exports.packages[name] = pack[name].replace(codePoint, "\\u$&");
     }
-
 });
 
-ace.define("ace/mode/text", ["require", "exports", "module", "ace/tokenizer", "ace/mode/text_highlight_rules", "ace/mode/behaviour/cstyle", "ace/unicode", "ace/lib/lang", "ace/token_iterator", "ace/range"], function(require, exports, module) {
-    "use strict";
+ace.define("ace/mode/text", ["require", "exports", "module", "ace/tokenizer", "ace/mode/text_highlight_rules", "ace/mode/behaviour/cstyle", "ace/unicode", "ace/lib/lang", "ace/token_iterator", "ace/range"], (require, exports, module) => {
+    const Tokenizer = require("../tokenizer").Tokenizer;
+    const TextHighlightRules = require("./text_highlight_rules").TextHighlightRules;
+    const CstyleBehaviour = require("./behaviour/cstyle").CstyleBehaviour;
+    const unicode = require("../unicode");
+    const lang = require("../lib/lang");
+    const TokenIterator = require("../token_iterator").TokenIterator;
+    const Range = require("../range").Range;
 
-    var Tokenizer = require("../tokenizer").Tokenizer;
-    var TextHighlightRules = require("./text_highlight_rules").TextHighlightRules;
-    var CstyleBehaviour = require("./behaviour/cstyle").CstyleBehaviour;
-    var unicode = require("../unicode");
-    var lang = require("../lib/lang");
-    var TokenIterator = require("../token_iterator").TokenIterator;
-    var Range = require("../range").Range;
-
-    var Mode = function() {
+    const Mode = function() {
         this.HighlightRules = TextHighlightRules;
     };
 
     (function() {
         this.$behaviour = new CstyleBehaviour();
 
-        this.tokenRe = new RegExp("^[" + unicode.packages.L + unicode.packages.Mn + unicode.packages.Mc + unicode.packages.Nd + unicode.packages.Pc + "\\$_]+", "g");
+        this.tokenRe = new RegExp(`^[${unicode.packages.L}${unicode.packages.Mn}${unicode.packages.Mc}${unicode.packages.Nd}${unicode.packages.Pc}\\$_]+`, "g");
 
-        this.nonTokenRe = new RegExp("^(?:[^" + unicode.packages.L + unicode.packages.Mn + unicode.packages.Mc + unicode.packages.Nd + unicode.packages.Pc + "\\$_]|\\s])+", "g");
+        this.nonTokenRe = new RegExp(`^(?:[^${unicode.packages.L}${unicode.packages.Mn}${unicode.packages.Mc}${unicode.packages.Nd}${unicode.packages.Pc}\\$_]|\\s])+`, "g");
 
         this.getTokenizer = function() {
             if (!this.$tokenizer) {
@@ -6216,23 +6117,23 @@ ace.define("ace/mode/text", ["require", "exports", "module", "ace/tokenizer", "a
         this.blockComment = "";
 
         this.toggleCommentLines = function(state, session, startRow, endRow) {
-            var doc = session.doc;
+            const doc = session.doc;
 
-            var ignoreBlankLines = true;
-            var shouldRemove = true;
-            var minIndent = Infinity;
-            var tabSize = session.getTabSize();
-            var insertAtTabStop = false;
+            let ignoreBlankLines = true;
+            let shouldRemove = true;
+            let minIndent = Infinity;
+            const tabSize = session.getTabSize();
+            let insertAtTabStop = false;
 
             if (!this.lineCommentStart) {
                 if (!this.blockComment)
                     return false;
                 var lineCommentStart = this.blockComment.start;
-                var lineCommentEnd = this.blockComment.end;
-                var regexpStart = new RegExp("^(\\s*)(?:" + lang.escapeRegExp(lineCommentStart) + ")");
-                var regexpEnd = new RegExp("(?:" + lang.escapeRegExp(lineCommentEnd) + ")\\s*$");
+                const lineCommentEnd = this.blockComment.end;
+                var regexpStart = new RegExp(`^(\\s*)(?:${lang.escapeRegExp(lineCommentStart)})`);
+                const regexpEnd = new RegExp(`(?:${lang.escapeRegExp(lineCommentEnd)})\\s*$`);
 
-                var comment = function(line, i) {
+                var comment = (line, i) => {
                     if (testRemove(line, i))
                         return;
                     if (!ignoreBlankLines || /\S/.test(line)) {
@@ -6247,19 +6148,19 @@ ace.define("ace/mode/text", ["require", "exports", "module", "ace/tokenizer", "a
                     }
                 };
 
-                var uncomment = function(line, i) {
-                    var m;
+                var uncomment = (line, i) => {
+                    let m;
                     if (m = line.match(regexpEnd))
                         doc.removeInLine(i, line.length - m[0].length, line.length);
                     if (m = line.match(regexpStart))
                         doc.removeInLine(i, m[1].length, m[0].length);
                 };
 
-                var testRemove = function(line, row) {
+                var testRemove = (line, row) => {
                     if (regexpStart.test(line))
                         return true;
-                    var tokens = session.getTokens(row);
-                    for (var i = 0; i < tokens.length; i++) {
+                    const tokens = session.getTokens(row);
+                    for (let i = 0; i < tokens.length; i++) {
                         if (tokens[i].type === "comment")
                             return true;
                     }
@@ -6272,21 +6173,21 @@ ace.define("ace/mode/text", ["require", "exports", "module", "ace/tokenizer", "a
                     var regexpStart = lang.escapeRegExp(this.lineCommentStart);
                     var lineCommentStart = this.lineCommentStart;
                 }
-                regexpStart = new RegExp("^(\\s*)(?:" + regexpStart + ") ?");
+                regexpStart = new RegExp(`^(\\s*)(?:${regexpStart}) ?`);
 
                 insertAtTabStop = session.getUseSoftTabs();
 
-                var uncomment = function(line, i) {
-                    var m = line.match(regexpStart);
+                var uncomment = (line, i) => {
+                    const m = line.match(regexpStart);
                     if (!m) return;
-                    var start = m[1].length,
-                        end = m[0].length;
+                    const start = m[1].length;
+                    let end = m[0].length;
                     if (!shouldInsertSpace(line, start, end) && m[0][end - 1] == " ")
                         end--;
                     doc.removeInLine(i, start, end);
                 };
-                var commentWithSpace = lineCommentStart + " ";
-                var comment = function(line, i) {
+                const commentWithSpace = `${lineCommentStart} `;
+                var comment = (line, i) => {
                     if (!ignoreBlankLines || /\S/.test(line)) {
                         if (shouldInsertSpace(line, minIndent, minIndent))
                             doc.insertInLine({
@@ -6300,11 +6201,9 @@ ace.define("ace/mode/text", ["require", "exports", "module", "ace/tokenizer", "a
                             }, lineCommentStart);
                     }
                 };
-                var testRemove = function(line, i) {
-                    return regexpStart.test(line);
-                };
+                var testRemove = (line, i) => regexpStart.test(line);
 
-                var shouldInsertSpace = function(line, before, after) {
+                var shouldInsertSpace = (line, before, after) => {
                     var spaces = 0;
                     while (before-- && line.charAt(before) == " ")
                         spaces++;
@@ -6322,14 +6221,14 @@ ace.define("ace/mode/text", ["require", "exports", "module", "ace/tokenizer", "a
             }
 
             function iter(fun) {
-                for (var i = startRow; i <= endRow; i++)
+                for (let i = startRow; i <= endRow; i++)
                     fun(doc.getLine(i), i);
             }
 
 
-            var minEmptyLength = Infinity;
-            iter(function(line, i) {
-                var indent = line.search(/\S/);
+            let minEmptyLength = Infinity;
+            iter((line, i) => {
+                const indent = line.search(/\S/);
                 if (indent !== -1) {
                     if (indent < minIndent)
                         minIndent = indent;
@@ -6353,7 +6252,7 @@ ace.define("ace/mode/text", ["require", "exports", "module", "ace/tokenizer", "a
         };
 
         this.toggleBlockComment = function(state, session, range, cursor) {
-            var comment = this.blockComment;
+            let comment = this.blockComment;
             if (!comment)
                 return;
             if (!comment.start && comment[0])
@@ -6362,12 +6261,14 @@ ace.define("ace/mode/text", ["require", "exports", "module", "ace/tokenizer", "a
             var iterator = new TokenIterator(session, cursor.row, cursor.column);
             var token = iterator.getCurrentToken();
 
-            var sel = session.selection;
-            var initialRange = session.selection.toOrientedRange();
-            var startRow, colDiff;
+            const sel = session.selection;
+            const initialRange = session.selection.toOrientedRange();
+            let startRow;
+            let colDiff;
 
             if (token && /comment/.test(token.type)) {
-                var startRange, endRange;
+                let startRange;
+                let endRange;
                 while (token && /comment/.test(token.type)) {
                     var i = token.value.indexOf(comment.start);
                     if (i != -1) {
@@ -6415,19 +6316,13 @@ ace.define("ace/mode/text", ["require", "exports", "module", "ace/tokenizer", "a
             return this.$getIndent(line);
         };
 
-        this.checkOutdent = function(state, line, input) {
-            return false;
-        };
+        this.checkOutdent = (state, line, input) => false;
 
-        this.autoOutdent = function(state, doc, row) {};
+        this.autoOutdent = (state, doc, row) => {};
 
-        this.$getIndent = function(line) {
-            return line.match(/^\s*/)[0];
-        };
+        this.$getIndent = line => line.match(/^\s*/)[0];
 
-        this.createWorker = function(session) {
-            return null;
-        };
+        this.createWorker = session => null;
 
         this.createModeDelegates = function(mapping) {
             this.$embeds = [];
@@ -6439,45 +6334,45 @@ ace.define("ace/mode/text", ["require", "exports", "module", "ace/tokenizer", "a
                 }
             }
 
-            var delegations = ["toggleBlockComment", "toggleCommentLines", "getNextLineIndent",
+            const delegations = ["toggleBlockComment", "toggleCommentLines", "getNextLineIndent",
                 "checkOutdent", "autoOutdent", "transformAction", "getCompletions"
             ];
 
             for (var i = 0; i < delegations.length; i++) {
-                (function(scope) {
-                    var functionName = delegations[i];
-                    var defaultHandler = scope[functionName];
+                ((scope => {
+                    const functionName = delegations[i];
+                    const defaultHandler = scope[functionName];
                     scope[delegations[i]] = function() {
                         return this.$delegator(functionName, arguments, defaultHandler);
                     };
-                }(this));
+                })(this));
             }
         };
 
         this.$delegator = function(method, args, defaultHandler) {
-            var state = args[0];
+            let state = args[0];
             if (typeof state != "string")
                 state = state[0];
-            for (var i = 0; i < this.$embeds.length; i++) {
+            for (let i = 0; i < this.$embeds.length; i++) {
                 if (!this.$modes[this.$embeds[i]]) continue;
 
-                var split = state.split(this.$embeds[i]);
+                const split = state.split(this.$embeds[i]);
                 if (!split[0] && split[1]) {
                     args[0] = split[1];
-                    var mode = this.$modes[this.$embeds[i]];
-                    return mode[method].apply(mode, args);
+                    const mode = this.$modes[this.$embeds[i]];
+                    return mode[method](...args);
                 }
             }
-            var ret = defaultHandler.apply(this, args);
+            const ret = defaultHandler.apply(this, args);
             return defaultHandler ? ret : undefined;
         };
 
         this.transformAction = function(state, action, editor, session, param) {
             if (this.$behaviour) {
-                var behaviours = this.$behaviour.getBehaviours();
-                for (var key in behaviours) {
+                const behaviours = this.$behaviour.getBehaviours();
+                for (const key in behaviours) {
                     if (behaviours[key][action]) {
-                        var ret = behaviours[key][action].apply(this, arguments);
+                        const ret = behaviours[key][action].apply(this, arguments);
                         if (ret) {
                             return ret;
                         }
@@ -6488,16 +6383,16 @@ ace.define("ace/mode/text", ["require", "exports", "module", "ace/tokenizer", "a
 
         this.getKeywords = function(append) {
             if (!this.completionKeywords) {
-                var rules = this.$tokenizer.rules;
+                const rules = this.$tokenizer.rules;
                 var completionKeywords = [];
                 for (var rule in rules) {
-                    var ruleItr = rules[rule];
-                    for (var r = 0, l = ruleItr.length; r < l; r++) {
+                    const ruleItr = rules[rule];
+                    for (let r = 0, l = ruleItr.length; r < l; r++) {
                         if (typeof ruleItr[r].token === "string") {
                             if (/keyword|support|storage/.test(ruleItr[r].token))
                                 completionKeywords.push(ruleItr[r].regex);
                         } else if (typeof ruleItr[r].token === "object") {
-                            for (var a = 0, aLength = ruleItr[r].token.length; a < aLength; a++) {
+                            for (let a = 0, aLength = ruleItr[r].token.length; a < aLength; a++) {
                                 if (/keyword|support|storage/.test(ruleItr[r].token[a])) {
                                     var rule = ruleItr[r].regex.match(/\(.+?\)/g)[a];
                                     completionKeywords.push(rule.substr(1, rule.length - 2));
@@ -6520,15 +6415,13 @@ ace.define("ace/mode/text", ["require", "exports", "module", "ace/tokenizer", "a
         };
 
         this.getCompletions = function(state, session, pos, prefix) {
-            var keywords = this.$keywordList || this.$createKeywordList();
-            return keywords.map(function(word) {
-                return {
-                    name: word,
-                    value: word,
-                    score: 0,
-                    meta: "keyword"
-                };
-            });
+            const keywords = this.$keywordList || this.$createKeywordList();
+            return keywords.map(word => ({
+                name: word,
+                value: word,
+                score: 0,
+                meta: "keyword"
+            }));
         };
 
         this.$id = "ace/mode/text";
@@ -6537,12 +6430,10 @@ ace.define("ace/mode/text", ["require", "exports", "module", "ace/tokenizer", "a
     exports.Mode = Mode;
 });
 
-ace.define("ace/apply_delta", ["require", "exports", "module"], function(require, exports, module) {
-    "use strict";
-
+ace.define("ace/apply_delta", ["require", "exports", "module"], (require, exports, module) => {
     function throwDeltaError(delta, errorText) {
         console.log("Invalid Delta:", delta);
-        throw "Invalid Delta: " + errorText;
+        throw `Invalid Delta: ${errorText}`;
     }
 
     function positionInDocument(docLines, position) {
@@ -6557,38 +6448,38 @@ ace.define("ace/apply_delta", ["require", "exports", "module"], function(require
             throwDeltaError(delta, "delta.lines must be an Array");
         if (!delta.start || !delta.end)
             throwDeltaError(delta, "delta.start/end must be an present");
-        var start = delta.start;
+        const start = delta.start;
         if (!positionInDocument(docLines, delta.start))
             throwDeltaError(delta, "delta.start must be contained in document");
-        var end = delta.end;
+        const end = delta.end;
         if (delta.action == "remove" && !positionInDocument(docLines, end))
             throwDeltaError(delta, "delta.end must contained in document for 'remove' actions");
-        var numRangeRows = end.row - start.row;
-        var numRangeLastLineChars = (end.column - (numRangeRows == 0 ? start.column : 0));
+        const numRangeRows = end.row - start.row;
+        const numRangeLastLineChars = (end.column - (numRangeRows == 0 ? start.column : 0));
         if (numRangeRows != delta.lines.length - 1 || delta.lines[numRangeRows].length != numRangeLastLineChars)
             throwDeltaError(delta, "delta.range must match delta lines");
     }
 
-    exports.applyDelta = function(docLines, delta, doNotValidate) {
+    exports.applyDelta = (docLines, delta, doNotValidate) => {
 
-        var row = delta.start.row;
-        var startColumn = delta.start.column;
-        var line = docLines[row] || "";
+        const row = delta.start.row;
+        const startColumn = delta.start.column;
+        const line = docLines[row] || "";
         switch (delta.action) {
             case "insert":
-                var lines = delta.lines;
+                const lines = delta.lines;
                 if (lines.length === 1) {
                     docLines[row] = line.substring(0, startColumn) + delta.lines[0] + line.substring(startColumn);
                 } else {
-                    var args = [row, 1].concat(delta.lines);
-                    docLines.splice.apply(docLines, args);
+                    const args = [row, 1].concat(delta.lines);
+                    docLines.splice(...args);
                     docLines[row] = line.substring(0, startColumn) + docLines[row];
                     docLines[row + delta.lines.length - 1] += line.substring(startColumn);
                 }
                 break;
             case "remove":
-                var endColumn = delta.end.column;
-                var endRow = delta.end.row;
+                const endColumn = delta.end.column;
+                const endRow = delta.end.row;
                 if (row === endRow) {
                     docLines[row] = line.substring(0, startColumn) + line.substring(endColumn);
                 } else {
@@ -6602,13 +6493,11 @@ ace.define("ace/apply_delta", ["require", "exports", "module"], function(require
     }
 });
 
-ace.define("ace/anchor", ["require", "exports", "module", "ace/lib/oop", "ace/lib/event_emitter"], function(require, exports, module) {
-    "use strict";
+ace.define("ace/anchor", ["require", "exports", "module", "ace/lib/oop", "ace/lib/event_emitter"], (require, exports, module) => {
+    const oop = require("./lib/oop");
+    const EventEmitter = require("./lib/event_emitter").EventEmitter;
 
-    var oop = require("./lib/oop");
-    var EventEmitter = require("./lib/event_emitter").EventEmitter;
-
-    var Anchor = exports.Anchor = function(doc, row, column) {
+    const Anchor = exports.Anchor = function(doc, row, column) {
         this.$onChange = this.onChange.bind(this);
         this.attach(doc);
 
@@ -6635,7 +6524,7 @@ ace.define("ace/anchor", ["require", "exports", "module", "ace/lib/oop", "ace/li
             if (delta.start.row > this.row)
                 return;
 
-            var point = $getTransformedPoint(delta, {
+            const point = $getTransformedPoint(delta, {
                 row: this.row,
                 column: this.column
             }, this.$insertRight);
@@ -6643,16 +6532,16 @@ ace.define("ace/anchor", ["require", "exports", "module", "ace/lib/oop", "ace/li
         };
 
         function $pointsInOrder(point1, point2, equalPointsInOrder) {
-            var bColIsAfter = equalPointsInOrder ? point1.column <= point2.column : point1.column < point2.column;
+            const bColIsAfter = equalPointsInOrder ? point1.column <= point2.column : point1.column < point2.column;
             return (point1.row < point2.row) || (point1.row == point2.row && bColIsAfter);
         }
 
         function $getTransformedPoint(delta, point, moveIfEqual) {
-            var deltaIsInsert = delta.action == "insert";
-            var deltaRowShift = (deltaIsInsert ? 1 : -1) * (delta.end.row - delta.start.row);
-            var deltaColShift = (deltaIsInsert ? 1 : -1) * (delta.end.column - delta.start.column);
-            var deltaStart = delta.start;
-            var deltaEnd = deltaIsInsert ? deltaStart : delta.end; // Collapse insert range.
+            const deltaIsInsert = delta.action == "insert";
+            const deltaRowShift = (deltaIsInsert ? 1 : -1) * (delta.end.row - delta.start.row);
+            const deltaColShift = (deltaIsInsert ? 1 : -1) * (delta.end.column - delta.start.column);
+            const deltaStart = delta.start;
+            const deltaEnd = deltaIsInsert ? deltaStart : delta.end; // Collapse insert range.
             if ($pointsInOrder(point, deltaStart, moveIfEqual)) {
                 return {
                     row: point.row,
@@ -6672,11 +6561,11 @@ ace.define("ace/anchor", ["require", "exports", "module", "ace/lib/oop", "ace/li
             };
         }
         this.setPosition = function(row, column, noClip) {
-            var pos;
+            let pos;
             if (noClip) {
                 pos = {
-                    row: row,
-                    column: column
+                    row,
+                    column
                 };
             } else {
                 pos = this.$clipPositionToDocument(row, column);
@@ -6685,7 +6574,7 @@ ace.define("ace/anchor", ["require", "exports", "module", "ace/lib/oop", "ace/li
             if (this.row == pos.row && this.column == pos.column)
                 return;
 
-            var old = {
+            const old = {
                 row: this.row,
                 column: this.column
             };
@@ -6693,7 +6582,7 @@ ace.define("ace/anchor", ["require", "exports", "module", "ace/lib/oop", "ace/li
             this.row = pos.row;
             this.column = pos.column;
             this._signal("change", {
-                old: old,
+                old,
                 value: pos
             });
         };
@@ -6705,7 +6594,7 @@ ace.define("ace/anchor", ["require", "exports", "module", "ace/lib/oop", "ace/li
             this.document.on("change", this.$onChange);
         };
         this.$clipPositionToDocument = function(row, column) {
-            var pos = {};
+            const pos = {};
 
             if (row >= this.document.getLength()) {
                 pos.row = Math.max(0, this.document.getLength() - 1);
@@ -6725,19 +6614,16 @@ ace.define("ace/anchor", ["require", "exports", "module", "ace/lib/oop", "ace/li
         };
 
     }).call(Anchor.prototype);
-
 });
 
-ace.define("ace/document", ["require", "exports", "module", "ace/lib/oop", "ace/apply_delta", "ace/lib/event_emitter", "ace/range", "ace/anchor"], function(require, exports, module) {
-    "use strict";
+ace.define("ace/document", ["require", "exports", "module", "ace/lib/oop", "ace/apply_delta", "ace/lib/event_emitter", "ace/range", "ace/anchor"], (require, exports, module) => {
+    const oop = require("./lib/oop");
+    const applyDelta = require("./apply_delta").applyDelta;
+    const EventEmitter = require("./lib/event_emitter").EventEmitter;
+    const Range = require("./range").Range;
+    const Anchor = require("./anchor").Anchor;
 
-    var oop = require("./lib/oop");
-    var applyDelta = require("./apply_delta").applyDelta;
-    var EventEmitter = require("./lib/event_emitter").EventEmitter;
-    var Range = require("./range").Range;
-    var Anchor = require("./anchor").Anchor;
-
-    var Document = function(textOrLines) {
+    const Document = function(textOrLines) {
         this.$lines = [""];
         if (textOrLines.length === 0) {
             this.$lines = [""];
@@ -6758,7 +6644,7 @@ ace.define("ace/document", ["require", "exports", "module", "ace/lib/oop", "ace/
 
         oop.implement(this, EventEmitter);
         this.setValue = function(text) {
-            var len = this.getLength() - 1;
+            const len = this.getLength() - 1;
             this.remove(new Range(0, 0, len, this.getLine(len).length));
             this.insert({
                 row: 0,
@@ -6772,18 +6658,14 @@ ace.define("ace/document", ["require", "exports", "module", "ace/lib/oop", "ace/
             return new Anchor(this, row, column);
         };
         if ("aaa".split(/a/).length === 0) {
-            this.$split = function(text) {
-                return text.replace(/\r\n|\r/g, "\n").split("\n");
-            };
+            this.$split = text => text.replace(/\r\n|\r/g, "\n").split("\n");
         } else {
-            this.$split = function(text) {
-                return text.split(/\r\n|\r|\n/);
-            };
+            this.$split = text => text.split(/\r\n|\r|\n/);
         }
 
 
         this.$detectNewLine = function(text) {
-            var match = text.match(/^.*?(\r\n|\r|\n)/m);
+            const match = text.match(/^.*?(\r\n|\r|\n)/m);
             this.$autoNewLine = match ? match[1] : "\n";
             this._signal("changeNewLineMode");
         };
@@ -6810,9 +6692,7 @@ ace.define("ace/document", ["require", "exports", "module", "ace/lib/oop", "ace/
         this.getNewLineMode = function() {
             return this.$newLineMode;
         };
-        this.isNewLine = function(text) {
-            return (text == "\r\n" || text == "\r" || text == "\n");
-        };
+        this.isNewLine = text => text == "\r\n" || text == "\r" || text == "\n";
         this.getLine = function(row) {
             return this.$lines[row] || "";
         };
@@ -6829,13 +6709,13 @@ ace.define("ace/document", ["require", "exports", "module", "ace/lib/oop", "ace/
             return this.getLinesForRange(range).join(this.getNewLineCharacter());
         };
         this.getLinesForRange = function(range) {
-            var lines;
+            let lines;
             if (range.start.row === range.end.row) {
                 lines = [this.getLine(range.start.row).substring(range.start.column, range.end.column)];
             } else {
                 lines = this.getLines(range.start.row, range.end.row);
                 lines[0] = (lines[0] || "").substring(range.start.column);
-                var l = lines.length - 1;
+                const l = lines.length - 1;
                 if (range.end.row - range.start.row == l)
                     lines[l] = lines[l].substring(0, range.end.column);
             }
@@ -6860,12 +6740,12 @@ ace.define("ace/document", ["require", "exports", "module", "ace/lib/oop", "ace/
             return this.insertMergedLines(position, this.$split(text));
         };
         this.insertInLine = function(position, text) {
-            var start = this.clippedPos(position.row, position.column);
-            var end = this.pos(position.row, position.column + text.length);
+            const start = this.clippedPos(position.row, position.column);
+            const end = this.pos(position.row, position.column + text.length);
 
             this.applyDelta({
-                start: start,
-                end: end,
+                start,
+                end,
                 action: "insert",
                 lines: [text]
             }, true);
@@ -6874,7 +6754,7 @@ ace.define("ace/document", ["require", "exports", "module", "ace/lib/oop", "ace/
         };
 
         this.clippedPos = function(row, column) {
-            var length = this.getLength();
+            const length = this.getLength();
             if (row === undefined) {
                 row = length;
             } else if (row < 0) {
@@ -6883,32 +6763,28 @@ ace.define("ace/document", ["require", "exports", "module", "ace/lib/oop", "ace/
                 row = length - 1;
                 column = undefined;
             }
-            var line = this.getLine(row);
+            const line = this.getLine(row);
             if (column == undefined)
                 column = line.length;
             column = Math.min(Math.max(column, 0), line.length);
             return {
-                row: row,
-                column: column
+                row,
+                column
             };
         };
 
-        this.clonePos = function(pos) {
-            return {
-                row: pos.row,
-                column: pos.column
-            };
-        };
+        this.clonePos = pos => ({
+            row: pos.row,
+            column: pos.column
+        });
 
-        this.pos = function(row, column) {
-            return {
-                row: row,
-                column: column
-            };
-        };
+        this.pos = (row, column) => ({
+            row,
+            column
+        });
 
         this.$clipPosition = function(position) {
-            var length = this.getLength();
+            const length = this.getLength();
             if (position.row >= length) {
                 position.row = Math.max(0, length - 1);
                 position.column = this.getLine(length - 1).length;
@@ -6920,7 +6796,7 @@ ace.define("ace/document", ["require", "exports", "module", "ace/lib/oop", "ace/
         };
         this.insertFullLines = function(row, lines) {
             row = Math.min(Math.max(row, 0), this.getLength());
-            var column = 0;
+            let column = 0;
             if (row < this.getLength()) {
                 lines = lines.concat([""]);
                 column = 0;
@@ -6930,51 +6806,51 @@ ace.define("ace/document", ["require", "exports", "module", "ace/lib/oop", "ace/
                 column = this.$lines[row].length;
             }
             this.insertMergedLines({
-                row: row,
-                column: column
+                row,
+                column
             }, lines);
         };
         this.insertMergedLines = function(position, lines) {
-            var start = this.clippedPos(position.row, position.column);
-            var end = {
+            const start = this.clippedPos(position.row, position.column);
+            const end = {
                 row: start.row + lines.length - 1,
                 column: (lines.length == 1 ? start.column : 0) + lines[lines.length - 1].length
             };
 
             this.applyDelta({
-                start: start,
-                end: end,
+                start,
+                end,
                 action: "insert",
-                lines: lines
+                lines
             });
 
             return this.clonePos(end);
         };
         this.remove = function(range) {
-            var start = this.clippedPos(range.start.row, range.start.column);
-            var end = this.clippedPos(range.end.row, range.end.column);
+            const start = this.clippedPos(range.start.row, range.start.column);
+            const end = this.clippedPos(range.end.row, range.end.column);
             this.applyDelta({
-                start: start,
-                end: end,
+                start,
+                end,
                 action: "remove",
                 lines: this.getLinesForRange({
-                    start: start,
-                    end: end
+                    start,
+                    end
                 })
             });
             return this.clonePos(start);
         };
         this.removeInLine = function(row, startColumn, endColumn) {
-            var start = this.clippedPos(row, startColumn);
-            var end = this.clippedPos(row, endColumn);
+            const start = this.clippedPos(row, startColumn);
+            const end = this.clippedPos(row, endColumn);
 
             this.applyDelta({
-                start: start,
-                end: end,
+                start,
+                end,
                 action: "remove",
                 lines: this.getLinesForRange({
-                    start: start,
-                    end: end
+                    start,
+                    end
                 })
             }, true);
 
@@ -6983,14 +6859,14 @@ ace.define("ace/document", ["require", "exports", "module", "ace/lib/oop", "ace/
         this.removeFullLines = function(firstRow, lastRow) {
             firstRow = Math.min(Math.max(0, firstRow), this.getLength() - 1);
             lastRow = Math.min(Math.max(0, lastRow), this.getLength() - 1);
-            var deleteFirstNewLine = lastRow == this.getLength() - 1 && firstRow > 0;
-            var deleteLastNewLine = lastRow < this.getLength() - 1;
-            var startRow = (deleteFirstNewLine ? firstRow - 1 : firstRow);
-            var startCol = (deleteFirstNewLine ? this.getLine(startRow).length : 0);
-            var endRow = (deleteLastNewLine ? lastRow + 1 : lastRow);
-            var endCol = (deleteLastNewLine ? 0 : this.getLine(endRow).length);
-            var range = new Range(startRow, startCol, endRow, endCol);
-            var deletedLines = this.$lines.slice(firstRow, lastRow + 1);
+            const deleteFirstNewLine = lastRow == this.getLength() - 1 && firstRow > 0;
+            const deleteLastNewLine = lastRow < this.getLength() - 1;
+            const startRow = (deleteFirstNewLine ? firstRow - 1 : firstRow);
+            const startCol = (deleteFirstNewLine ? this.getLine(startRow).length : 0);
+            const endRow = (deleteLastNewLine ? lastRow + 1 : lastRow);
+            const endCol = (deleteLastNewLine ? 0 : this.getLine(endRow).length);
+            const range = new Range(startRow, startCol, endRow, endCol);
+            const deletedLines = this.$lines.slice(firstRow, lastRow + 1);
 
             this.applyDelta({
                 start: range.start,
@@ -7019,7 +6895,7 @@ ace.define("ace/document", ["require", "exports", "module", "ace/lib/oop", "ace/
                 return range.end;
 
             this.remove(range);
-            var end;
+            let end;
             if (text) {
                 end = this.insert(range.start, text);
             } else {
@@ -7029,17 +6905,17 @@ ace.define("ace/document", ["require", "exports", "module", "ace/lib/oop", "ace/
             return end;
         };
         this.applyDeltas = function(deltas) {
-            for (var i = 0; i < deltas.length; i++) {
+            for (let i = 0; i < deltas.length; i++) {
                 this.applyDelta(deltas[i]);
             }
         };
         this.revertDeltas = function(deltas) {
-            for (var i = deltas.length - 1; i >= 0; i--) {
+            for (let i = deltas.length - 1; i >= 0; i--) {
                 this.revertDelta(deltas[i]);
             }
         };
         this.applyDelta = function(delta, doNotValidate) {
-            var isInsert = delta.action == "insert";
+            const isInsert = delta.action == "insert";
             if (isInsert ? delta.lines.length <= 1 && !delta.lines[0] : !Range.comparePoints(delta.start, delta.end)) {
                 return;
             }
@@ -7051,16 +6927,16 @@ ace.define("ace/document", ["require", "exports", "module", "ace/lib/oop", "ace/
         };
 
         this.$splitAndapplyLargeDelta = function(delta, MAX) {
-            var lines = delta.lines;
-            var l = lines.length;
-            var row = delta.start.row;
-            var column = delta.start.column;
-            var from = 0,
-                to = 0;
+            const lines = delta.lines;
+            const l = lines.length;
+            const row = delta.start.row;
+            let column = delta.start.column;
+            let from = 0;
+            let to = 0;
             do {
                 from = to;
                 to += MAX - 1;
-                var chunk = lines.slice(from, to);
+                const chunk = lines.slice(from, to);
                 if (to > l) {
                     delta.lines = chunk;
                     delta.start.row = row + from;
@@ -7085,8 +6961,8 @@ ace.define("ace/document", ["require", "exports", "module", "ace/lib/oop", "ace/
             });
         };
         this.indexToPosition = function(index, startRow) {
-            var lines = this.$lines || this.getAllLines();
-            var newlineLength = this.getNewLineCharacter().length;
+            const lines = this.$lines || this.getAllLines();
+            const newlineLength = this.getNewLineCharacter().length;
             for (var i = startRow || 0, l = lines.length; i < l; i++) {
                 index -= lines[i].length + newlineLength;
                 if (index < 0)
@@ -7101,11 +6977,11 @@ ace.define("ace/document", ["require", "exports", "module", "ace/lib/oop", "ace/
             };
         };
         this.positionToIndex = function(pos, startRow) {
-            var lines = this.$lines || this.getAllLines();
-            var newlineLength = this.getNewLineCharacter().length;
-            var index = 0;
-            var row = Math.min(pos.row, lines.length);
-            for (var i = startRow || 0; i < row; ++i)
+            const lines = this.$lines || this.getAllLines();
+            const newlineLength = this.getNewLineCharacter().length;
+            let index = 0;
+            const row = Math.min(pos.row, lines.length);
+            for (let i = startRow || 0; i < row; ++i)
                 index += lines[i].length + newlineLength;
 
             return index + pos.column;
@@ -7116,37 +6992,35 @@ ace.define("ace/document", ["require", "exports", "module", "ace/lib/oop", "ace/
     exports.Document = Document;
 });
 
-ace.define("ace/background_tokenizer", ["require", "exports", "module", "ace/lib/oop", "ace/lib/event_emitter"], function(require, exports, module) {
-    "use strict";
+ace.define("ace/background_tokenizer", ["require", "exports", "module", "ace/lib/oop", "ace/lib/event_emitter"], (require, exports, module) => {
+    const oop = require("./lib/oop");
+    const EventEmitter = require("./lib/event_emitter").EventEmitter;
 
-    var oop = require("./lib/oop");
-    var EventEmitter = require("./lib/event_emitter").EventEmitter;
-
-    var BackgroundTokenizer = function(tokenizer, editor) {
+    const BackgroundTokenizer = function(tokenizer, editor) {
         this.running = false;
         this.lines = [];
         this.states = [];
         this.currentLine = 0;
         this.tokenizer = tokenizer;
 
-        var self = this;
+        const self = this;
 
-        this.$worker = function() {
+        this.$worker = () => {
             if (!self.running) {
                 return;
             }
 
-            var workerStart = new Date();
-            var currentLine = self.currentLine;
-            var endLine = -1;
-            var doc = self.doc;
+            const workerStart = new Date();
+            let currentLine = self.currentLine;
+            let endLine = -1;
+            const doc = self.doc;
 
-            var startLine = currentLine;
+            const startLine = currentLine;
             while (self.lines[currentLine])
                 currentLine++;
 
-            var len = doc.getLength();
-            var processedLines = 0;
+            const len = doc.getLength();
+            let processedLines = 0;
             self.running = false;
             while (currentLine < len) {
                 self.$tokenizeRow(currentLine);
@@ -7185,12 +7059,12 @@ ace.define("ace/background_tokenizer", ["require", "exports", "module", "ace/lib
             this.stop();
         };
         this.fireUpdateEvent = function(firstRow, lastRow) {
-            var data = {
+            const data = {
                 first: firstRow,
                 last: lastRow
             };
             this._signal("update", {
-                data: data
+                data
             });
         };
         this.start = function(startRow) {
@@ -7208,8 +7082,8 @@ ace.define("ace/background_tokenizer", ["require", "exports", "module", "ace/lib
         }
 
         this.$updateOnChange = function(delta) {
-            var startRow = delta.start.row;
-            var len = delta.end.row - startRow;
+            const startRow = delta.start.row;
+            const len = delta.end.row - startRow;
 
             if (len === 0) {
                 this.lines[startRow] = null;
@@ -7217,10 +7091,10 @@ ace.define("ace/background_tokenizer", ["require", "exports", "module", "ace/lib
                 this.lines.splice(startRow, len + 1, null);
                 this.states.splice(startRow, len + 1, null);
             } else {
-                var args = Array(len + 1);
+                const args = Array(len + 1);
                 args.unshift(startRow, 1);
-                this.lines.splice.apply(this.lines, args);
-                this.states.splice.apply(this.states, args);
+                this.lines.splice(...args);
+                this.states.splice(...args);
             }
 
             this.currentLine = Math.min(startRow, this.currentLine, this.doc.getLength());
@@ -7242,12 +7116,12 @@ ace.define("ace/background_tokenizer", ["require", "exports", "module", "ace/lib
         };
 
         this.$tokenizeRow = function(row) {
-            var line = this.doc.getLine(row);
-            var state = this.states[row - 1];
+            const line = this.doc.getLine(row);
+            const state = this.states[row - 1];
 
-            var data = this.tokenizer.getLineTokens(line, state, row);
+            const data = this.tokenizer.getLineTokens(line, state, row);
 
-            if (this.states[row] + "" !== data.state + "") {
+            if (`${this.states[row]}` !== `${data.state}`) {
                 this.states[row] = data.state;
                 this.lines[row + 1] = null;
                 if (this.currentLine > row + 1)
@@ -7264,14 +7138,12 @@ ace.define("ace/background_tokenizer", ["require", "exports", "module", "ace/lib
     exports.BackgroundTokenizer = BackgroundTokenizer;
 });
 
-ace.define("ace/search_highlight", ["require", "exports", "module", "ace/lib/lang", "ace/lib/oop", "ace/range"], function(require, exports, module) {
-    "use strict";
+ace.define("ace/search_highlight", ["require", "exports", "module", "ace/lib/lang", "ace/lib/oop", "ace/range"], (require, exports, module) => {
+    const lang = require("./lib/lang");
+    const oop = require("./lib/oop");
+    const Range = require("./range").Range;
 
-    var lang = require("./lib/lang");
-    var oop = require("./lib/oop");
-    var Range = require("./range").Range;
-
-    var SearchHighlight = function(regExp, clazz, type) {
+    const SearchHighlight = function(regExp, clazz, type) {
         this.setRegexp(regExp);
         this.clazz = clazz;
         this.type = type || "text";
@@ -7281,7 +7153,7 @@ ace.define("ace/search_highlight", ["require", "exports", "module", "ace/lib/lan
         this.MAX_RANGES = 500;
 
         this.setRegexp = function(regExp) {
-            if (this.regExp + "" == regExp + "")
+            if (`${this.regExp}` == `${regExp}`)
                 return;
             this.regExp = regExp;
             this.cache = [];
@@ -7290,22 +7162,20 @@ ace.define("ace/search_highlight", ["require", "exports", "module", "ace/lib/lan
         this.update = function(html, markerLayer, session, config) {
             if (!this.regExp)
                 return;
-            var start = config.firstRow,
-                end = config.lastRow;
+            const start = config.firstRow;
+            const end = config.lastRow;
 
-            for (var i = start; i <= end; i++) {
-                var ranges = this.cache[i];
+            for (let i = start; i <= end; i++) {
+                let ranges = this.cache[i];
                 if (ranges == null) {
                     ranges = lang.getMatchOffsets(session.getLine(i), this.regExp);
                     if (ranges.length > this.MAX_RANGES)
                         ranges = ranges.slice(0, this.MAX_RANGES);
-                    ranges = ranges.map(function(match) {
-                        return new Range(i, match.offset, i, match.offset + match.length);
-                    });
+                    ranges = ranges.map(match => new Range(i, match.offset, i, match.offset + match.length));
                     this.cache[i] = ranges.length ? ranges : "";
                 }
 
-                for (var j = ranges.length; j--;) {
+                for (let j = ranges.length; j--;) {
                     markerLayer.drawSingleLineMarker(
                         html, ranges[j].toScreenRange(session), this.clazz, config);
                 }
@@ -7317,10 +7187,8 @@ ace.define("ace/search_highlight", ["require", "exports", "module", "ace/lib/lan
     exports.SearchHighlight = SearchHighlight;
 });
 
-ace.define("ace/edit_session/fold_line", ["require", "exports", "module", "ace/range"], function(require, exports, module) {
-    "use strict";
-
-    var Range = require("../range").Range;
+ace.define("ace/edit_session/fold_line", ["require", "exports", "module", "ace/range"], (require, exports, module) => {
+    const Range = require("../range").Range;
 
     function FoldLine(foldData, folds) {
         this.foldData = foldData;
@@ -7330,7 +7198,7 @@ ace.define("ace/edit_session/fold_line", ["require", "exports", "module", "ace/r
             folds = this.folds = [folds];
         }
 
-        var last = folds[folds.length - 1];
+        const last = folds[folds.length - 1];
         this.range = new Range(folds[0].start.row, folds[0].start.column,
             last.end.row, last.end.column);
         this.start = this.range.start;
@@ -7345,7 +7213,7 @@ ace.define("ace/edit_session/fold_line", ["require", "exports", "module", "ace/r
         this.shiftRow = function(shift) {
             this.start.row += shift;
             this.end.row += shift;
-            this.folds.forEach(function(fold) {
+            this.folds.forEach(fold => {
                 fold.start.row += shift;
                 fold.end.row += shift;
             });
@@ -7357,9 +7225,7 @@ ace.define("ace/edit_session/fold_line", ["require", "exports", "module", "ace/r
                     throw new Error("Can't add a fold to this FoldLine as it has no connection");
                 }
                 this.folds.push(fold);
-                this.folds.sort(function(a, b) {
-                    return -a.range.compareEnd(b.start.row, b.start.column);
-                });
+                this.folds.sort((a, b) => -a.range.compareEnd(b.start.row, b.start.column));
                 if (this.range.compareEnd(fold.start.row, fold.start.column) > 0) {
                     this.end.row = fold.end.row;
                     this.end.column = fold.end.column;
@@ -7386,17 +7252,19 @@ ace.define("ace/edit_session/fold_line", ["require", "exports", "module", "ace/r
         };
 
         this.walk = function(callback, endRow, endColumn) {
-            var lastEnd = 0,
-                folds = this.folds,
-                fold,
-                cmp, stop, isNewRow = true;
+            let lastEnd = 0;
+            const folds = this.folds;
+            let fold;
+            let cmp;
+            let stop;
+            let isNewRow = true;
 
             if (endRow == null) {
                 endRow = this.end.row;
                 endColumn = this.end.column;
             }
 
-            for (var i = 0; i < folds.length; i++) {
+            for (let i = 0; i < folds.length; i++) {
                 fold = folds[i];
 
                 cmp = fold.range.compareStart(endRow, endColumn);
@@ -7417,18 +7285,19 @@ ace.define("ace/edit_session/fold_line", ["require", "exports", "module", "ace/r
         };
 
         this.getNextFoldTo = function(row, column) {
-            var fold, cmp;
-            for (var i = 0; i < this.folds.length; i++) {
+            let fold;
+            let cmp;
+            for (let i = 0; i < this.folds.length; i++) {
                 fold = this.folds[i];
                 cmp = fold.range.compareEnd(row, column);
                 if (cmp == -1) {
                     return {
-                        fold: fold,
+                        fold,
                         kind: "after"
                     };
                 } else if (cmp === 0) {
                     return {
-                        fold: fold,
+                        fold,
                         kind: "inside"
                     };
                 }
@@ -7437,15 +7306,16 @@ ace.define("ace/edit_session/fold_line", ["require", "exports", "module", "ace/r
         };
 
         this.addRemoveChars = function(row, column, len) {
-            var ret = this.getNextFoldTo(row, column),
-                fold, folds;
+            const ret = this.getNextFoldTo(row, column);
+            let fold;
+            let folds;
             if (ret) {
                 fold = ret.fold;
                 if (ret.kind == "inside" && fold.start.column != column && fold.start.row != row) {
                     window.console && window.console.log(row, column, fold);
                 } else if (fold.start.row == row) {
                     folds = this.folds;
-                    var i = folds.indexOf(fold);
+                    let i = folds.indexOf(fold);
                     if (i === 0) {
                         this.start.column += len;
                     }
@@ -7463,51 +7333,49 @@ ace.define("ace/edit_session/fold_line", ["require", "exports", "module", "ace/r
         };
 
         this.split = function(row, column) {
-            var pos = this.getNextFoldTo(row, column);
+            const pos = this.getNextFoldTo(row, column);
 
             if (!pos || pos.kind == "inside")
                 return null;
 
-            var fold = pos.fold;
-            var folds = this.folds;
-            var foldData = this.foldData;
+            const fold = pos.fold;
+            let folds = this.folds;
+            const foldData = this.foldData;
 
-            var i = folds.indexOf(fold);
-            var foldBefore = folds[i - 1];
+            const i = folds.indexOf(fold);
+            const foldBefore = folds[i - 1];
             this.end.row = foldBefore.end.row;
             this.end.column = foldBefore.end.column;
             folds = folds.splice(i, folds.length - i);
 
-            var newFoldLine = new FoldLine(foldData, folds);
+            const newFoldLine = new FoldLine(foldData, folds);
             foldData.splice(foldData.indexOf(this) + 1, 0, newFoldLine);
             return newFoldLine;
         };
 
         this.merge = function(foldLineNext) {
-            var folds = foldLineNext.folds;
-            for (var i = 0; i < folds.length; i++) {
+            const folds = foldLineNext.folds;
+            for (let i = 0; i < folds.length; i++) {
                 this.addFold(folds[i]);
             }
-            var foldData = this.foldData;
+            const foldData = this.foldData;
             foldData.splice(foldData.indexOf(foldLineNext), 1);
         };
 
         this.toString = function() {
-            var ret = [this.range.toString() + ": ["];
+            const ret = [`${this.range.toString()}: [`];
 
-            this.folds.forEach(function(fold) {
-                ret.push("  " + fold.toString());
+            this.folds.forEach(fold => {
+                ret.push(`  ${fold.toString()}`);
             });
             ret.push("]");
             return ret.join("\n");
         };
 
         this.idxToPosition = function(idx) {
-            var lastFoldEndColumn = 0;
+            let lastFoldEndColumn = 0;
 
-            for (var i = 0; i < this.folds.length; i++) {
-                var fold = this.folds[i];
-
+            for (const fold of this.folds) {
                 idx -= fold.start.column - lastFoldEndColumn;
                 if (idx < 0) {
                     return {
@@ -7534,12 +7402,11 @@ ace.define("ace/edit_session/fold_line", ["require", "exports", "module", "ace/r
     exports.FoldLine = FoldLine;
 });
 
-ace.define("ace/range_list", ["require", "exports", "module", "ace/range"], function(require, exports, module) {
-    "use strict";
-    var Range = require("./range").Range;
-    var comparePoints = Range.comparePoints;
+ace.define("ace/range_list", ["require", "exports", "module", "ace/range"], (require, exports, module) => {
+    const Range = require("./range").Range;
+    const comparePoints = Range.comparePoints;
 
-    var RangeList = function() {
+    const RangeList = function() {
         this.ranges = [];
     };
 
@@ -7547,14 +7414,14 @@ ace.define("ace/range_list", ["require", "exports", "module", "ace/range"], func
         this.comparePoints = comparePoints;
 
         this.pointIndex = function(pos, excludeEdges, startIndex) {
-            var list = this.ranges;
+            const list = this.ranges;
 
             for (var i = startIndex || 0; i < list.length; i++) {
-                var range = list[i];
-                var cmpEnd = comparePoints(pos, range.end);
+                const range = list[i];
+                const cmpEnd = comparePoints(pos, range.end);
                 if (cmpEnd > 0)
                     continue;
-                var cmpStart = comparePoints(pos, range.start);
+                const cmpStart = comparePoints(pos, range.start);
                 if (cmpEnd === 0)
                     return excludeEdges && cmpStart !== 0 ? -i - 2 : i;
                 if (cmpStart > 0 || (cmpStart === 0 && !excludeEdges))
@@ -7566,12 +7433,12 @@ ace.define("ace/range_list", ["require", "exports", "module", "ace/range"], func
         };
 
         this.add = function(range) {
-            var excludeEdges = !range.isEmpty();
-            var startIndex = this.pointIndex(range.start, excludeEdges);
+            const excludeEdges = !range.isEmpty();
+            let startIndex = this.pointIndex(range.start, excludeEdges);
             if (startIndex < 0)
                 startIndex = -startIndex - 1;
 
-            var endIndex = this.pointIndex(range.end, excludeEdges, startIndex);
+            let endIndex = this.pointIndex(range.end, excludeEdges, startIndex);
 
             if (endIndex < 0)
                 endIndex = -endIndex - 1;
@@ -7581,33 +7448,31 @@ ace.define("ace/range_list", ["require", "exports", "module", "ace/range"], func
         };
 
         this.addList = function(list) {
-            var removed = [];
-            for (var i = list.length; i--;) {
-                removed.push.apply(removed, this.add(list[i]));
+            const removed = [];
+            for (let i = list.length; i--;) {
+                removed.push(...this.add(list[i]));
             }
             return removed;
         };
 
         this.substractPoint = function(pos) {
-            var i = this.pointIndex(pos);
+            const i = this.pointIndex(pos);
 
             if (i >= 0)
                 return this.ranges.splice(i, 1);
         };
         this.merge = function() {
-            var removed = [];
-            var list = this.ranges;
+            const removed = [];
+            let list = this.ranges;
 
-            list = list.sort(function(a, b) {
-                return comparePoints(a.start, b.start);
-            });
+            list = list.sort((a, b) => comparePoints(a.start, b.start));
 
-            var next = list[0],
-                range;
-            for (var i = 1; i < list.length; i++) {
+            let next = list[0];
+            let range;
+            for (let i = 1; i < list.length; i++) {
                 range = next;
                 next = list[i];
-                var cmp = comparePoints(range.end, next.start);
+                const cmp = comparePoints(range.end, next.start);
                 if (cmp < 0)
                     continue;
 
@@ -7632,8 +7497,8 @@ ace.define("ace/range_list", ["require", "exports", "module", "ace/range"], func
 
         this.contains = function(row, column) {
             return this.pointIndex({
-                row: row,
-                column: column
+                row,
+                column
             }) >= 0;
         };
 
@@ -7642,32 +7507,32 @@ ace.define("ace/range_list", ["require", "exports", "module", "ace/range"], func
         };
 
         this.rangeAtPoint = function(pos) {
-            var i = this.pointIndex(pos);
+            const i = this.pointIndex(pos);
             if (i >= 0)
                 return this.ranges[i];
         };
 
 
         this.clipRows = function(startRow, endRow) {
-            var list = this.ranges;
+            const list = this.ranges;
             if (list[0].start.row > endRow || list[list.length - 1].start.row < startRow)
                 return [];
 
-            var startIndex = this.pointIndex({
+            let startIndex = this.pointIndex({
                 row: startRow,
                 column: 0
             });
             if (startIndex < 0)
                 startIndex = -startIndex - 1;
-            var endIndex = this.pointIndex({
+            let endIndex = this.pointIndex({
                 row: endRow,
                 column: 0
             }, startIndex);
             if (endIndex < 0)
                 endIndex = -endIndex - 1;
 
-            var clipped = [];
-            for (var i = startIndex; i < endIndex; i++) {
+            const clipped = [];
+            for (let i = startIndex; i < endIndex; i++) {
                 clipped.push(list[i]);
             }
             return clipped;
@@ -7702,12 +7567,12 @@ ace.define("ace/range_list", ["require", "exports", "module", "ace/range"], func
                 var end = delta.start;
                 var start = delta.end;
             }
-            var startRow = start.row;
-            var endRow = end.row;
-            var lineDif = endRow - startRow;
+            const startRow = start.row;
+            const endRow = end.row;
+            const lineDif = endRow - startRow;
 
-            var colDiff = -start.column + end.column;
-            var ranges = this.ranges;
+            const colDiff = -start.column + end.column;
+            const ranges = this.ranges;
 
             for (var i = 0, n = ranges.length; i < n; i++) {
                 var r = ranges[i];
@@ -7749,13 +7614,11 @@ ace.define("ace/range_list", ["require", "exports", "module", "ace/range"], func
     exports.RangeList = RangeList;
 });
 
-ace.define("ace/edit_session/fold", ["require", "exports", "module", "ace/range", "ace/range_list", "ace/lib/oop"], function(require, exports, module) {
-    "use strict";
-
-    var Range = require("../range").Range;
-    var RangeList = require("../range_list").RangeList;
-    var oop = require("../lib/oop")
-    var Fold = exports.Fold = function(range, placeholder) {
+ace.define("ace/edit_session/fold", ["require", "exports", "module", "ace/range", "ace/range_list", "ace/lib/oop"], (require, exports, module) => {
+    const Range = require("../range").Range;
+    const RangeList = require("../range_list").RangeList;
+    const oop = require("../lib/oop");
+    const Fold = exports.Fold = function(range, placeholder) {
         this.foldLine = null;
         this.placeholder = placeholder;
         this.range = range;
@@ -7771,20 +7634,20 @@ ace.define("ace/edit_session/fold", ["require", "exports", "module", "ace/range"
     (function() {
 
         this.toString = function() {
-            return '"' + this.placeholder + '" ' + this.range.toString();
+            return `"${this.placeholder}" ${this.range.toString()}`;
         };
 
         this.setFoldLine = function(foldLine) {
             this.foldLine = foldLine;
-            this.subFolds.forEach(function(fold) {
+            this.subFolds.forEach(fold => {
                 fold.setFoldLine(foldLine);
             });
         };
 
         this.clone = function() {
-            var range = this.range.clone();
-            var fold = new Fold(range, this.placeholder);
-            this.subFolds.forEach(function(subFold) {
+            const range = this.range.clone();
+            const fold = new Fold(range, this.placeholder);
+            this.subFolds.forEach(subFold => {
                 fold.subFolds.push(subFold.clone());
             });
             fold.collapseChildren = this.collapseChildren;
@@ -7796,33 +7659,33 @@ ace.define("ace/edit_session/fold", ["require", "exports", "module", "ace/range"
                 return;
 
             if (!this.range.containsRange(fold))
-                throw new Error("A fold can't intersect already existing fold" + fold.range + this.range);
+                throw new Error(`A fold can't intersect already existing fold${fold.range}${this.range}`);
             consumeRange(fold, this.start);
 
-            var row = fold.start.row,
-                column = fold.start.column;
+            var row = fold.start.row;
+            var column = fold.start.column;
             for (var i = 0, cmp = -1; i < this.subFolds.length; i++) {
                 cmp = this.subFolds[i].range.compare(row, column);
                 if (cmp != 1)
                     break;
             }
-            var afterStart = this.subFolds[i];
+            const afterStart = this.subFolds[i];
 
             if (cmp == 0)
                 return afterStart.addSubFold(fold);
-            var row = fold.range.end.row,
-                column = fold.range.end.column;
+            var row = fold.range.end.row;
+            var column = fold.range.end.column;
             for (var j = i, cmp = -1; j < this.subFolds.length; j++) {
                 cmp = this.subFolds[j].range.compare(row, column);
                 if (cmp != 1)
                     break;
             }
-            var afterEnd = this.subFolds[j];
+            const afterEnd = this.subFolds[j];
 
             if (cmp == 0)
-                throw new Error("A fold can't intersect already existing fold" + fold.range + this.range);
+                throw new Error(`A fold can't intersect already existing fold${fold.range}${this.range}`);
 
-            var consumedFolds = this.subFolds.splice(i, j - i, fold);
+            const consumedFolds = this.subFolds.splice(i, j - i, fold);
             fold.setFoldLine(this.foldLine);
 
             return fold;
@@ -7855,26 +7718,23 @@ ace.define("ace/edit_session/fold", ["require", "exports", "module", "ace/range"
         restorePoint(range.start, anchor);
         restorePoint(range.end, anchor);
     }
-
 });
 
-ace.define("ace/edit_session/folding", ["require", "exports", "module", "ace/range", "ace/edit_session/fold_line", "ace/edit_session/fold", "ace/token_iterator"], function(require, exports, module) {
-    "use strict";
-
-    var Range = require("../range").Range;
-    var FoldLine = require("./fold_line").FoldLine;
-    var Fold = require("./fold").Fold;
-    var TokenIterator = require("../token_iterator").TokenIterator;
+ace.define("ace/edit_session/folding", ["require", "exports", "module", "ace/range", "ace/edit_session/fold_line", "ace/edit_session/fold", "ace/token_iterator"], (require, exports, module) => {
+    const Range = require("../range").Range;
+    const FoldLine = require("./fold_line").FoldLine;
+    const Fold = require("./fold").Fold;
+    const TokenIterator = require("../token_iterator").TokenIterator;
 
     function Folding() {
         this.getFoldAt = function(row, column, side) {
-            var foldLine = this.getFoldLine(row);
+            const foldLine = this.getFoldLine(row);
             if (!foldLine)
                 return null;
 
-            var folds = foldLine.folds;
-            for (var i = 0; i < folds.length; i++) {
-                var fold = folds[i];
+            const folds = foldLine.folds;
+
+            for (const fold of folds) {
                 if (fold.range.contains(row, column)) {
                     if (side == 1 && fold.range.isEnd(row, column)) {
                         continue;
@@ -7886,25 +7746,25 @@ ace.define("ace/edit_session/folding", ["require", "exports", "module", "ace/ran
             }
         };
         this.getFoldsInRange = function(range) {
-            var start = range.start;
-            var end = range.end;
-            var foldLines = this.$foldData;
-            var foundFolds = [];
+            const start = range.start;
+            const end = range.end;
+            const foldLines = this.$foldData;
+            const foundFolds = [];
 
             start.column += 1;
             end.column -= 1;
 
-            for (var i = 0; i < foldLines.length; i++) {
-                var cmp = foldLines[i].range.compareRange(range);
+            for (let i = 0; i < foldLines.length; i++) {
+                let cmp = foldLines[i].range.compareRange(range);
                 if (cmp == 2) {
                     continue;
                 } else if (cmp == -2) {
                     break;
                 }
 
-                var folds = foldLines[i].folds;
-                for (var j = 0; j < folds.length; j++) {
-                    var fold = folds[j];
+                const folds = foldLines[i].folds;
+
+                for (const fold of folds) {
                     cmp = fold.range.compareRange(range);
                     if (cmp == -2) {
                         break;
@@ -7935,29 +7795,29 @@ ace.define("ace/edit_session/folding", ["require", "exports", "module", "ace/ran
             return folds;
         };
         this.getAllFolds = function() {
-            var folds = [];
-            var foldLines = this.$foldData;
+            const folds = [];
+            const foldLines = this.$foldData;
 
-            for (var i = 0; i < foldLines.length; i++)
-                for (var j = 0; j < foldLines[i].folds.length; j++)
+            for (let i = 0; i < foldLines.length; i++)
+                for (let j = 0; j < foldLines[i].folds.length; j++)
                     folds.push(foldLines[i].folds[j]);
 
             return folds;
         };
-        this.getFoldStringAt = function(row, column, trim, foldLine) {
-            foldLine = foldLine || this.getFoldLine(row);
+        this.getFoldStringAt = function(row, column, trim, foldLine=this.getFoldLine(row)) {
             if (!foldLine)
                 return null;
 
-            var lastFold = {
+            let lastFold = {
                 end: {
                     column: 0
                 }
             };
-            var str, fold;
-            for (var i = 0; i < foldLine.folds.length; i++) {
+            let str;
+            let fold;
+            for (let i = 0; i < foldLine.folds.length; i++) {
                 fold = foldLine.folds[i];
-                var cmp = fold.range.compareEnd(row, column);
+                const cmp = fold.range.compareEnd(row, column);
                 if (cmp == -1) {
                     str = this
                         .getLine(fold.start.row)
@@ -7980,14 +7840,14 @@ ace.define("ace/edit_session/folding", ["require", "exports", "module", "ace/ran
         };
 
         this.getFoldLine = function(docRow, startFoldLine) {
-            var foldData = this.$foldData;
-            var i = 0;
+            const foldData = this.$foldData;
+            let i = 0;
             if (startFoldLine)
                 i = foldData.indexOf(startFoldLine);
             if (i == -1)
                 i = 0;
             for (i; i < foldData.length; i++) {
-                var foldLine = foldData[i];
+                const foldLine = foldData[i];
                 if (foldLine.start.row <= docRow && foldLine.end.row >= docRow) {
                     return foldLine;
                 } else if (foldLine.end.row > docRow) {
@@ -7997,14 +7857,14 @@ ace.define("ace/edit_session/folding", ["require", "exports", "module", "ace/ran
             return null;
         };
         this.getNextFoldLine = function(docRow, startFoldLine) {
-            var foldData = this.$foldData;
-            var i = 0;
+            const foldData = this.$foldData;
+            let i = 0;
             if (startFoldLine)
                 i = foldData.indexOf(startFoldLine);
             if (i == -1)
                 i = 0;
             for (i; i < foldData.length; i++) {
-                var foldLine = foldData[i];
+                const foldLine = foldData[i];
                 if (foldLine.end.row >= docRow) {
                     return foldLine;
                 }
@@ -8013,12 +7873,12 @@ ace.define("ace/edit_session/folding", ["require", "exports", "module", "ace/ran
         };
 
         this.getFoldedRowCount = function(first, last) {
-            var foldData = this.$foldData,
-                rowCount = last - first + 1;
-            for (var i = 0; i < foldData.length; i++) {
-                var foldLine = foldData[i],
-                    end = foldLine.end.row,
-                    start = foldLine.start.row;
+            const foldData = this.$foldData;
+            let rowCount = last - first + 1;
+
+            for (const foldLine of foldData) {
+                const end = foldLine.end.row;
+                const start = foldLine.start.row;
                 if (end >= last) {
                     if (start < last) {
                         if (start >= first)
@@ -8034,20 +7894,19 @@ ace.define("ace/edit_session/folding", ["require", "exports", "module", "ace/ran
                         rowCount -= end - first + 1;
                 }
             }
+
             return rowCount;
         };
 
         this.$addFoldLine = function(foldLine) {
             this.$foldData.push(foldLine);
-            this.$foldData.sort(function(a, b) {
-                return a.start.row - b.start.row;
-            });
+            this.$foldData.sort((a, b) => a.start.row - b.start.row);
             return foldLine;
         };
         this.addFold = function(placeholder, range) {
-            var foldData = this.$foldData;
-            var added = false;
-            var fold;
+            const foldData = this.$foldData;
+            let added = false;
+            let fold;
 
             if (placeholder instanceof Fold)
                 fold = placeholder;
@@ -8057,16 +7916,16 @@ ace.define("ace/edit_session/folding", ["require", "exports", "module", "ace/ran
             }
             this.$clipRangeToDocument(fold.range);
 
-            var startRow = fold.start.row;
-            var startColumn = fold.start.column;
-            var endRow = fold.end.row;
-            var endColumn = fold.end.column;
+            const startRow = fold.start.row;
+            const startColumn = fold.start.column;
+            const endRow = fold.end.row;
+            const endColumn = fold.end.column;
             if (!(startRow < endRow ||
                     startRow == endRow && startColumn <= endColumn - 2))
                 throw new Error("The range has to be at least 2 characters width");
 
-            var startFold = this.getFoldAt(startRow, startColumn, 1);
-            var endFold = this.getFoldAt(endRow, endColumn, -1);
+            const startFold = this.getFoldAt(startRow, startColumn, 1);
+            const endFold = this.getFoldAt(endRow, endColumn, -1);
             if (startFold && endFold == startFold)
                 return startFold.addSubFold(fold);
 
@@ -8075,15 +7934,15 @@ ace.define("ace/edit_session/folding", ["require", "exports", "module", "ace/ran
 
             if (endFold && !endFold.range.isEnd(endRow, endColumn))
                 this.removeFold(endFold);
-            var folds = this.getFoldsInRange(fold.range);
+            const folds = this.getFoldsInRange(fold.range);
             if (folds.length > 0) {
                 this.removeFolds(folds);
-                folds.forEach(function(subFold) {
+                folds.forEach(subFold => {
                     fold.addSubFold(subFold);
                 });
             }
 
-            for (var i = 0; i < foldData.length; i++) {
+            for (let i = 0; i < foldData.length; i++) {
                 var foldLine = foldData[i];
                 if (endRow == foldLine.start.row) {
                     foldLine.addFold(fold);
@@ -8093,7 +7952,7 @@ ace.define("ace/edit_session/folding", ["require", "exports", "module", "ace/ran
                     foldLine.addFold(fold);
                     added = true;
                     if (!fold.sameRow) {
-                        var foldLineNext = foldData[i + 1];
+                        const foldLineNext = foldData[i + 1];
                         if (foldLineNext && foldLineNext.start.row == endRow) {
                             foldLine.merge(foldLineNext);
                             break;
@@ -8128,12 +7987,12 @@ ace.define("ace/edit_session/folding", ["require", "exports", "module", "ace/ran
         };
 
         this.removeFold = function(fold) {
-            var foldLine = fold.foldLine;
-            var startRow = foldLine.start.row;
-            var endRow = foldLine.end.row;
+            const foldLine = fold.foldLine;
+            const startRow = foldLine.start.row;
+            const endRow = foldLine.end.row;
 
-            var foldLines = this.$foldData;
-            var folds = foldLine.folds;
+            const foldLines = this.$foldData;
+            let folds = foldLine.folds;
             if (folds.length == 1) {
                 foldLines.splice(foldLines.indexOf(foldLine), 1);
             } else
@@ -8150,7 +8009,7 @@ ace.define("ace/edit_session/folding", ["require", "exports", "module", "ace/ran
             if (fold.sameRow) {
                 folds.splice(folds.indexOf(fold), 1);
             } else {
-                var newFoldLine = foldLine.split(fold.start.row, fold.start.column);
+                const newFoldLine = foldLine.split(fold.start.row, fold.start.column);
                 folds = newFoldLine.folds;
                 folds.shift();
                 newFoldLine.start.row = folds[0].start.row;
@@ -8171,8 +8030,8 @@ ace.define("ace/edit_session/folding", ["require", "exports", "module", "ace/ran
         };
 
         this.removeFolds = function(folds) {
-            var cloneFolds = [];
-            for (var i = 0; i < folds.length; i++) {
+            const cloneFolds = [];
+            for (let i = 0; i < folds.length; i++) {
                 cloneFolds.push(folds[i]);
             }
 
@@ -8201,7 +8060,8 @@ ace.define("ace/edit_session/folding", ["require", "exports", "module", "ace/ran
         };
 
         this.unfold = function(location, expandInner) {
-            var range, folds;
+            let range;
+            let folds;
             if (location == null) {
                 range = new Range(0, 0, this.getLength(), 0);
                 expandInner = true;
@@ -8216,7 +8076,7 @@ ace.define("ace/edit_session/folding", ["require", "exports", "module", "ace/ran
             if (expandInner) {
                 this.removeFolds(folds);
             } else {
-                var subFolds = folds;
+                let subFolds = folds;
                 while (subFolds.length) {
                     this.expandFolds(subFolds);
                     subFolds = this.getFoldsInRangeList(range);
@@ -8230,12 +8090,12 @@ ace.define("ace/edit_session/folding", ["require", "exports", "module", "ace/ran
         };
 
         this.getRowFoldEnd = function(docRow, startFoldRow) {
-            var foldLine = this.getFoldLine(docRow, startFoldRow);
+            const foldLine = this.getFoldLine(docRow, startFoldRow);
             return foldLine ? foldLine.end.row : docRow;
         };
 
         this.getRowFoldStart = function(docRow, startFoldRow) {
-            var foldLine = this.getFoldLine(docRow, startFoldRow);
+            const foldLine = this.getFoldLine(docRow, startFoldRow);
             return foldLine ? foldLine.start.row : docRow;
         };
 
@@ -8248,10 +8108,10 @@ ace.define("ace/edit_session/folding", ["require", "exports", "module", "ace/ran
                 endRow = foldLine.end.row;
             if (endColumn == null)
                 endColumn = this.getLine(endRow).length;
-            var doc = this.doc;
-            var textLine = "";
+            const doc = this.doc;
+            let textLine = "";
 
-            foldLine.walk(function(placeholder, row, column, lastColumn) {
+            foldLine.walk((placeholder, row, column, lastColumn) => {
                 if (row < startRow)
                     return;
                 if (row == startRow) {
@@ -8270,10 +8130,10 @@ ace.define("ace/edit_session/folding", ["require", "exports", "module", "ace/ran
         };
 
         this.getDisplayLine = function(row, endColumn, startRow, startColumn) {
-            var foldLine = this.getFoldLine(row);
+            const foldLine = this.getFoldLine(row);
 
             if (!foldLine) {
-                var line;
+                let line;
                 line = this.doc.getLine(row);
                 return line.substring(startColumn || 0, endColumn || line.length);
             } else {
@@ -8283,11 +8143,9 @@ ace.define("ace/edit_session/folding", ["require", "exports", "module", "ace/ran
         };
 
         this.$cloneFoldData = function() {
-            var fd = [];
-            fd = this.$foldData.map(function(foldLine) {
-                var folds = foldLine.folds.map(function(fold) {
-                    return fold.clone();
-                });
+            let fd = [];
+            fd = this.$foldData.map(foldLine => {
+                const folds = foldLine.folds.map(fold => fold.clone());
                 return new FoldLine(fd, folds);
             });
 
@@ -8295,13 +8153,13 @@ ace.define("ace/edit_session/folding", ["require", "exports", "module", "ace/ran
         };
 
         this.toggleFold = function(tryToUnfold) {
-            var selection = this.selection;
-            var range = selection.getRange();
-            var fold;
-            var bracketPos;
+            const selection = this.selection;
+            let range = selection.getRange();
+            let fold;
+            let bracketPos;
 
             if (range.isEmpty()) {
-                var cursor = range.start;
+                const cursor = range.start;
                 fold = this.getFoldAt(cursor.row, cursor.column);
 
                 if (fold) {
@@ -8329,7 +8187,7 @@ ace.define("ace/edit_session/folding", ["require", "exports", "module", "ace/ran
                     range = this.getCommentFoldRange(cursor.row, cursor.column) || range;
                 }
             } else {
-                var folds = this.getFoldsInRange(range);
+                const folds = this.getFoldsInRange(range);
                 if (tryToUnfold && folds.length) {
                     this.expandFolds(folds);
                     return;
@@ -8346,23 +8204,23 @@ ace.define("ace/edit_session/folding", ["require", "exports", "module", "ace/ran
                 return;
             }
 
-            var placeholder = "...";
+            let placeholder = "...";
             if (!range.isMultiLine()) {
                 placeholder = this.getTextRange(range);
                 if (placeholder.length < 4)
                     return;
-                placeholder = placeholder.trim().substring(0, 2) + "..";
+                placeholder = `${placeholder.trim().substring(0, 2)}..`;
             }
 
             this.addFold(placeholder, range);
         };
 
         this.getCommentFoldRange = function(row, column, dir) {
-            var iterator = new TokenIterator(this, row, column);
-            var token = iterator.getCurrentToken();
+            let iterator = new TokenIterator(this, row, column);
+            let token = iterator.getCurrentToken();
             if (token && /^comment|string/.test(token.type)) {
-                var range = new Range();
-                var re = new RegExp(token.type.replace(/\..*/, "\\."));
+                const range = new Range();
+                const re = new RegExp(token.type.replace(/\..*/, "\\."));
                 if (dir != 1) {
                     do {
                         token = iterator.stepBackward();
@@ -8392,22 +8250,22 @@ ace.define("ace/edit_session/folding", ["require", "exports", "module", "ace/ran
         this.foldAll = function(startRow, endRow, depth) {
             if (depth == undefined)
                 depth = 100000; // JSON.stringify doesn't hanle Infinity
-            var foldWidgets = this.foldWidgets;
+            const foldWidgets = this.foldWidgets;
             if (!foldWidgets)
                 return; // mode doesn't support folding
             endRow = endRow || this.getLength();
             startRow = startRow || 0;
-            for (var row = startRow; row < endRow; row++) {
+            for (let row = startRow; row < endRow; row++) {
                 if (foldWidgets[row] == null)
                     foldWidgets[row] = this.getFoldWidget(row);
                 if (foldWidgets[row] != "start")
                     continue;
 
-                var range = this.getFoldWidgetRange(row);
+                const range = this.getFoldWidgetRange(row);
                 if (range && range.isMultiLine() && range.end.row <= endRow && range.start.row >= startRow) {
                     row = range.end.row;
                     try {
-                        var fold = this.addFold("...", range);
+                        const fold = this.addFold("...", range);
                         if (fold)
                             fold.collapseChildren = depth;
                     } catch (e) {}
@@ -8422,7 +8280,7 @@ ace.define("ace/edit_session/folding", ["require", "exports", "module", "ace/ran
         this.$foldStyle = "markbegin";
         this.setFoldStyle = function(style) {
             if (!this.$foldStyles[style])
-                throw new Error("invalid fold style: " + style + "[" + Object.keys(this.$foldStyles).join(", ") + "]");
+                throw new Error(`invalid fold style: ${style}[${Object.keys(this.$foldStyles).join(", ")}]`);
 
             if (this.$foldStyle == style)
                 return;
@@ -8431,7 +8289,7 @@ ace.define("ace/edit_session/folding", ["require", "exports", "module", "ace/ran
 
             if (style == "manual")
                 this.unfold();
-            var mode = this.$foldMode;
+            const mode = this.$foldMode;
             this.$setFolding(null);
             this.$setFolding(mode);
         };
@@ -8462,14 +8320,14 @@ ace.define("ace/edit_session/folding", ["require", "exports", "module", "ace/ran
         };
 
         this.getParentFoldRangeData = function(row, ignoreCurrent) {
-            var fw = this.foldWidgets;
+            const fw = this.foldWidgets;
             if (!fw || (ignoreCurrent && fw[row]))
                 return {};
 
-            var i = row - 1,
-                firstRange;
+            let i = row - 1;
+            let firstRange;
             while (i >= 0) {
-                var c = fw[i];
+                let c = fw[i];
                 if (c == null)
                     c = fw[i] = this.getFoldWidget(i);
 
@@ -8485,21 +8343,21 @@ ace.define("ace/edit_session/folding", ["require", "exports", "module", "ace/ran
 
             return {
                 range: i !== -1 && range,
-                firstRange: firstRange
+                firstRange
             };
         };
 
         this.onFoldWidgetClick = function(row, e) {
             e = e.domEvent;
-            var options = {
+            const options = {
                 children: e.shiftKey,
                 all: e.ctrlKey || e.metaKey,
                 siblings: e.altKey
             };
 
-            var range = this.$toggleFoldWidget(row, options);
+            const range = this.$toggleFoldWidget(row, options);
             if (!range) {
-                var el = (e.target || e.srcElement);
+                const el = (e.target || e.srcElement);
                 if (el && /ace_fold-widget/.test(el.className))
                     el.className += " ace_invalid";
             }
@@ -8508,11 +8366,11 @@ ace.define("ace/edit_session/folding", ["require", "exports", "module", "ace/ran
         this.$toggleFoldWidget = function(row, options) {
             if (!this.getFoldWidget)
                 return;
-            var type = this.getFoldWidget(row);
-            var line = this.getLine(row);
+            const type = this.getFoldWidget(row);
+            const line = this.getLine(row);
 
-            var dir = type === "end" ? -1 : 1;
-            var fold = this.getFoldAt(row, dir === -1 ? 0 : line.length, dir);
+            const dir = type === "end" ? -1 : 1;
+            let fold = this.getFoldAt(row, dir === -1 ? 0 : line.length, dir);
 
             if (fold) {
                 if (options.children || options.all)
@@ -8522,7 +8380,7 @@ ace.define("ace/edit_session/folding", ["require", "exports", "module", "ace/ran
                 return fold;
             }
 
-            var range = this.getFoldWidgetRange(row, true);
+            const range = this.getFoldWidgetRange(row, true);
             if (range && !range.isMultiLine()) {
                 fold = this.getFoldAt(range.start.row, range.start.column, 1);
                 if (fold && range.isEqual(fold.range)) {
@@ -8532,7 +8390,7 @@ ace.define("ace/edit_session/folding", ["require", "exports", "module", "ace/ran
             }
 
             if (options.siblings) {
-                var data = this.getParentFoldRangeData(row);
+                const data = this.getParentFoldRangeData(row);
                 if (data.range) {
                     var startRow = data.range.start.row + 1;
                     var endRow = data.range.end.row;
@@ -8553,18 +8411,18 @@ ace.define("ace/edit_session/folding", ["require", "exports", "module", "ace/ran
 
 
         this.toggleFoldWidget = function(toggleParent) {
-            var row = this.selection.getCursor().row;
+            let row = this.selection.getCursor().row;
             row = this.getRowFoldStart(row);
-            var range = this.$toggleFoldWidget(row, {});
+            let range = this.$toggleFoldWidget(row, {});
 
             if (range)
                 return;
-            var data = this.getParentFoldRangeData(row, true);
+            const data = this.getParentFoldRangeData(row, true);
             range = data.range || data.firstRange;
 
             if (range) {
                 row = range.start.row;
-                var fold = this.getFoldAt(row, this.getLine(row).length, 1);
+                const fold = this.getFoldAt(row, this.getLine(row).length, 1);
 
                 if (fold) {
                     this.removeFold(fold);
@@ -8575,21 +8433,21 @@ ace.define("ace/edit_session/folding", ["require", "exports", "module", "ace/ran
         };
 
         this.updateFoldWidgets = function(delta) {
-            var firstRow = delta.start.row;
-            var len = delta.end.row - firstRow;
+            const firstRow = delta.start.row;
+            const len = delta.end.row - firstRow;
 
             if (len === 0) {
                 this.foldWidgets[firstRow] = null;
             } else if (delta.action == 'remove') {
                 this.foldWidgets.splice(firstRow, len + 1, null);
             } else {
-                var args = Array(len + 1);
+                const args = Array(len + 1);
                 args.unshift(firstRow, 1);
-                this.foldWidgets.splice.apply(this.foldWidgets, args);
+                this.foldWidgets.splice(...args);
             }
         };
         this.tokenizerUpdateFoldWidgets = function(e) {
-            var rows = e.data;
+            const rows = e.data;
             if (rows.first != rows.last) {
                 if (this.foldWidgets.length > rows.first)
                     this.foldWidgets.splice(rows.first, this.foldWidgets.length);
@@ -8598,14 +8456,11 @@ ace.define("ace/edit_session/folding", ["require", "exports", "module", "ace/ran
     }
 
     exports.Folding = Folding;
-
 });
 
-ace.define("ace/edit_session/bracket_match", ["require", "exports", "module", "ace/token_iterator", "ace/range"], function(require, exports, module) {
-    "use strict";
-
-    var TokenIterator = require("../token_iterator").TokenIterator;
-    var Range = require("../range").Range;
+ace.define("ace/edit_session/bracket_match", ["require", "exports", "module", "ace/token_iterator", "ace/range"], (require, exports, module) => {
+    const TokenIterator = require("../token_iterator").TokenIterator;
+    const Range = require("../range").Range;
 
 
     function BracketMatch() {
@@ -8613,10 +8468,10 @@ ace.define("ace/edit_session/bracket_match", ["require", "exports", "module", "a
         this.findMatchingBracket = function(position, chr) {
             if (position.column == 0) return null;
 
-            var charBeforeCursor = chr || this.getLine(position.row).charAt(position.column - 1);
+            const charBeforeCursor = chr || this.getLine(position.row).charAt(position.column - 1);
             if (charBeforeCursor == "") return null;
 
-            var match = charBeforeCursor.match(/([\(\[\{])|([\)\]\}])/);
+            const match = charBeforeCursor.match(/([\(\[\{])|([\)\]\}])/);
             if (!match)
                 return null;
 
@@ -8627,12 +8482,12 @@ ace.define("ace/edit_session/bracket_match", ["require", "exports", "module", "a
         };
 
         this.getBracketRange = function(pos) {
-            var line = this.getLine(pos.row);
-            var before = true,
-                range;
+            const line = this.getLine(pos.row);
+            let before = true;
+            let range;
 
-            var chr = line.charAt(pos.column - 1);
-            var match = chr && chr.match(/([\(\[\{])|([\)\]\}])/);
+            let chr = line.charAt(pos.column - 1);
+            let match = chr && chr.match(/([\(\[\{])|([\)\]\}])/);
             if (!match) {
                 chr = line.charAt(pos.column);
                 pos = {
@@ -8680,11 +8535,11 @@ ace.define("ace/edit_session/bracket_match", ["require", "exports", "module", "a
         };
 
         this.$findOpeningBracket = function(bracket, position, typeRe) {
-            var openBracket = this.$brackets[bracket];
-            var depth = 1;
+            const openBracket = this.$brackets[bracket];
+            let depth = 1;
 
-            var iterator = new TokenIterator(this, position.row, position.column);
-            var token = iterator.getCurrentToken();
+            const iterator = new TokenIterator(this, position.row, position.column);
+            let token = iterator.getCurrentToken();
             if (!token)
                 token = iterator.stepForward();
             if (!token)
@@ -8692,18 +8547,17 @@ ace.define("ace/edit_session/bracket_match", ["require", "exports", "module", "a
 
             if (!typeRe) {
                 typeRe = new RegExp(
-                    "(\\.?" +
-                    token.type.replace(".", "\\.").replace("rparen", ".paren")
-                    .replace(/\b(?:end)\b/, "(?:start|begin|end)") + ")+"
+                    `(\\.?${token.type.replace(".", "\\.").replace("rparen", ".paren")
+.replace(/\b(?:end)\b/, "(?:start|begin|end)")})+`
                 );
             }
-            var valueIndex = position.column - iterator.getCurrentTokenColumn() - 2;
-            var value = token.value;
+            let valueIndex = position.column - iterator.getCurrentTokenColumn() - 2;
+            let value = token.value;
 
             while (true) {
 
                 while (valueIndex >= 0) {
-                    var chr = value.charAt(valueIndex);
+                    const chr = value.charAt(valueIndex);
                     if (chr == openBracket) {
                         depth -= 1;
                         if (depth == 0) {
@@ -8732,11 +8586,11 @@ ace.define("ace/edit_session/bracket_match", ["require", "exports", "module", "a
         };
 
         this.$findClosingBracket = function(bracket, position, typeRe) {
-            var closingBracket = this.$brackets[bracket];
-            var depth = 1;
+            const closingBracket = this.$brackets[bracket];
+            let depth = 1;
 
-            var iterator = new TokenIterator(this, position.row, position.column);
-            var token = iterator.getCurrentToken();
+            const iterator = new TokenIterator(this, position.row, position.column);
+            let token = iterator.getCurrentToken();
             if (!token)
                 token = iterator.stepForward();
             if (!token)
@@ -8744,19 +8598,18 @@ ace.define("ace/edit_session/bracket_match", ["require", "exports", "module", "a
 
             if (!typeRe) {
                 typeRe = new RegExp(
-                    "(\\.?" +
-                    token.type.replace(".", "\\.").replace("lparen", ".paren")
-                    .replace(/\b(?:start|begin)\b/, "(?:start|begin|end)") + ")+"
+                    `(\\.?${token.type.replace(".", "\\.").replace("lparen", ".paren")
+.replace(/\b(?:start|begin)\b/, "(?:start|begin|end)")})+`
                 );
             }
-            var valueIndex = position.column - iterator.getCurrentTokenColumn();
+            let valueIndex = position.column - iterator.getCurrentTokenColumn();
 
             while (true) {
 
-                var value = token.value;
-                var valueLength = value.length;
+                const value = token.value;
+                const valueLength = value.length;
                 while (valueIndex < valueLength) {
-                    var chr = value.charAt(valueIndex);
+                    const chr = value.charAt(valueIndex);
                     if (chr == closingBracket) {
                         depth -= 1;
                         if (depth == 0) {
@@ -8784,24 +8637,21 @@ ace.define("ace/edit_session/bracket_match", ["require", "exports", "module", "a
         };
     }
     exports.BracketMatch = BracketMatch;
-
 });
 
-ace.define("ace/edit_session", ["require", "exports", "module", "ace/lib/oop", "ace/lib/lang", "ace/config", "ace/lib/event_emitter", "ace/selection", "ace/mode/text", "ace/range", "ace/document", "ace/background_tokenizer", "ace/search_highlight", "ace/edit_session/folding", "ace/edit_session/bracket_match"], function(require, exports, module) {
-    "use strict";
+ace.define("ace/edit_session", ["require", "exports", "module", "ace/lib/oop", "ace/lib/lang", "ace/config", "ace/lib/event_emitter", "ace/selection", "ace/mode/text", "ace/range", "ace/document", "ace/background_tokenizer", "ace/search_highlight", "ace/edit_session/folding", "ace/edit_session/bracket_match"], (require, exports, module) => {
+    const oop = require("./lib/oop");
+    const lang = require("./lib/lang");
+    const config = require("./config");
+    const EventEmitter = require("./lib/event_emitter").EventEmitter;
+    const Selection = require("./selection").Selection;
+    const TextMode = require("./mode/text").Mode;
+    const Range = require("./range").Range;
+    const Document = require("./document").Document;
+    const BackgroundTokenizer = require("./background_tokenizer").BackgroundTokenizer;
+    const SearchHighlight = require("./search_highlight").SearchHighlight;
 
-    var oop = require("./lib/oop");
-    var lang = require("./lib/lang");
-    var config = require("./config");
-    var EventEmitter = require("./lib/event_emitter").EventEmitter;
-    var Selection = require("./selection").Selection;
-    var TextMode = require("./mode/text").Mode;
-    var Range = require("./range").Range;
-    var Document = require("./document").Document;
-    var BackgroundTokenizer = require("./background_tokenizer").BackgroundTokenizer;
-    var SearchHighlight = require("./search_highlight").SearchHighlight;
-
-    var EditSession = function(text, mode) {
+    const EditSession = function(text, mode) {
         this.$breakpoints = [];
         this.$decorations = [];
         this.$frontMarkers = {};
@@ -8810,7 +8660,7 @@ ace.define("ace/edit_session", ["require", "exports", "module", "ace/lib/oop", "
         this.$undoSelect = true;
 
         this.$foldData = [];
-        this.id = "session" + (++EditSession.$uid);
+        this.id = `session${++EditSession.$uid}`;
         this.$foldData.toString = function() {
             return this.join("\n");
         };
@@ -8830,7 +8680,6 @@ ace.define("ace/edit_session", ["require", "exports", "module", "ace/lib/oop", "
 
 
     (function() {
-
         oop.implement(this, EventEmitter);
         this.setDocument = function(doc) {
             if (this.doc)
@@ -8853,21 +8702,21 @@ ace.define("ace/edit_session", ["require", "exports", "module", "ace/lib/oop", "
                 this.$screenRowCache = [];
                 return;
             }
-            var l = this.$docRowCache.length;
-            var i = this.$getRowCacheIndex(this.$docRowCache, docRow) + 1;
+            const l = this.$docRowCache.length;
+            const i = this.$getRowCacheIndex(this.$docRowCache, docRow) + 1;
             if (l > i) {
                 this.$docRowCache.splice(i, l);
                 this.$screenRowCache.splice(i, l);
             }
         };
 
-        this.$getRowCacheIndex = function(cacheArray, val) {
-            var low = 0;
-            var hi = cacheArray.length - 1;
+        this.$getRowCacheIndex = (cacheArray, val) => {
+            let low = 0;
+            let hi = cacheArray.length - 1;
 
             while (low <= hi) {
-                var mid = (low + hi) >> 1;
-                var c = cacheArray[mid];
+                const mid = (low + hi) >> 1;
+                const c = cacheArray[mid];
 
                 if (val > c)
                     low = mid + 1;
@@ -8890,7 +8739,7 @@ ace.define("ace/edit_session", ["require", "exports", "module", "ace/lib/oop", "
         };
 
         this.onChangeFold = function(e) {
-            var fold = e.data;
+            const fold = e.data;
             this.$resetRowCache(fold.start.row);
         };
 
@@ -8899,7 +8748,7 @@ ace.define("ace/edit_session", ["require", "exports", "module", "ace/lib/oop", "
 
             this.$resetRowCache(delta.start.row);
 
-            var removedFolds = this.$updateInternalDataOnChange(delta);
+            const removedFolds = this.$updateInternalDataOnChange(delta);
             if (!this.$fromUndo && this.$undoManager && !delta.ignore) {
                 this.$deltasDoc.push(delta);
                 if (removedFolds && removedFolds.length != 0) {
@@ -8940,8 +8789,9 @@ ace.define("ace/edit_session", ["require", "exports", "module", "ace/lib/oop", "
             return this.bgTokenizer.getTokens(row);
         };
         this.getTokenAt = function(row, column) {
-            var tokens = this.bgTokenizer.getTokens(row);
-            var token, c = 0;
+            const tokens = this.bgTokenizer.getTokens(row);
+            let token;
+            let c = 0;
             if (column == null) {
                 i = tokens.length - 1;
                 c = this.getLine(row).length;
@@ -8969,9 +8819,9 @@ ace.define("ace/edit_session", ["require", "exports", "module", "ace/lib/oop", "
                 this.$informUndoManager.cancel();
 
             if (undoManager) {
-                var self = this;
+                const self = this;
 
-                this.$syncInformUndoManager = function() {
+                this.$syncInformUndoManager = () => {
                     self.$informUndoManager.cancel();
 
                     if (self.$deltasFold.length) {
@@ -9009,9 +8859,9 @@ ace.define("ace/edit_session", ["require", "exports", "module", "ace/lib/oop", "
         };
 
         this.$defaultUndoManager = {
-            undo: function() {},
-            redo: function() {},
-            reset: function() {}
+            undo() {},
+            redo() {},
+            reset() {}
         };
         this.getUndoManager = function() {
             return this.$undoManager || this.$defaultUndoManager;
@@ -9052,11 +8902,11 @@ ace.define("ace/edit_session", ["require", "exports", "module", "ace/lib/oop", "
         this.addGutterDecoration = function(row, className) {
             if (!this.$decorations[row])
                 this.$decorations[row] = "";
-            this.$decorations[row] += " " + className;
+            this.$decorations[row] += ` ${className}`;
             this._signal("changeBreakpoint", {});
         };
         this.removeGutterDecoration = function(row, className) {
-            this.$decorations[row] = (this.$decorations[row] || "").replace(" " + className, "");
+            this.$decorations[row] = (this.$decorations[row] || "").replace(` ${className}`, "");
             this._signal("changeBreakpoint", {});
         };
         this.getBreakpoints = function() {
@@ -9064,7 +8914,7 @@ ace.define("ace/edit_session", ["require", "exports", "module", "ace/lib/oop", "
         };
         this.setBreakpoints = function(rows) {
             this.$breakpoints = [];
-            for (var i = 0; i < rows.length; i++) {
+            for (let i = 0; i < rows.length; i++) {
                 this.$breakpoints[rows[i]] = "ace_breakpoint";
             }
             this._signal("changeBreakpoint", {});
@@ -9087,15 +8937,15 @@ ace.define("ace/edit_session", ["require", "exports", "module", "ace/lib/oop", "
             this._signal("changeBreakpoint", {});
         };
         this.addMarker = function(range, clazz, type, inFront) {
-            var id = this.$markerId++;
+            const id = this.$markerId++;
 
-            var marker = {
-                range: range,
+            const marker = {
+                range,
                 type: type || "line",
                 renderer: typeof type == "function" ? type : null,
-                clazz: clazz,
+                clazz,
                 inFront: !!inFront,
-                id: id
+                id
             };
 
             if (inFront) {
@@ -9111,7 +8961,7 @@ ace.define("ace/edit_session", ["require", "exports", "module", "ace/lib/oop", "
         this.addDynamicMarker = function(marker, inFront) {
             if (!marker.update)
                 return;
-            var id = this.$markerId++;
+            const id = this.$markerId++;
             marker.id = id;
             marker.inFront = !!inFront;
 
@@ -9126,11 +8976,11 @@ ace.define("ace/edit_session", ["require", "exports", "module", "ace/lib/oop", "
             return marker;
         };
         this.removeMarker = function(markerId) {
-            var marker = this.$frontMarkers[markerId] || this.$backMarkers[markerId];
+            const marker = this.$frontMarkers[markerId] || this.$backMarkers[markerId];
             if (!marker)
                 return;
 
-            var markers = marker.inFront ? this.$frontMarkers : this.$backMarkers;
+            const markers = marker.inFront ? this.$frontMarkers : this.$backMarkers;
             if (marker) {
                 delete(markers[markerId]);
                 this._signal(marker.inFront ? "changeFrontMarker" : "changeBackMarker");
@@ -9142,7 +8992,7 @@ ace.define("ace/edit_session", ["require", "exports", "module", "ace/lib/oop", "
 
         this.highlight = function(re) {
             if (!this.$searchHighlight) {
-                var highlight = new SearchHighlight(null, "ace_selected-word", "text");
+                const highlight = new SearchHighlight(null, "ace_selected-word", "text");
                 this.$searchHighlight = this.addDynamicMarker(highlight);
             }
             this.$searchHighlight.setRegexp(re);
@@ -9155,7 +9005,7 @@ ace.define("ace/edit_session", ["require", "exports", "module", "ace/lib/oop", "
             if (!clazz)
                 clazz = "ace_step";
 
-            var range = new Range(startRow, 0, endRow, Infinity);
+            const range = new Range(startRow, 0, endRow, Infinity);
             range.id = this.addMarker(range, clazz, "fullLine", inFront);
             return range;
         };
@@ -9170,7 +9020,7 @@ ace.define("ace/edit_session", ["require", "exports", "module", "ace/lib/oop", "
             this.setAnnotations([]);
         };
         this.$detectNewLine = function(text) {
-            var match = text.match(/^.*?(\r?\n)/m);
+            const match = text.match(/^.*?(\r?\n)/m);
             if (match) {
                 this.$autoNewLine = match[1];
             } else {
@@ -9178,9 +9028,9 @@ ace.define("ace/edit_session", ["require", "exports", "module", "ace/lib/oop", "
             }
         };
         this.getWordRange = function(row, column) {
-            var line = this.getLine(row);
+            const line = this.getLine(row);
 
-            var inToken = false;
+            let inToken = false;
             if (column > 0)
                 inToken = !!line.charAt(column - 1).match(this.tokenRe);
 
@@ -9194,7 +9044,7 @@ ace.define("ace/edit_session", ["require", "exports", "module", "ace/lib/oop", "
             else
                 var re = this.nonTokenRe;
 
-            var start = column;
+            let start = column;
             if (start > 0) {
                 do {
                     start--;
@@ -9203,7 +9053,7 @@ ace.define("ace/edit_session", ["require", "exports", "module", "ace/lib/oop", "
                 start++;
             }
 
-            var end = column;
+            let end = column;
             while (end < line.length && line.charAt(end).match(re)) {
                 end++;
             }
@@ -9211,8 +9061,8 @@ ace.define("ace/edit_session", ["require", "exports", "module", "ace/lib/oop", "
             return new Range(row, start, row, end);
         };
         this.getAWordRange = function(row, column) {
-            var wordRange = this.getWordRange(row, column);
-            var line = this.getLine(wordRange.end.row);
+            const wordRange = this.getWordRange(row, column);
+            const line = this.getLine(wordRange.end.row);
 
             while (line.charAt(wordRange.end.column).match(/[ \t]/)) {
                 wordRange.end.column += 1;
@@ -9232,7 +9082,7 @@ ace.define("ace/edit_session", ["require", "exports", "module", "ace/lib/oop", "
             return this.$useWorker;
         };
         this.onReloadTokenizer = function(e) {
-            var rows = e.data;
+            const rows = e.data;
             this.bgTokenizer.start(rows.first);
             this._signal("tokenizerUpdate", e);
         };
@@ -9258,7 +9108,7 @@ ace.define("ace/edit_session", ["require", "exports", "module", "ace/lib/oop", "
                 return;
             }
             this.$modeId = path;
-            config.loadModule(["mode", path], function(m) {
+            config.loadModule(["mode", path], m => {
                 if (this.$modeId !== path)
                     return cb && cb();
                 if (this.$modes[path] && !options) {
@@ -9272,7 +9122,7 @@ ace.define("ace/edit_session", ["require", "exports", "module", "ace/lib/oop", "
                     this.$onChangeMode(m);
                 }
                 cb && cb();
-            }.bind(this));
+            });
             if (!this.$mode)
                 this.$onChangeMode(this.$modes["ace/mode/text"], true);
         };
@@ -9290,17 +9140,17 @@ ace.define("ace/edit_session", ["require", "exports", "module", "ace/lib/oop", "
             if (this.$useWorker)
                 this.$startWorker();
 
-            var tokenizer = mode.getTokenizer();
+            const tokenizer = mode.getTokenizer();
 
             if (tokenizer.addEventListener !== undefined) {
-                var onReloadTokenizer = this.onReloadTokenizer.bind(this);
+                const onReloadTokenizer = this.onReloadTokenizer.bind(this);
                 tokenizer.addEventListener("update", onReloadTokenizer);
             }
 
             if (!this.bgTokenizer) {
                 this.bgTokenizer = new BackgroundTokenizer(tokenizer);
-                var _self = this;
-                this.bgTokenizer.addEventListener("update", function(e) {
+                const _self = this;
+                this.bgTokenizer.addEventListener("update", e => {
                     _self._signal("tokenizerUpdate", e);
                 });
             } else {
@@ -9374,8 +9224,8 @@ ace.define("ace/edit_session", ["require", "exports", "module", "ace/lib/oop", "
 
         this.getLineWidgetMaxWidth = function() {
             if (this.lineWidgetsWidth != null) return this.lineWidgetsWidth;
-            var width = 0;
-            this.lineWidgets.forEach(function(w) {
+            let width = 0;
+            this.lineWidgets.forEach(w => {
                 if (w && w.screenWidth > width)
                     width = w.screenWidth;
             });
@@ -9389,15 +9239,15 @@ ace.define("ace/edit_session", ["require", "exports", "module", "ace/lib/oop", "
                 if (this.$useWrapMode)
                     return this.screenWidth = this.$wrapLimit;
 
-                var lines = this.doc.getAllLines();
-                var cache = this.$rowLengthCache;
-                var longestScreenLine = 0;
-                var foldIndex = 0;
-                var foldLine = this.$foldData[foldIndex];
-                var foldStart = foldLine ? foldLine.start.row : Infinity;
-                var len = lines.length;
+                const lines = this.doc.getAllLines();
+                const cache = this.$rowLengthCache;
+                let longestScreenLine = 0;
+                let foldIndex = 0;
+                let foldLine = this.$foldData[foldIndex];
+                let foldStart = foldLine ? foldLine.start.row : Infinity;
+                const len = lines.length;
 
-                for (var i = 0; i < len; i++) {
+                for (let i = 0; i < len; i++) {
                     if (i > foldStart) {
                         i = foldLine.end.row + 1;
                         if (i >= len)
@@ -9441,9 +9291,9 @@ ace.define("ace/edit_session", ["require", "exports", "module", "ace/lib/oop", "
                 return;
 
             this.$fromUndo = true;
-            var lastUndoRange = null;
-            for (var i = deltas.length - 1; i != -1; i--) {
-                var delta = deltas[i];
+            let lastUndoRange = null;
+            for (let i = deltas.length - 1; i != -1; i--) {
+                const delta = deltas[i];
                 if (delta.group == "doc") {
                     this.doc.revertDeltas(delta.deltas);
                     lastUndoRange =
@@ -9466,15 +9316,16 @@ ace.define("ace/edit_session", ["require", "exports", "module", "ace/lib/oop", "
                 return;
 
             this.$fromUndo = true;
-            var lastUndoRange = null;
-            for (var i = 0; i < deltas.length; i++) {
-                var delta = deltas[i];
+            let lastUndoRange = null;
+
+            for (const delta of deltas) {
                 if (delta.group == "doc") {
                     this.doc.applyDeltas(delta.deltas);
                     lastUndoRange =
                         this.$getUndoSelection(delta.deltas, false, lastUndoRange);
                 }
             }
+
             this.$fromUndo = false;
             lastUndoRange &&
                 this.$undoSelect &&
@@ -9486,14 +9337,15 @@ ace.define("ace/edit_session", ["require", "exports", "module", "ace/lib/oop", "
             this.$undoSelect = enable;
         };
 
-        this.$getUndoSelection = function(deltas, isUndo, lastUndoRange) {
+        this.$getUndoSelection = (deltas, isUndo, lastUndoRange) => {
             function isInsert(delta) {
                 return isUndo ? delta.action !== "insert" : delta.action === "insert";
             }
 
-            var delta = deltas[0];
-            var range, point;
-            var lastDeltaIsInsert = false;
+            let delta = deltas[0];
+            let range;
+            let point;
+            let lastDeltaIsInsert = false;
             if (isInsert(delta)) {
                 range = Range.fromPoints(delta.start, delta.end);
                 lastDeltaIsInsert = true;
@@ -9502,7 +9354,7 @@ ace.define("ace/edit_session", ["require", "exports", "module", "ace/lib/oop", "
                 lastDeltaIsInsert = false;
             }
 
-            for (var i = 1; i < deltas.length; i++) {
+            for (let i = 1; i < deltas.length; i++) {
                 delta = deltas[i];
                 if (isInsert(delta)) {
                     point = delta.start;
@@ -9528,7 +9380,7 @@ ace.define("ace/edit_session", ["require", "exports", "module", "ace/lib/oop", "
                     lastUndoRange.end.column += range.end.column - range.start.column;
                 }
 
-                var cmp = lastUndoRange.compareRange(range);
+                const cmp = lastUndoRange.compareRange(range);
                 if (cmp == 1) {
                     range.setStart(lastUndoRange.start);
                 } else if (cmp == -1) {
@@ -9542,10 +9394,10 @@ ace.define("ace/edit_session", ["require", "exports", "module", "ace/lib/oop", "
             return this.doc.replace(range, text);
         };
         this.moveText = function(fromRange, toPosition, copy) {
-            var text = this.getTextRange(fromRange);
-            var folds = this.getFoldsInRange(fromRange);
+            const text = this.getTextRange(fromRange);
+            const folds = this.getFoldsInRange(fromRange);
 
-            var toRange = Range.fromPoints(toPosition, toPosition);
+            const toRange = Range.fromPoints(toPosition, toPosition);
             if (!copy) {
                 this.remove(fromRange);
                 var rowDiff = fromRange.start.row - fromRange.end.row;
@@ -9564,11 +9416,11 @@ ace.define("ace/edit_session", ["require", "exports", "module", "ace/lib/oop", "
 
             toRange.end = this.insert(toRange.start, text);
             if (folds.length) {
-                var oldStart = fromRange.start;
-                var newStart = toRange.start;
+                const oldStart = fromRange.start;
+                const newStart = toRange.start;
                 var rowDiff = newStart.row - oldStart.row;
                 var collDiff = newStart.column - oldStart.column;
-                this.addFolds(folds.map(function(x) {
+                this.addFolds(folds.map(x => {
                     x = x.clone();
                     if (x.start.row == oldStart.row)
                         x.start.column += collDiff;
@@ -9584,19 +9436,19 @@ ace.define("ace/edit_session", ["require", "exports", "module", "ace/lib/oop", "
         };
         this.indentRows = function(startRow, endRow, indentString) {
             indentString = indentString.replace(/\t/g, this.getTabString());
-            for (var row = startRow; row <= endRow; row++)
+            for (let row = startRow; row <= endRow; row++)
                 this.doc.insertInLine({
-                    row: row,
+                    row,
                     column: 0
                 }, indentString);
         };
         this.outdentRows = function(range) {
-            var rowRange = range.collapseRows();
-            var deleteRange = new Range(0, 0, 0, 0);
-            var size = this.getTabSize();
+            const rowRange = range.collapseRows();
+            const deleteRange = new Range(0, 0, 0, 0);
+            const size = this.getTabSize();
 
-            for (var i = rowRange.start.row; i <= rowRange.end.row; ++i) {
-                var line = this.getLine(i);
+            for (let i = rowRange.start.row; i <= rowRange.end.row; ++i) {
+                const line = this.getLine(i);
 
                 deleteRange.start.row = i;
                 deleteRange.end.row = i;
@@ -9631,15 +9483,15 @@ ace.define("ace/edit_session", ["require", "exports", "module", "ace/lib/oop", "
                 var diff = lastRow - firstRow + 1;
             }
 
-            var range = new Range(firstRow, 0, lastRow, Number.MAX_VALUE);
-            var folds = this.getFoldsInRange(range).map(function(x) {
+            const range = new Range(firstRow, 0, lastRow, Number.MAX_VALUE);
+            const folds = this.getFoldsInRange(range).map(x => {
                 x = x.clone();
                 x.start.row += diff;
                 x.end.row += diff;
                 return x;
             });
 
-            var lines = dir == 0 ? this.doc.getLines(firstRow, lastRow) : this.doc.removeFullLines(firstRow, lastRow);
+            const lines = dir == 0 ? this.doc.getLines(firstRow, lastRow) : this.doc.removeFullLines(firstRow, lastRow);
             this.doc.insertFullLines(firstRow + diff, lines);
             folds.length && this.addFolds(folds);
             return diff;
@@ -9673,7 +9525,7 @@ ace.define("ace/edit_session", ["require", "exports", "module", "ace/lib/oop", "
                 row = 0;
                 column = 0;
             } else {
-                var len = this.doc.getLength();
+                const len = this.doc.getLength();
                 if (row >= len) {
                     row = len - 1;
                     column = this.doc.getLine(len - 1).length;
@@ -9683,8 +9535,8 @@ ace.define("ace/edit_session", ["require", "exports", "module", "ace/lib/oop", "
             }
 
             return {
-                row: row,
-                column: column
+                row,
+                column
             };
         };
 
@@ -9699,7 +9551,7 @@ ace.define("ace/edit_session", ["require", "exports", "module", "ace/lib/oop", "
                 );
             }
 
-            var len = this.doc.getLength() - 1;
+            const len = this.doc.getLength() - 1;
             if (range.end.row > len) {
                 range.end.row = len;
                 range.end.column = this.doc.getLine(len).length;
@@ -9723,7 +9575,7 @@ ace.define("ace/edit_session", ["require", "exports", "module", "ace/lib/oop", "
                 this.$modified = true;
                 this.$resetRowCache(0);
                 if (useWrapMode) {
-                    var len = this.getLength();
+                    const len = this.getLength();
                     this.$wrapData = Array(len);
                     this.$updateWrapData(0, len - 1);
                 }
@@ -9737,8 +9589,8 @@ ace.define("ace/edit_session", ["require", "exports", "module", "ace/lib/oop", "
         this.setWrapLimitRange = function(min, max) {
             if (this.$wrapLimitRange.min !== min || this.$wrapLimitRange.max !== max) {
                 this.$wrapLimitRange = {
-                    min: min,
-                    max: max
+                    min,
+                    max
                 };
                 this.$modified = true;
                 if (this.$useWrapMode)
@@ -9746,13 +9598,13 @@ ace.define("ace/edit_session", ["require", "exports", "module", "ace/lib/oop", "
             }
         };
         this.adjustWrapLimit = function(desiredLimit, $printMargin) {
-            var limits = this.$wrapLimitRange;
+            let limits = this.$wrapLimitRange;
             if (limits.max < 0)
                 limits = {
                     min: $printMargin,
                     max: $printMargin
                 };
-            var wrapLimit = this.$constrainWrapLimit(desiredLimit, limits.min, limits.max);
+            const wrapLimit = this.$constrainWrapLimit(desiredLimit, limits.min, limits.max);
             if (wrapLimit != this.$wrapLimit && wrapLimit > 1) {
                 this.$wrapLimit = wrapLimit;
                 this.$modified = true;
@@ -9766,7 +9618,7 @@ ace.define("ace/edit_session", ["require", "exports", "module", "ace/lib/oop", "
             return false;
         };
 
-        this.$constrainWrapLimit = function(wrapLimit, min, max) {
+        this.$constrainWrapLimit = (wrapLimit, min, max) => {
             if (min)
                 wrapLimit = Math.max(min, wrapLimit);
 
@@ -9789,14 +9641,14 @@ ace.define("ace/edit_session", ["require", "exports", "module", "ace/lib/oop", "
         };
 
         this.$updateInternalDataOnChange = function(delta) {
-            var useWrapMode = this.$useWrapMode;
-            var action = delta.action;
-            var start = delta.start;
-            var end = delta.end;
-            var firstRow = start.row;
-            var lastRow = end.row;
-            var len = lastRow - firstRow;
-            var removedFolds = null;
+            const useWrapMode = this.$useWrapMode;
+            const action = delta.action;
+            const start = delta.start;
+            const end = delta.end;
+            const firstRow = start.row;
+            let lastRow = end.row;
+            let len = lastRow - firstRow;
+            let removedFolds = null;
 
             this.$updating = true;
             if (len != 0) {
@@ -9813,7 +9665,7 @@ ace.define("ace/edit_session", ["require", "exports", "module", "ace/lib/oop", "
                         foldLine.addRemoveChars(end.row, end.column, start.column - end.column);
                         foldLine.shiftRow(-len);
 
-                        var foldLineBefore = this.getFoldLine(firstRow);
+                        const foldLineBefore = this.getFoldLine(firstRow);
                         if (foldLineBefore && foldLineBefore !== foldLine) {
                             foldLineBefore.merge(foldLine);
                             foldLine = foldLineBefore;
@@ -9830,15 +9682,15 @@ ace.define("ace/edit_session", ["require", "exports", "module", "ace/lib/oop", "
 
                     lastRow = firstRow;
                 } else {
-                    var args = Array(len);
+                    const args = Array(len);
                     args.unshift(firstRow, 0);
-                    var arr = useWrapMode ? this.$wrapData : this.$rowLengthCache
-                    arr.splice.apply(arr, args);
+                    const arr = useWrapMode ? this.$wrapData : this.$rowLengthCache;
+                    arr.splice(...args);
                     var foldLines = this.$foldData;
                     var foldLine = this.getFoldLine(firstRow);
                     var idx = 0;
                     if (foldLine) {
-                        var cmp = foldLine.range.compareInside(start.row, start.column);
+                        const cmp = foldLine.range.compareInside(start.row, start.column);
                         if (cmp == 0) {
                             foldLine = foldLine.split(start.row, start.column);
                             if (foldLine) {
@@ -9893,14 +9745,14 @@ ace.define("ace/edit_session", ["require", "exports", "module", "ace/lib/oop", "
         };
 
         this.$updateWrapData = function(firstRow, lastRow) {
-            var lines = this.doc.getAllLines();
-            var tabSize = this.getTabSize();
-            var wrapData = this.$wrapData;
-            var wrapLimit = this.$wrapLimit;
-            var tokens;
-            var foldLine;
+            const lines = this.doc.getAllLines();
+            const tabSize = this.getTabSize();
+            const wrapData = this.$wrapData;
+            const wrapLimit = this.$wrapLimit;
+            let tokens;
+            let foldLine;
 
-            var row = firstRow;
+            let row = firstRow;
             lastRow = Math.min(lastRow, lines.length - 1);
             while (row <= lastRow) {
                 foldLine = this.getFoldLine(row, foldLine);
@@ -9910,13 +9762,13 @@ ace.define("ace/edit_session", ["require", "exports", "module", "ace/lib/oop", "
                     row++;
                 } else {
                     tokens = [];
-                    foldLine.walk(function(placeholder, row, column, lastColumn) {
-                            var walkTokens;
+                    foldLine.walk((placeholder, row, column, lastColumn) => {
+                            let walkTokens;
                             if (placeholder != null) {
                                 walkTokens = this.$getDisplayTokens(
                                     placeholder, tokens.length);
                                 walkTokens[0] = PLACEHOLDER_START;
-                                for (var i = 1; i < walkTokens.length; i++) {
+                                for (let i = 1; i < walkTokens.length; i++) {
                                     walkTokens[i] = PLACEHOLDER_BODY;
                                 }
                             } else {
@@ -9925,7 +9777,7 @@ ace.define("ace/edit_session", ["require", "exports", "module", "ace/lib/oop", "
                                     tokens.length);
                             }
                             tokens = tokens.concat(walkTokens);
-                        }.bind(this),
+                        },
                         foldLine.end.row,
                         lines[foldLine.end.row].length + 1
                     );
@@ -9935,14 +9787,14 @@ ace.define("ace/edit_session", ["require", "exports", "module", "ace/lib/oop", "
                 }
             }
         };
-        var CHAR = 1,
-            CHAR_EXT = 2,
-            PLACEHOLDER_START = 3,
-            PLACEHOLDER_BODY = 4,
-            PUNCTUATION = 9,
-            SPACE = 10,
-            TAB = 11,
-            TAB_SPACE = 12;
+        const CHAR = 1;
+        const CHAR_EXT = 2;
+        var PLACEHOLDER_START = 3;
+        var PLACEHOLDER_BODY = 4;
+        const PUNCTUATION = 9;
+        const SPACE = 10;
+        const TAB = 11;
+        const TAB_SPACE = 12;
 
 
         this.$computeWrapSplits = function(tokens, wrapLimit, tabSize) {
@@ -9950,23 +9802,22 @@ ace.define("ace/edit_session", ["require", "exports", "module", "ace/lib/oop", "
                 return [];
             }
 
-            var splits = [];
-            var displayLength = tokens.length;
-            var lastSplit = 0,
-                lastDocSplit = 0;
+            const splits = [];
+            const displayLength = tokens.length;
+            let lastSplit = 0;
+            let lastDocSplit = 0;
 
-            var isCode = this.$wrapAsCode;
+            const isCode = this.$wrapAsCode;
 
-            var indentedSoftWrap = this.$indentedSoftWrap;
-            var maxIndent = wrapLimit <= Math.max(2 * tabSize, 8) || indentedSoftWrap === false ? 0 : Math.floor(wrapLimit / 2);
+            const indentedSoftWrap = this.$indentedSoftWrap;
+            const maxIndent = wrapLimit <= Math.max(2 * tabSize, 8) || indentedSoftWrap === false ? 0 : Math.floor(wrapLimit / 2);
 
             function getWrapIndent() {
-                var indentation = 0;
+                let indentation = 0;
                 if (maxIndent === 0)
                     return indentation;
                 if (indentedSoftWrap) {
-                    for (var i = 0; i < tokens.length; i++) {
-                        var token = tokens[i];
+                    for (const token of tokens) {
                         if (token == SPACE)
                             indentation += 1;
                         else if (token == TAB)
@@ -9983,13 +9834,13 @@ ace.define("ace/edit_session", ["require", "exports", "module", "ace/lib/oop", "
             }
 
             function addSplit(screenPos) {
-                var displayed = tokens.slice(lastSplit, screenPos);
-                var len = displayed.length;
+                const displayed = tokens.slice(lastSplit, screenPos);
+                let len = displayed.length;
                 displayed.join("")
-                    .replace(/12/g, function() {
+                    .replace(/12/g, () => {
                         len -= 1;
                     })
-                    .replace(/2/g, function() {
+                    .replace(/2/g, () => {
                         len -= 1;
                     });
 
@@ -10003,7 +9854,7 @@ ace.define("ace/edit_session", ["require", "exports", "module", "ace/lib/oop", "
             }
             var indent = 0;
             while (displayLength - lastSplit > wrapLimit - indent) {
-                var split = lastSplit + wrapLimit - indent;
+                let split = lastSplit + wrapLimit - indent;
                 if (tokens[split - 1] >= SPACE && tokens[split] >= SPACE) {
                     addSplit(split);
                     continue;
@@ -10030,7 +9881,7 @@ ace.define("ace/edit_session", ["require", "exports", "module", "ace/lib/oop", "
                     addSplit(split);
                     continue;
                 }
-                var minSplit = Math.max(split - (wrapLimit - (wrapLimit >> 2)), lastSplit - 1);
+                const minSplit = Math.max(split - (wrapLimit - (wrapLimit >> 2)), lastSplit - 1);
                 while (split > minSplit && tokens[split] < PLACEHOLDER_START) {
                     split--;
                 }
@@ -10058,16 +9909,16 @@ ace.define("ace/edit_session", ["require", "exports", "module", "ace/lib/oop", "
             return splits;
         };
         this.$getDisplayTokens = function(str, offset) {
-            var arr = [];
-            var tabSize;
+            const arr = [];
+            let tabSize;
             offset = offset || 0;
 
-            for (var i = 0; i < str.length; i++) {
-                var c = str.charCodeAt(i);
+            for (let i = 0; i < str.length; i++) {
+                const c = str.charCodeAt(i);
                 if (c == 9) {
                     tabSize = this.getScreenTabSize(arr.length + offset);
                     arr.push(TAB);
-                    for (var n = 1; n < tabSize; n++) {
+                    for (let n = 1; n < tabSize; n++) {
                         arr.push(TAB_SPACE);
                     }
                 } else if (c == 32) {
@@ -10089,7 +9940,8 @@ ace.define("ace/edit_session", ["require", "exports", "module", "ace/lib/oop", "
                 maxScreenColumn = Infinity;
             screenColumn = screenColumn || 0;
 
-            var c, column;
+            let c;
+            let column;
             for (column = 0; column < str.length; column++) {
                 c = str.charCodeAt(column);
                 if (c == 9) {
@@ -10110,7 +9962,7 @@ ace.define("ace/edit_session", ["require", "exports", "module", "ace/lib/oop", "
         this.lineWidgets = null;
         this.getRowLength = function(row) {
             if (this.lineWidgets)
-                var h = this.lineWidgets[row] && this.lineWidgets[row].rowCount || 0;
+                let h = this.lineWidgets[row] && this.lineWidgets[row].rowCount || 0;
             else
                 h = 0
             if (!this.$useWrapMode || !this.$wrapData[row]) {
@@ -10129,23 +9981,23 @@ ace.define("ace/edit_session", ["require", "exports", "module", "ace/lib/oop", "
 
         this.getRowWrapIndent = function(screenRow) {
             if (this.$useWrapMode) {
-                var pos = this.screenToDocumentPosition(screenRow, Number.MAX_VALUE);
-                var splits = this.$wrapData[pos.row];
+                const pos = this.screenToDocumentPosition(screenRow, Number.MAX_VALUE);
+                const splits = this.$wrapData[pos.row];
                 return splits.length && splits[0] < pos.column ? splits.indent : 0;
             } else {
                 return 0;
             }
         }
         this.getScreenLastRowColumn = function(screenRow) {
-            var pos = this.screenToDocumentPosition(screenRow, Number.MAX_VALUE);
+            const pos = this.screenToDocumentPosition(screenRow, Number.MAX_VALUE);
             return this.documentToScreenColumn(pos.row, pos.column);
         };
         this.getDocumentLastRowColumn = function(docRow, docColumn) {
-            var screenRow = this.documentToScreenRow(docRow, docColumn);
+            const screenRow = this.documentToScreenRow(docRow, docColumn);
             return this.getScreenLastRowColumn(screenRow);
         };
         this.getDocumentLastRowColumnPosition = function(docRow, docColumn) {
-            var screenRow = this.documentToScreenRow(docRow, docColumn);
+            const screenRow = this.documentToScreenRow(docRow, docColumn);
             return this.screenToDocumentPosition(screenRow, Number.MAX_VALUE / 10);
         };
         this.getRowSplitData = function(row) {
@@ -10175,16 +10027,16 @@ ace.define("ace/edit_session", ["require", "exports", "module", "ace/lib/oop", "
                     column: 0
                 };
 
-            var line;
+            let line;
             var docRow = 0;
-            var docColumn = 0;
-            var column;
+            let docColumn = 0;
+            let column;
             var row = 0;
-            var rowLength = 0;
+            let rowLength = 0;
 
-            var rowCache = this.$screenRowCache;
-            var i = this.$getRowCacheIndex(rowCache, screenRow);
-            var l = rowCache.length;
+            const rowCache = this.$screenRowCache;
+            const i = this.$getRowCacheIndex(rowCache, screenRow);
+            const l = rowCache.length;
             if (l && i >= 0) {
                 var row = rowCache[i];
                 var docRow = this.$docRowCache[i];
@@ -10193,9 +10045,9 @@ ace.define("ace/edit_session", ["require", "exports", "module", "ace/lib/oop", "
                 var doCache = !l;
             }
 
-            var maxRow = this.getLength() - 1;
-            var foldLine = this.getNextFoldLine(docRow);
-            var foldStart = foldLine ? foldLine.start.row : Infinity;
+            const maxRow = this.getLength() - 1;
+            let foldLine = this.getNextFoldLine(docRow);
+            let foldStart = foldLine ? foldLine.start.row : Infinity;
 
             while (row <= screenRow) {
                 rowLength = this.getRowLength(docRow);
@@ -10229,11 +10081,11 @@ ace.define("ace/edit_session", ["require", "exports", "module", "ace/lib/oop", "
                 line = this.getLine(docRow);
                 foldLine = null;
             }
-            var wrapIndent = 0;
+            let wrapIndent = 0;
             if (this.$useWrapMode) {
-                var splits = this.$wrapData[docRow];
+                const splits = this.$wrapData[docRow];
                 if (splits) {
-                    var splitIndex = Math.floor(screenRow - row);
+                    const splitIndex = Math.floor(screenRow - row);
                     column = splits[splitIndex];
                     if (splitIndex > 0 && splits.length) {
                         wrapIndent = splits.indent;
@@ -10257,7 +10109,7 @@ ace.define("ace/edit_session", ["require", "exports", "module", "ace/lib/oop", "
         };
         this.documentToScreenPosition = function(docRow, docColumn) {
             if (typeof docColumn === "undefined")
-                var pos = this.$clipPositionToDocument(docRow.row, docRow.column);
+                let pos = this.$clipPositionToDocument(docRow.row, docRow.column);
             else
                 pos = this.$clipPositionToDocument(docRow, docColumn);
 
@@ -10265,20 +10117,21 @@ ace.define("ace/edit_session", ["require", "exports", "module", "ace/lib/oop", "
             docColumn = pos.column;
 
             var screenRow = 0;
-            var foldStartRow = null;
-            var fold = null;
+            let foldStartRow = null;
+            let fold = null;
             fold = this.getFoldAt(docRow, docColumn, 1);
             if (fold) {
                 docRow = fold.start.row;
                 docColumn = fold.start.column;
             }
 
-            var rowEnd, row = 0;
+            let rowEnd;
+            var row = 0;
 
 
-            var rowCache = this.$docRowCache;
-            var i = this.$getRowCacheIndex(rowCache, docRow);
-            var l = rowCache.length;
+            const rowCache = this.$docRowCache;
+            const i = this.$getRowCacheIndex(rowCache, docRow);
+            const l = rowCache.length;
             if (l && i >= 0) {
                 var row = rowCache[i];
                 var screenRow = this.$screenRowCache[i];
@@ -10287,8 +10140,8 @@ ace.define("ace/edit_session", ["require", "exports", "module", "ace/lib/oop", "
                 var doCache = !l;
             }
 
-            var foldLine = this.getNextFoldLine(row);
-            var foldStart = foldLine ? foldLine.start.row : Infinity;
+            let foldLine = this.getNextFoldLine(row);
+            let foldStart = foldLine ? foldLine.start.row : Infinity;
 
             while (row < docRow) {
                 if (row >= foldStart) {
@@ -10309,7 +10162,7 @@ ace.define("ace/edit_session", ["require", "exports", "module", "ace/lib/oop", "
                     this.$screenRowCache.push(screenRow);
                 }
             }
-            var textLine = "";
+            let textLine = "";
             if (foldLine && row >= foldStart) {
                 textLine = this.getFoldDisplayLine(foldLine, docRow, docColumn);
                 foldStartRow = foldLine.start.row;
@@ -10317,11 +10170,11 @@ ace.define("ace/edit_session", ["require", "exports", "module", "ace/lib/oop", "
                 textLine = this.getLine(docRow).substring(0, docColumn);
                 foldStartRow = docRow;
             }
-            var wrapIndent = 0;
+            let wrapIndent = 0;
             if (this.$useWrapMode) {
-                var wrapRow = this.$wrapData[foldStartRow];
+                const wrapRow = this.$wrapData[foldStartRow];
                 if (wrapRow) {
-                    var screenRowOffset = 0;
+                    let screenRowOffset = 0;
                     while (textLine.length >= wrapRow[screenRowOffset]) {
                         screenRow++;
                         screenRowOffset++;
@@ -10345,24 +10198,24 @@ ace.define("ace/edit_session", ["require", "exports", "module", "ace/lib/oop", "
             return this.documentToScreenPosition(docRow, docColumn).row;
         };
         this.getScreenLength = function() {
-            var screenRows = 0;
+            let screenRows = 0;
             var fold = null;
             if (!this.$useWrapMode) {
                 screenRows = this.getLength();
-                var foldData = this.$foldData;
+                const foldData = this.$foldData;
                 for (var i = 0; i < foldData.length; i++) {
                     fold = foldData[i];
                     screenRows -= fold.end.row - fold.start.row;
                 }
             } else {
-                var lastRow = this.$wrapData.length;
-                var row = 0,
-                    i = 0;
+                const lastRow = this.$wrapData.length;
+                let row = 0;
+                const i = 0;
                 var fold = this.$foldData[i++];
-                var foldStart = fold ? fold.start.row : Infinity;
+                let foldStart = fold ? fold.start.row : Infinity;
 
                 while (row < lastRow) {
-                    var splits = this.$wrapData[row];
+                    const splits = this.$wrapData[row];
                     screenRows += splits ? splits.length + 1 : 1;
                     row++;
                     if (row > foldStart) {
@@ -10386,7 +10239,8 @@ ace.define("ace/edit_session", ["require", "exports", "module", "ace/lib/oop", "
                     maxScreenColumn = Infinity;
                 screenColumn = screenColumn || 0;
 
-                var c, column;
+                let c;
+                let column;
                 for (column = 0; column < str.length; column++) {
                     c = str.charAt(column);
                     if (c === "\t") {
@@ -10447,7 +10301,6 @@ ace.define("ace/edit_session", ["require", "exports", "module", "ace/lib/oop", "
                 c >= 0xFF01 && c <= 0xFF60 ||
                 c >= 0xFFE0 && c <= 0xFFE6;
         }
-
     }).call(EditSession.prototype);
 
     require("./edit_session/folding").Folding.call(EditSession.prototype);
@@ -10456,7 +10309,7 @@ ace.define("ace/edit_session", ["require", "exports", "module", "ace/lib/oop", "
 
     config.defineOptions(EditSession.prototype, "session", {
         wrap: {
-            set: function(value) {
+            set(value) {
                 if (!value || value == "off")
                     value = false;
                 else if (value == "free")
@@ -10472,12 +10325,12 @@ ace.define("ace/edit_session", ["require", "exports", "module", "ace/lib/oop", "
                 if (!value) {
                     this.setUseWrapMode(false);
                 } else {
-                    var col = typeof value == "number" ? value : null;
+                    const col = typeof value == "number" ? value : null;
                     this.setWrapLimitRange(col, col);
                     this.setUseWrapMode(true);
                 }
             },
-            get: function() {
+            get() {
                 if (this.getUseWrapMode()) {
                     if (this.$wrap == -1)
                         return "printMargin";
@@ -10490,7 +10343,7 @@ ace.define("ace/edit_session", ["require", "exports", "module", "ace/lib/oop", "
             handlesSet: true
         },
         wrapMethod: {
-            set: function(val) {
+            set(val) {
                 val = val == "auto" ? this.$mode.type != "text" : val != "text";
                 if (val != this.$wrapAsCode) {
                     this.$wrapAsCode = val;
@@ -10507,13 +10360,13 @@ ace.define("ace/edit_session", ["require", "exports", "module", "ace/lib/oop", "
             initialValue: true
         },
         firstLineNumber: {
-            set: function() {
+            set() {
                 this._signal("changeBreakpoint");
             },
             initialValue: 1
         },
         useWorker: {
-            set: function(useWorker) {
+            set(useWorker) {
                 this.$useWorker = useWorker;
 
                 this.$stopWorker();
@@ -10526,7 +10379,7 @@ ace.define("ace/edit_session", ["require", "exports", "module", "ace/lib/oop", "
             initialValue: true
         },
         tabSize: {
-            set: function(tabSize) {
+            set(tabSize) {
                 if (isNaN(tabSize) || this.$tabSize === tabSize) return;
 
                 this.$modified = true;
@@ -10538,25 +10391,25 @@ ace.define("ace/edit_session", ["require", "exports", "module", "ace/lib/oop", "
             handlesSet: true
         },
         overwrite: {
-            set: function(val) {
+            set(val) {
                 this._signal("changeOverwrite");
             },
             initialValue: false
         },
         newLineMode: {
-            set: function(val) {
+            set(val) {
                 this.doc.setNewLineMode(val)
             },
-            get: function() {
+            get() {
                 return this.doc.getNewLineMode()
             },
             handlesSet: true
         },
         mode: {
-            set: function(val) {
+            set(val) {
                 this.setMode(val)
             },
-            get: function() {
+            get() {
                 return this.$modeId
             }
         }
@@ -10565,14 +10418,12 @@ ace.define("ace/edit_session", ["require", "exports", "module", "ace/lib/oop", "
     exports.EditSession = EditSession;
 });
 
-ace.define("ace/search", ["require", "exports", "module", "ace/lib/lang", "ace/lib/oop", "ace/range"], function(require, exports, module) {
-    "use strict";
+ace.define("ace/search", ["require", "exports", "module", "ace/lib/lang", "ace/lib/oop", "ace/range"], (require, exports, module) => {
+    const lang = require("./lib/lang");
+    const oop = require("./lib/oop");
+    const Range = require("./range").Range;
 
-    var lang = require("./lib/lang");
-    var oop = require("./lib/oop");
-    var Range = require("./range").Range;
-
-    var Search = function() {
+    const Search = function() {
         this.$options = {};
     };
 
@@ -10588,15 +10439,15 @@ ace.define("ace/search", ["require", "exports", "module", "ace/lib/lang", "ace/l
             this.$options = options;
         };
         this.find = function(session) {
-            var options = this.$options;
-            var iterator = this.$matchIterator(session, options);
+            const options = this.$options;
+            const iterator = this.$matchIterator(session, options);
             if (!iterator)
                 return false;
 
-            var firstRange = null;
-            iterator.forEach(function(range, row, offset) {
+            let firstRange = null;
+            iterator.forEach((range, row, offset) => {
                 if (!range.start) {
-                    var column = range.offset + (offset || 0);
+                    const column = range.offset + (offset || 0);
                     firstRange = new Range(row, column, row, column + range.length);
                     if (!range.length && options.start && options.start.start && options.skipCurrent != false && firstRange.isEqual(options.start)) {
                         firstRange = null;
@@ -10610,29 +10461,29 @@ ace.define("ace/search", ["require", "exports", "module", "ace/lib/lang", "ace/l
             return firstRange;
         };
         this.findAll = function(session) {
-            var options = this.$options;
+            const options = this.$options;
             if (!options.needle)
                 return [];
             this.$assembleRegExp(options);
 
-            var range = options.range;
-            var lines = range ? session.getLines(range.start.row, range.end.row) : session.doc.getAllLines();
+            const range = options.range;
+            const lines = range ? session.getLines(range.start.row, range.end.row) : session.doc.getAllLines();
 
-            var ranges = [];
-            var re = options.re;
+            let ranges = [];
+            const re = options.re;
             if (options.$isMultiLine) {
-                var len = re.length;
-                var maxRow = lines.length - len;
-                var prevRange;
-                outer: for (var row = re.offset || 0; row <= maxRow; row++) {
+                const len = re.length;
+                const maxRow = lines.length - len;
+                let prevRange;
+                outer: for (let row = re.offset || 0; row <= maxRow; row++) {
                     for (var j = 0; j < len; j++)
                         if (lines[row + j].search(re[j]) == -1)
                             continue outer;
 
-                    var startLine = lines[row];
-                    var line = lines[row + len - 1];
-                    var startIndex = startLine.length - startLine.match(re[0])[0].length;
-                    var endIndex = line.match(re[len - 1])[0].length;
+                    const startLine = lines[row];
+                    const line = lines[row + len - 1];
+                    const startIndex = startLine.length - startLine.match(re[0])[0].length;
+                    const endIndex = line.match(re[len - 1])[0].length;
 
                     if (prevRange && prevRange.end.row === row &&
                         prevRange.end.column > startIndex
@@ -10647,19 +10498,19 @@ ace.define("ace/search", ["require", "exports", "module", "ace/lib/lang", "ace/l
                 }
             } else {
                 for (var i = 0; i < lines.length; i++) {
-                    var matches = lang.getMatchOffsets(lines[i], re);
+                    const matches = lang.getMatchOffsets(lines[i], re);
                     for (var j = 0; j < matches.length; j++) {
-                        var match = matches[j];
+                        const match = matches[j];
                         ranges.push(new Range(i, match.offset, i, match.offset + match.length));
                     }
                 }
             }
 
             if (range) {
-                var startColumn = range.start.column;
-                var endColumn = range.start.column;
-                var i = 0,
-                    j = ranges.length - 1;
+                const startColumn = range.start.column;
+                const endColumn = range.start.column;
+                var i = 0;
+                var j = ranges.length - 1;
                 while (i < j && ranges[i].start.column < startColumn && ranges[i].start.row == range.start.row)
                     i++;
 
@@ -10676,24 +10527,24 @@ ace.define("ace/search", ["require", "exports", "module", "ace/lib/lang", "ace/l
             return ranges;
         };
         this.replace = function(input, replacement) {
-            var options = this.$options;
+            const options = this.$options;
 
-            var re = this.$assembleRegExp(options);
+            const re = this.$assembleRegExp(options);
             if (options.$isMultiLine)
                 return replacement;
 
             if (!re)
                 return;
 
-            var match = re.exec(input);
+            const match = re.exec(input);
             if (!match || match[0].length != input.length)
                 return null;
 
             replacement = input.replace(re, replacement);
             if (options.preserveCase) {
                 replacement = replacement.split("");
-                for (var i = Math.min(input.length, input.length); i--;) {
-                    var ch = input[i];
+                for (let i = Math.min(input.length, input.length); i--;) {
+                    const ch = input[i];
                     if (ch && ch.toLowerCase() != ch)
                         replacement[i] = replacement[i].toUpperCase();
                     else
@@ -10706,26 +10557,26 @@ ace.define("ace/search", ["require", "exports", "module", "ace/lib/lang", "ace/l
         };
 
         this.$matchIterator = function(session, options) {
-            var re = this.$assembleRegExp(options);
+            const re = this.$assembleRegExp(options);
             if (!re)
                 return false;
 
-            var callback;
+            let callback;
             if (options.$isMultiLine) {
-                var len = re.length;
-                var matchIterator = function(line, row, offset) {
-                    var startIndex = line.search(re[0]);
+                const len = re.length;
+                var matchIterator = (line, row, offset) => {
+                    const startIndex = line.search(re[0]);
                     if (startIndex == -1)
                         return;
-                    for (var i = 1; i < len; i++) {
+                    for (let i = 1; i < len; i++) {
                         line = session.getLine(row + i);
                         if (line.search(re[i]) == -1)
                             return;
                     }
 
-                    var endIndex = line.match(re[len - 1])[0].length;
+                    const endIndex = line.match(re[len - 1])[0].length;
 
-                    var range = new Range(row, startIndex, row + len - 1, endIndex);
+                    const range = new Range(row, startIndex, row + len - 1, endIndex);
                     if (re.offset == 1) {
                         range.start.row--;
                         range.start.column = Number.MAX_VALUE;
@@ -10736,25 +10587,25 @@ ace.define("ace/search", ["require", "exports", "module", "ace/lib/lang", "ace/l
                         return true;
                 };
             } else if (options.backwards) {
-                var matchIterator = function(line, row, startIndex) {
-                    var matches = lang.getMatchOffsets(line, re);
-                    for (var i = matches.length - 1; i >= 0; i--)
+                var matchIterator = (line, row, startIndex) => {
+                    const matches = lang.getMatchOffsets(line, re);
+                    for (let i = matches.length - 1; i >= 0; i--)
                         if (callback(matches[i], row, startIndex))
                             return true;
                 };
             } else {
-                var matchIterator = function(line, row, startIndex) {
-                    var matches = lang.getMatchOffsets(line, re);
-                    for (var i = 0; i < matches.length; i++)
+                var matchIterator = (line, row, startIndex) => {
+                    const matches = lang.getMatchOffsets(line, re);
+                    for (let i = 0; i < matches.length; i++)
                         if (callback(matches[i], row, startIndex))
                             return true;
                 };
             }
 
-            var lineIterator = this.$lineIterator(session, options);
+            const lineIterator = this.$lineIterator(session, options);
 
             return {
-                forEach: function(_callback) {
+                forEach(_callback) {
                     callback = _callback;
                     lineIterator.forEach(matchIterator);
                 }
@@ -10765,7 +10616,7 @@ ace.define("ace/search", ["require", "exports", "module", "ace/lib/lang", "ace/l
             if (options.needle instanceof RegExp)
                 return options.re = options.needle;
 
-            var needle = options.needle;
+            let needle = options.needle;
 
             if (!options.needle)
                 return options.re = false;
@@ -10774,9 +10625,9 @@ ace.define("ace/search", ["require", "exports", "module", "ace/lib/lang", "ace/l
                 needle = lang.escapeRegExp(needle);
 
             if (options.wholeWord)
-                needle = "\\b" + needle + "\\b";
+                needle = `\\b${needle}\\b`;
 
-            var modifier = options.caseSensitive ? "gm" : "gmi";
+            const modifier = options.caseSensitive ? "gm" : "gmi";
 
             options.$isMultiLine = !$disableFakeMultiline && /[\n\r]/.test(needle);
             if (options.$isMultiLine)
@@ -10790,10 +10641,10 @@ ace.define("ace/search", ["require", "exports", "module", "ace/lib/lang", "ace/l
             return options.re = re;
         };
 
-        this.$assembleMultilineRegExp = function(needle, modifier) {
-            var parts = needle.replace(/\r\n|\r|\n/g, "$\n^").split("\n");
-            var re = [];
-            for (var i = 0; i < parts.length; i++) try {
+        this.$assembleMultilineRegExp = (needle, modifier) => {
+            const parts = needle.replace(/\r\n|\r|\n/g, "$\n^").split("\n");
+            const re = [];
+            for (let i = 0; i < parts.length; i++) try {
                 re.push(new RegExp(parts[i], modifier));
             } catch (e) {
                 return false;
@@ -10807,25 +10658,25 @@ ace.define("ace/search", ["require", "exports", "module", "ace/lib/lang", "ace/l
             return re;
         };
 
-        this.$lineIterator = function(session, options) {
-            var backwards = options.backwards == true;
-            var skipCurrent = options.skipCurrent != false;
+        this.$lineIterator = (session, options) => {
+            const backwards = options.backwards == true;
+            const skipCurrent = options.skipCurrent != false;
 
-            var range = options.range;
-            var start = options.start;
+            const range = options.range;
+            let start = options.start;
             if (!start)
                 start = range ? range[backwards ? "end" : "start"] : session.selection.getRange();
 
             if (start.start)
                 start = start[skipCurrent != backwards ? "end" : "start"];
 
-            var firstRow = range ? range.start.row : 0;
-            var lastRow = range ? range.end.row : session.getLength() - 1;
+            let firstRow = range ? range.start.row : 0;
+            let lastRow = range ? range.end.row : session.getLength() - 1;
 
-            var forEach = backwards ? function(callback) {
-                var row = start.row;
+            const forEach = backwards ? callback => {
+                let row = start.row;
 
-                var line = session.getLine(row).substring(0, start.column);
+                const line = session.getLine(row).substring(0, start.column);
                 if (callback(line, row))
                     return;
 
@@ -10839,10 +10690,10 @@ ace.define("ace/search", ["require", "exports", "module", "ace/lib/lang", "ace/l
                 for (row = lastRow, firstRow = start.row; row >= firstRow; row--)
                     if (callback(session.getLine(row), row))
                         return;
-            } : function(callback) {
-                var row = start.row;
+            } : callback => {
+                let row = start.row;
 
-                var line = session.getLine(row).substr(start.column);
+                const line = session.getLine(row).substr(start.column);
                 if (callback(line, row, start.column))
                     return;
 
@@ -10859,7 +10710,7 @@ ace.define("ace/search", ["require", "exports", "module", "ace/lib/lang", "ace/l
             };
 
             return {
-                forEach: forEach
+                forEach
             };
         };
 
@@ -10868,12 +10719,10 @@ ace.define("ace/search", ["require", "exports", "module", "ace/lib/lang", "ace/l
     exports.Search = Search;
 });
 
-ace.define("ace/keyboard/hash_handler", ["require", "exports", "module", "ace/lib/keys", "ace/lib/useragent"], function(require, exports, module) {
-    "use strict";
-
-    var keyUtil = require("../lib/keys");
-    var useragent = require("../lib/useragent");
-    var KEY_MODS = keyUtil.KEY_MODS;
+ace.define("ace/keyboard/hash_handler", ["require", "exports", "module", "ace/lib/keys", "ace/lib/useragent"], (require, exports, module) => {
+    const keyUtil = require("../lib/keys");
+    const useragent = require("../lib/useragent");
+    const KEY_MODS = keyUtil.KEY_MODS;
 
     function HashHandler(config, platform) {
         this.platform = platform || (useragent.isMac ? "mac" : "win");
@@ -10904,17 +10753,17 @@ ace.define("ace/keyboard/hash_handler", ["require", "exports", "module", "ace/li
         };
 
         this.removeCommand = function(command, keepCommand) {
-            var name = command && (typeof command === 'string' ? command : command.name);
+            const name = command && (typeof command === 'string' ? command : command.name);
             command = this.commands[name];
             if (!keepCommand)
                 delete this.commands[name];
-            var ckb = this.commandKeyBinding;
-            for (var keyId in ckb) {
-                var cmdGroup = ckb[keyId];
+            const ckb = this.commandKeyBinding;
+            for (const keyId in ckb) {
+                const cmdGroup = ckb[keyId];
                 if (cmdGroup == command) {
                     delete ckb[keyId];
                 } else if (Array.isArray(cmdGroup)) {
-                    var i = cmdGroup.indexOf(command);
+                    const i = cmdGroup.indexOf(command);
                     if (i != -1) {
                         cmdGroup.splice(i, 1);
                         if (cmdGroup.length == 1)
@@ -10940,20 +10789,20 @@ ace.define("ace/keyboard/hash_handler", ["require", "exports", "module", "ace/li
                 });
 
             key.split("|").forEach(function(keyPart) {
-                var chain = "";
-                if (keyPart.indexOf(" ") != -1) {
-                    var parts = keyPart.split(/\s+/);
+                let chain = "";
+                if (keyPart.includes(" ")) {
+                    const parts = keyPart.split(/\s+/);
                     keyPart = parts.pop();
                     parts.forEach(function(keyPart) {
-                        var binding = this.parseKeys(keyPart);
-                        var id = KEY_MODS[binding.hashId] + binding.key;
+                        const binding = this.parseKeys(keyPart);
+                        const id = KEY_MODS[binding.hashId] + binding.key;
                         chain += (chain ? " " : "") + id;
                         this._addCommandToBinding(chain, "chainKeys");
                     }, this);
                     chain += " ";
                 }
-                var binding = this.parseKeys(keyPart);
-                var id = KEY_MODS[binding.hashId] + binding.key;
+                const binding = this.parseKeys(keyPart);
+                const id = KEY_MODS[binding.hashId] + binding.key;
                 this._addCommandToBinding(chain + id, command, position);
             }, this);
         };
@@ -10962,8 +10811,8 @@ ace.define("ace/keyboard/hash_handler", ["require", "exports", "module", "ace/li
             return typeof command == "object" && command.bindKey && command.bindKey.position || 0;
         }
         this._addCommandToBinding = function(keyId, command, position) {
-            var ckb = this.commandKeyBinding,
-                i;
+            const ckb = this.commandKeyBinding;
+            let i;
             if (!command) {
                 delete ckb[keyId];
             } else if (!ckb[keyId] || this.$singleCommand) {
@@ -10981,10 +10830,10 @@ ace.define("ace/keyboard/hash_handler", ["require", "exports", "module", "ace/li
                     else
                         position = getPosition(command);
                 }
-                var commands = ckb[keyId];
+                const commands = ckb[keyId];
                 for (i = 0; i < commands.length; i++) {
-                    var other = commands[i];
-                    var otherPos = getPosition(other);
+                    const other = commands[i];
+                    const otherPos = getPosition(other);
                     if (otherPos > position)
                         break;
                 }
@@ -10994,7 +10843,7 @@ ace.define("ace/keyboard/hash_handler", ["require", "exports", "module", "ace/li
 
         this.addCommands = function(commands) {
             commands && Object.keys(commands).forEach(function(name) {
-                var command = commands[name];
+                let command = commands[name];
                 if (!command)
                     return;
 
@@ -11031,18 +10880,16 @@ ace.define("ace/keyboard/hash_handler", ["require", "exports", "module", "ace/li
         this._buildKeyHash = function(command) {
             this.bindKey(command.bindKey, command);
         };
-        this.parseKeys = function(keys) {
-            var parts = keys.toLowerCase().split(/[\-\+]([\-\+])?/).filter(function(x) {
-                return x
-            });
-            var key = parts.pop();
+        this.parseKeys = keys => {
+            const parts = keys.toLowerCase().split(/[\-\+]([\-\+])?/).filter(x => x);
+            let key = parts.pop();
 
-            var keyCode = keyUtil[key];
+            const keyCode = keyUtil[key];
             if (keyUtil.FUNCTION_KEYS[keyCode])
                 key = keyUtil.FUNCTION_KEYS[keyCode].toLowerCase();
             else if (!parts.length)
                 return {
-                    key: key,
+                    key,
                     hashId: -1
                 };
             else if (parts.length == 1 && parts[0] == "shift")
@@ -11051,33 +10898,33 @@ ace.define("ace/keyboard/hash_handler", ["require", "exports", "module", "ace/li
                     hashId: -1
                 };
 
-            var hashId = 0;
-            for (var i = parts.length; i--;) {
-                var modifier = keyUtil.KEY_MODS[parts[i]];
+            let hashId = 0;
+            for (let i = parts.length; i--;) {
+                const modifier = keyUtil.KEY_MODS[parts[i]];
                 if (modifier == null) {
                     if (typeof console != "undefined")
-                        console.error("invalid modifier " + parts[i] + " in " + keys);
+                        console.error(`invalid modifier ${parts[i]} in ${keys}`);
                     return false;
                 }
                 hashId |= modifier;
             }
             return {
-                key: key,
-                hashId: hashId
+                key,
+                hashId
             };
         };
 
         this.findKeyCommand = function findKeyCommand(hashId, keyString) {
-            var key = KEY_MODS[hashId] + keyString;
+            const key = KEY_MODS[hashId] + keyString;
             return this.commandKeyBinding[key];
         };
 
         this.handleKeyboard = function(data, hashId, keyString, keyCode) {
             if (keyCode < 0) return;
-            var key = KEY_MODS[hashId] + keyString;
-            var command = this.commandKeyBinding[key];
+            const key = KEY_MODS[hashId] + keyString;
+            let command = this.commandKeyBinding[key];
             if (data.$keyChain) {
-                data.$keyChain += " " + key;
+                data.$keyChain += ` ${key}`;
                 command = this.commandKeyBinding[data.$keyChain] || command;
             }
 
@@ -11097,13 +10944,11 @@ ace.define("ace/keyboard/hash_handler", ["require", "exports", "module", "ace/li
                     data.$keyChain = ""; // reset keyChain
             }
             return {
-                command: command
+                command
             };
         };
 
-        this.getStatusText = function(editor, data) {
-            return data.$keyChain || "";
-        };
+        this.getStatusText = (editor, data) => data.$keyChain || "";
 
     }).call(HashHandler.prototype);
 
@@ -11111,19 +10956,15 @@ ace.define("ace/keyboard/hash_handler", ["require", "exports", "module", "ace/li
     exports.MultiHashHandler = MultiHashHandler;
 });
 
-ace.define("ace/commands/command_manager", ["require", "exports", "module", "ace/lib/oop", "ace/keyboard/hash_handler", "ace/lib/event_emitter"], function(require, exports, module) {
-    "use strict";
+ace.define("ace/commands/command_manager", ["require", "exports", "module", "ace/lib/oop", "ace/keyboard/hash_handler", "ace/lib/event_emitter"], (require, exports, module) => {
+    const oop = require("../lib/oop");
+    const MultiHashHandler = require("../keyboard/hash_handler").MultiHashHandler;
+    const EventEmitter = require("../lib/event_emitter").EventEmitter;
 
-    var oop = require("../lib/oop");
-    var MultiHashHandler = require("../keyboard/hash_handler").MultiHashHandler;
-    var EventEmitter = require("../lib/event_emitter").EventEmitter;
-
-    var CommandManager = function(platform, commands) {
+    const CommandManager = function(platform, commands) {
         MultiHashHandler.call(this, commands, platform);
         this.byName = this.commands;
-        this.setDefaultHandler("exec", function(e) {
-            return e.command.exec(e.editor, e.args || {});
-        });
+        this.setDefaultHandler("exec", e => e.command.exec(e.editor, e.args || {}));
     };
 
     oop.inherits(CommandManager, MultiHashHandler);
@@ -11134,7 +10975,7 @@ ace.define("ace/commands/command_manager", ["require", "exports", "module", "ace
 
         this.exec = function(command, editor, args) {
             if (Array.isArray(command)) {
-                for (var i = command.length; i--;) {
+                for (let i = command.length; i--;) {
                     if (this.exec(command[i], editor, args)) return true;
                 }
                 return false;
@@ -11149,10 +10990,10 @@ ace.define("ace/commands/command_manager", ["require", "exports", "module", "ace
             if (editor && editor.$readOnly && !command.readOnly)
                 return false;
 
-            var e = {
-                editor: editor,
-                command: command,
-                args: args
+            const e = {
+                editor,
+                command,
+                args
             };
             e.returnValue = this._emit("exec", e);
             this._signal("afterExec", e);
@@ -11175,9 +11016,9 @@ ace.define("ace/commands/command_manager", ["require", "exports", "module", "ace
                 return this.recording = false;
             }
             if (!this.$addCommandToMacro) {
-                this.$addCommandToMacro = function(e) {
+                this.$addCommandToMacro = e => {
                     this.macro.push([e.command, e.args]);
-                }.bind(this);
+                };
             }
 
             this.oldMacro = this.macro;
@@ -11206,40 +11047,35 @@ ace.define("ace/commands/command_manager", ["require", "exports", "module", "ace
             }
         };
 
-        this.trimMacro = function(m) {
-            return m.map(function(x) {
-                if (typeof x[0] != "string")
-                    x[0] = x[0].name;
-                if (!x[1])
-                    x = x[0];
-                return x;
-            });
-        };
+        this.trimMacro = m => m.map(x => {
+            if (typeof x[0] != "string")
+                x[0] = x[0].name;
+            if (!x[1])
+                x = x[0];
+            return x;
+        });
 
     }).call(CommandManager.prototype);
 
     exports.CommandManager = CommandManager;
-
 });
 
-ace.define("ace/commands/default_commands", ["require", "exports", "module", "ace/lib/lang", "ace/config", "ace/range"], function(require, exports, module) {
-    "use strict";
-
-    var lang = require("../lib/lang");
-    var config = require("../config");
-    var Range = require("../range").Range;
+ace.define("ace/commands/default_commands", ["require", "exports", "module", "ace/lib/lang", "ace/config", "ace/range"], (require, exports, module) => {
+    const lang = require("../lib/lang");
+    const config = require("../config");
+    const Range = require("../range").Range;
 
     function bindKey(win, mac) {
         return {
-            win: win,
-            mac: mac
+            win,
+            mac
         };
     }
     exports.commands = [{
         name: "showSettingsMenu",
         bindKey: bindKey("Ctrl-,", "Command-,"),
-        exec: function(editor) {
-            config.loadModule("ace/ext/settings_menu", function(module) {
+        exec(editor) {
+            config.loadModule("ace/ext/settings_menu", module => {
                 module.init(editor);
                 editor.showSettingsMenu();
             });
@@ -11248,8 +11084,8 @@ ace.define("ace/commands/default_commands", ["require", "exports", "module", "ac
     }, {
         name: "goToNextError",
         bindKey: bindKey("Alt-E", "Ctrl-E"),
-        exec: function(editor) {
-            config.loadModule("ace/ext/error_marker", function(module) {
+        exec(editor) {
+            config.loadModule("ace/ext/error_marker", module => {
                 module.showErrorMarker(editor, 1);
             });
         },
@@ -11258,8 +11094,8 @@ ace.define("ace/commands/default_commands", ["require", "exports", "module", "ac
     }, {
         name: "goToPreviousError",
         bindKey: bindKey("Alt-Shift-E", "Ctrl-Shift-E"),
-        exec: function(editor) {
-            config.loadModule("ace/ext/error_marker", function(module) {
+        exec(editor) {
+            config.loadModule("ace/ext/error_marker", module => {
                 module.showErrorMarker(editor, -1);
             });
         },
@@ -11268,22 +11104,22 @@ ace.define("ace/commands/default_commands", ["require", "exports", "module", "ac
     }, {
         name: "selectall",
         bindKey: bindKey("Ctrl-A", "Command-A"),
-        exec: function(editor) {
+        exec(editor) {
             editor.selectAll();
         },
         readOnly: true
     }, {
         name: "centerselection",
         bindKey: bindKey(null, "Ctrl-L"),
-        exec: function(editor) {
+        exec(editor) {
             editor.centerSelection();
         },
         readOnly: true
     }, {
         name: "gotoline",
         bindKey: bindKey("Ctrl-L", "Command-L"),
-        exec: function(editor) {
-            var line = parseInt(prompt("Enter line number:"), 10);
+        exec(editor) {
+            const line = parseInt(prompt("Enter line number:"), 10);
             if (!isNaN(line)) {
                 editor.gotoLine(line);
             }
@@ -11292,7 +11128,7 @@ ace.define("ace/commands/default_commands", ["require", "exports", "module", "ac
     }, {
         name: "fold",
         bindKey: bindKey("Alt-L|Ctrl-F1", "Command-Alt-L|Command-F1"),
-        exec: function(editor) {
+        exec(editor) {
             editor.session.toggleFold(false);
         },
         multiSelectAction: "forEach",
@@ -11301,7 +11137,7 @@ ace.define("ace/commands/default_commands", ["require", "exports", "module", "ac
     }, {
         name: "unfold",
         bindKey: bindKey("Alt-Shift-L|Ctrl-Shift-F1", "Command-Alt-Shift-L|Command-Shift-F1"),
-        exec: function(editor) {
+        exec(editor) {
             editor.session.toggleFold(true);
         },
         multiSelectAction: "forEach",
@@ -11310,7 +11146,7 @@ ace.define("ace/commands/default_commands", ["require", "exports", "module", "ac
     }, {
         name: "toggleFoldWidget",
         bindKey: bindKey("F2", "F2"),
-        exec: function(editor) {
+        exec(editor) {
             editor.session.toggleFoldWidget();
         },
         multiSelectAction: "forEach",
@@ -11319,7 +11155,7 @@ ace.define("ace/commands/default_commands", ["require", "exports", "module", "ac
     }, {
         name: "toggleParentFoldWidget",
         bindKey: bindKey("Alt-F2", "Alt-F2"),
-        exec: function(editor) {
+        exec(editor) {
             editor.session.toggleFoldWidget(true);
         },
         multiSelectAction: "forEach",
@@ -11328,7 +11164,7 @@ ace.define("ace/commands/default_commands", ["require", "exports", "module", "ac
     }, {
         name: "foldall",
         bindKey: bindKey(null, "Ctrl-Command-Option-0"),
-        exec: function(editor) {
+        exec(editor) {
             editor.session.foldAll();
         },
         scrollIntoView: "center",
@@ -11336,7 +11172,7 @@ ace.define("ace/commands/default_commands", ["require", "exports", "module", "ac
     }, {
         name: "foldOther",
         bindKey: bindKey("Alt-0", "Command-Option-0"),
-        exec: function(editor) {
+        exec(editor) {
             editor.session.foldAll();
             editor.session.unfold(editor.selection.getAllRanges());
         },
@@ -11345,7 +11181,7 @@ ace.define("ace/commands/default_commands", ["require", "exports", "module", "ac
     }, {
         name: "unfoldall",
         bindKey: bindKey("Alt-Shift-0", "Command-Option-Shift-0"),
-        exec: function(editor) {
+        exec(editor) {
             editor.session.unfold();
         },
         scrollIntoView: "center",
@@ -11353,7 +11189,7 @@ ace.define("ace/commands/default_commands", ["require", "exports", "module", "ac
     }, {
         name: "findnext",
         bindKey: bindKey("Ctrl-K", "Command-G"),
-        exec: function(editor) {
+        exec(editor) {
             editor.findNext();
         },
         multiSelectAction: "forEach",
@@ -11362,7 +11198,7 @@ ace.define("ace/commands/default_commands", ["require", "exports", "module", "ac
     }, {
         name: "findprevious",
         bindKey: bindKey("Ctrl-Shift-K", "Command-Shift-G"),
-        exec: function(editor) {
+        exec(editor) {
             editor.findPrevious();
         },
         multiSelectAction: "forEach",
@@ -11371,7 +11207,7 @@ ace.define("ace/commands/default_commands", ["require", "exports", "module", "ac
     }, {
         name: "selectOrFindNext",
         bindKey: bindKey("Alt-K", "Ctrl-G"),
-        exec: function(editor) {
+        exec(editor) {
             if (editor.selection.isEmpty())
                 editor.selection.selectWord();
             else
@@ -11381,7 +11217,7 @@ ace.define("ace/commands/default_commands", ["require", "exports", "module", "ac
     }, {
         name: "selectOrFindPrevious",
         bindKey: bindKey("Alt-Shift-K", "Ctrl-Shift-G"),
-        exec: function(editor) {
+        exec(editor) {
             if (editor.selection.isEmpty())
                 editor.selection.selectWord();
             else
@@ -11391,8 +11227,8 @@ ace.define("ace/commands/default_commands", ["require", "exports", "module", "ac
     }, {
         name: "find",
         bindKey: bindKey("Ctrl-F", "Command-F"),
-        exec: function(editor) {
-            config.loadModule("ace/ext/searchbox", function(e) {
+        exec(editor) {
+            config.loadModule("ace/ext/searchbox", e => {
                 e.Search(editor)
             });
         },
@@ -11400,14 +11236,14 @@ ace.define("ace/commands/default_commands", ["require", "exports", "module", "ac
     }, {
         name: "overwrite",
         bindKey: "Insert",
-        exec: function(editor) {
+        exec(editor) {
             editor.toggleOverwrite();
         },
         readOnly: true
     }, {
         name: "selecttostart",
         bindKey: bindKey("Ctrl-Shift-Home", "Command-Shift-Up"),
-        exec: function(editor) {
+        exec(editor) {
             editor.getSelection().selectFileStart();
         },
         multiSelectAction: "forEach",
@@ -11417,7 +11253,7 @@ ace.define("ace/commands/default_commands", ["require", "exports", "module", "ac
     }, {
         name: "gotostart",
         bindKey: bindKey("Ctrl-Home", "Command-Home|Command-Up"),
-        exec: function(editor) {
+        exec(editor) {
             editor.navigateFileStart();
         },
         multiSelectAction: "forEach",
@@ -11427,7 +11263,7 @@ ace.define("ace/commands/default_commands", ["require", "exports", "module", "ac
     }, {
         name: "selectup",
         bindKey: bindKey("Shift-Up", "Shift-Up"),
-        exec: function(editor) {
+        exec(editor) {
             editor.getSelection().selectUp();
         },
         multiSelectAction: "forEach",
@@ -11436,7 +11272,7 @@ ace.define("ace/commands/default_commands", ["require", "exports", "module", "ac
     }, {
         name: "golineup",
         bindKey: bindKey("Up", "Up|Ctrl-P"),
-        exec: function(editor, args) {
+        exec(editor, args) {
             editor.navigateUp(args.times);
         },
         multiSelectAction: "forEach",
@@ -11445,7 +11281,7 @@ ace.define("ace/commands/default_commands", ["require", "exports", "module", "ac
     }, {
         name: "selecttoend",
         bindKey: bindKey("Ctrl-Shift-End", "Command-Shift-Down"),
-        exec: function(editor) {
+        exec(editor) {
             editor.getSelection().selectFileEnd();
         },
         multiSelectAction: "forEach",
@@ -11455,7 +11291,7 @@ ace.define("ace/commands/default_commands", ["require", "exports", "module", "ac
     }, {
         name: "gotoend",
         bindKey: bindKey("Ctrl-End", "Command-End|Command-Down"),
-        exec: function(editor) {
+        exec(editor) {
             editor.navigateFileEnd();
         },
         multiSelectAction: "forEach",
@@ -11465,7 +11301,7 @@ ace.define("ace/commands/default_commands", ["require", "exports", "module", "ac
     }, {
         name: "selectdown",
         bindKey: bindKey("Shift-Down", "Shift-Down"),
-        exec: function(editor) {
+        exec(editor) {
             editor.getSelection().selectDown();
         },
         multiSelectAction: "forEach",
@@ -11474,7 +11310,7 @@ ace.define("ace/commands/default_commands", ["require", "exports", "module", "ac
     }, {
         name: "golinedown",
         bindKey: bindKey("Down", "Down|Ctrl-N"),
-        exec: function(editor, args) {
+        exec(editor, args) {
             editor.navigateDown(args.times);
         },
         multiSelectAction: "forEach",
@@ -11483,7 +11319,7 @@ ace.define("ace/commands/default_commands", ["require", "exports", "module", "ac
     }, {
         name: "selectwordleft",
         bindKey: bindKey("Ctrl-Shift-Left", "Option-Shift-Left"),
-        exec: function(editor) {
+        exec(editor) {
             editor.getSelection().selectWordLeft();
         },
         multiSelectAction: "forEach",
@@ -11492,7 +11328,7 @@ ace.define("ace/commands/default_commands", ["require", "exports", "module", "ac
     }, {
         name: "gotowordleft",
         bindKey: bindKey("Ctrl-Left", "Option-Left"),
-        exec: function(editor) {
+        exec(editor) {
             editor.navigateWordLeft();
         },
         multiSelectAction: "forEach",
@@ -11501,7 +11337,7 @@ ace.define("ace/commands/default_commands", ["require", "exports", "module", "ac
     }, {
         name: "selecttolinestart",
         bindKey: bindKey("Alt-Shift-Left", "Command-Shift-Left"),
-        exec: function(editor) {
+        exec(editor) {
             editor.getSelection().selectLineStart();
         },
         multiSelectAction: "forEach",
@@ -11510,7 +11346,7 @@ ace.define("ace/commands/default_commands", ["require", "exports", "module", "ac
     }, {
         name: "gotolinestart",
         bindKey: bindKey("Alt-Left|Home", "Command-Left|Home|Ctrl-A"),
-        exec: function(editor) {
+        exec(editor) {
             editor.navigateLineStart();
         },
         multiSelectAction: "forEach",
@@ -11519,7 +11355,7 @@ ace.define("ace/commands/default_commands", ["require", "exports", "module", "ac
     }, {
         name: "selectleft",
         bindKey: bindKey("Shift-Left", "Shift-Left"),
-        exec: function(editor) {
+        exec(editor) {
             editor.getSelection().selectLeft();
         },
         multiSelectAction: "forEach",
@@ -11528,7 +11364,7 @@ ace.define("ace/commands/default_commands", ["require", "exports", "module", "ac
     }, {
         name: "gotoleft",
         bindKey: bindKey("Left", "Left|Ctrl-B"),
-        exec: function(editor, args) {
+        exec(editor, args) {
             editor.navigateLeft(args.times);
         },
         multiSelectAction: "forEach",
@@ -11537,7 +11373,7 @@ ace.define("ace/commands/default_commands", ["require", "exports", "module", "ac
     }, {
         name: "selectwordright",
         bindKey: bindKey("Ctrl-Shift-Right", "Option-Shift-Right"),
-        exec: function(editor) {
+        exec(editor) {
             editor.getSelection().selectWordRight();
         },
         multiSelectAction: "forEach",
@@ -11546,7 +11382,7 @@ ace.define("ace/commands/default_commands", ["require", "exports", "module", "ac
     }, {
         name: "gotowordright",
         bindKey: bindKey("Ctrl-Right", "Option-Right"),
-        exec: function(editor) {
+        exec(editor) {
             editor.navigateWordRight();
         },
         multiSelectAction: "forEach",
@@ -11555,7 +11391,7 @@ ace.define("ace/commands/default_commands", ["require", "exports", "module", "ac
     }, {
         name: "selecttolineend",
         bindKey: bindKey("Alt-Shift-Right", "Command-Shift-Right"),
-        exec: function(editor) {
+        exec(editor) {
             editor.getSelection().selectLineEnd();
         },
         multiSelectAction: "forEach",
@@ -11564,7 +11400,7 @@ ace.define("ace/commands/default_commands", ["require", "exports", "module", "ac
     }, {
         name: "gotolineend",
         bindKey: bindKey("Alt-Right|End", "Command-Right|End|Ctrl-E"),
-        exec: function(editor) {
+        exec(editor) {
             editor.navigateLineEnd();
         },
         multiSelectAction: "forEach",
@@ -11573,7 +11409,7 @@ ace.define("ace/commands/default_commands", ["require", "exports", "module", "ac
     }, {
         name: "selectright",
         bindKey: bindKey("Shift-Right", "Shift-Right"),
-        exec: function(editor) {
+        exec(editor) {
             editor.getSelection().selectRight();
         },
         multiSelectAction: "forEach",
@@ -11582,7 +11418,7 @@ ace.define("ace/commands/default_commands", ["require", "exports", "module", "ac
     }, {
         name: "gotoright",
         bindKey: bindKey("Right", "Right|Ctrl-F"),
-        exec: function(editor, args) {
+        exec(editor, args) {
             editor.navigateRight(args.times);
         },
         multiSelectAction: "forEach",
@@ -11591,63 +11427,63 @@ ace.define("ace/commands/default_commands", ["require", "exports", "module", "ac
     }, {
         name: "selectpagedown",
         bindKey: "Shift-PageDown",
-        exec: function(editor) {
+        exec(editor) {
             editor.selectPageDown();
         },
         readOnly: true
     }, {
         name: "pagedown",
         bindKey: bindKey(null, "Option-PageDown"),
-        exec: function(editor) {
+        exec(editor) {
             editor.scrollPageDown();
         },
         readOnly: true
     }, {
         name: "gotopagedown",
         bindKey: bindKey("PageDown", "PageDown|Ctrl-V"),
-        exec: function(editor) {
+        exec(editor) {
             editor.gotoPageDown();
         },
         readOnly: true
     }, {
         name: "selectpageup",
         bindKey: "Shift-PageUp",
-        exec: function(editor) {
+        exec(editor) {
             editor.selectPageUp();
         },
         readOnly: true
     }, {
         name: "pageup",
         bindKey: bindKey(null, "Option-PageUp"),
-        exec: function(editor) {
+        exec(editor) {
             editor.scrollPageUp();
         },
         readOnly: true
     }, {
         name: "gotopageup",
         bindKey: "PageUp",
-        exec: function(editor) {
+        exec(editor) {
             editor.gotoPageUp();
         },
         readOnly: true
     }, {
         name: "scrollup",
         bindKey: bindKey("Ctrl-Up", null),
-        exec: function(e) {
+        exec(e) {
             e.renderer.scrollBy(0, -2 * e.renderer.layerConfig.lineHeight);
         },
         readOnly: true
     }, {
         name: "scrolldown",
         bindKey: bindKey("Ctrl-Down", null),
-        exec: function(e) {
+        exec(e) {
             e.renderer.scrollBy(0, 2 * e.renderer.layerConfig.lineHeight);
         },
         readOnly: true
     }, {
         name: "selectlinestart",
         bindKey: "Shift-Home",
-        exec: function(editor) {
+        exec(editor) {
             editor.getSelection().selectLineStart();
         },
         multiSelectAction: "forEach",
@@ -11656,7 +11492,7 @@ ace.define("ace/commands/default_commands", ["require", "exports", "module", "ac
     }, {
         name: "selectlineend",
         bindKey: "Shift-End",
-        exec: function(editor) {
+        exec(editor) {
             editor.getSelection().selectLineEnd();
         },
         multiSelectAction: "forEach",
@@ -11665,21 +11501,21 @@ ace.define("ace/commands/default_commands", ["require", "exports", "module", "ac
     }, {
         name: "togglerecording",
         bindKey: bindKey("Ctrl-Alt-E", "Command-Option-E"),
-        exec: function(editor) {
+        exec(editor) {
             editor.commands.toggleRecording(editor);
         },
         readOnly: true
     }, {
         name: "replaymacro",
         bindKey: bindKey("Ctrl-Shift-E", "Command-Shift-E"),
-        exec: function(editor) {
+        exec(editor) {
             editor.commands.replay(editor);
         },
         readOnly: true
     }, {
         name: "jumptomatching",
         bindKey: bindKey("Ctrl-P", "Ctrl-P"),
-        exec: function(editor) {
+        exec(editor) {
             editor.jumpToMatching();
         },
         multiSelectAction: "forEach",
@@ -11688,7 +11524,7 @@ ace.define("ace/commands/default_commands", ["require", "exports", "module", "ac
     }, {
         name: "selecttomatching",
         bindKey: bindKey("Ctrl-Shift-P", "Ctrl-Shift-P"),
-        exec: function(editor) {
+        exec(editor) {
             editor.jumpToMatching(true);
         },
         multiSelectAction: "forEach",
@@ -11697,7 +11533,7 @@ ace.define("ace/commands/default_commands", ["require", "exports", "module", "ac
     }, {
         name: "expandToMatching",
         bindKey: bindKey("Ctrl-Shift-M", "Ctrl-Shift-M"),
-        exec: function(editor) {
+        exec(editor) {
             editor.jumpToMatching(true, true);
         },
         multiSelectAction: "forEach",
@@ -11706,17 +11542,17 @@ ace.define("ace/commands/default_commands", ["require", "exports", "module", "ac
     }, {
         name: "passKeysToBrowser",
         bindKey: bindKey(null, null),
-        exec: function() {},
+        exec() {},
         passEvent: true,
         readOnly: true
     }, {
         name: "copy",
-        exec: function(editor) {},
+        exec(editor) {},
         readOnly: true
     }, {
         name: "cut",
-        exec: function(editor) {
-            var range = editor.getSelectionRange();
+        exec(editor) {
+            const range = editor.getSelectionRange();
             editor._emit("cut", range);
 
             if (!editor.selection.isEmpty()) {
@@ -11728,14 +11564,14 @@ ace.define("ace/commands/default_commands", ["require", "exports", "module", "ac
         multiSelectAction: "forEach"
     }, {
         name: "paste",
-        exec: function(editor, args) {
+        exec(editor, args) {
             editor.$handlePaste(args);
         },
         scrollIntoView: "cursor"
     }, {
         name: "removeline",
         bindKey: bindKey("Ctrl-D", "Command-D"),
-        exec: function(editor) {
+        exec(editor) {
             editor.removeLines();
         },
         scrollIntoView: "cursor",
@@ -11743,7 +11579,7 @@ ace.define("ace/commands/default_commands", ["require", "exports", "module", "ac
     }, {
         name: "duplicateSelection",
         bindKey: bindKey("Ctrl-Shift-D", "Command-Shift-D"),
-        exec: function(editor) {
+        exec(editor) {
             editor.duplicateSelection();
         },
         scrollIntoView: "cursor",
@@ -11751,7 +11587,7 @@ ace.define("ace/commands/default_commands", ["require", "exports", "module", "ac
     }, {
         name: "sortlines",
         bindKey: bindKey("Ctrl-Alt-S", "Command-Alt-S"),
-        exec: function(editor) {
+        exec(editor) {
             editor.sortLines();
         },
         scrollIntoView: "selection",
@@ -11759,7 +11595,7 @@ ace.define("ace/commands/default_commands", ["require", "exports", "module", "ac
     }, {
         name: "togglecomment",
         bindKey: bindKey("Ctrl-/", "Command-/"),
-        exec: function(editor) {
+        exec(editor) {
             editor.toggleCommentLines();
         },
         multiSelectAction: "forEachLine",
@@ -11767,7 +11603,7 @@ ace.define("ace/commands/default_commands", ["require", "exports", "module", "ac
     }, {
         name: "toggleBlockComment",
         bindKey: bindKey("Ctrl-Shift-/", "Command-Shift-/"),
-        exec: function(editor) {
+        exec(editor) {
             editor.toggleBlockComment();
         },
         multiSelectAction: "forEach",
@@ -11775,7 +11611,7 @@ ace.define("ace/commands/default_commands", ["require", "exports", "module", "ac
     }, {
         name: "modifyNumberUp",
         bindKey: bindKey("Ctrl-Shift-Up", "Alt-Shift-Up"),
-        exec: function(editor) {
+        exec(editor) {
             editor.modifyNumber(1);
         },
         scrollIntoView: "cursor",
@@ -11783,7 +11619,7 @@ ace.define("ace/commands/default_commands", ["require", "exports", "module", "ac
     }, {
         name: "modifyNumberDown",
         bindKey: bindKey("Ctrl-Shift-Down", "Alt-Shift-Down"),
-        exec: function(editor) {
+        exec(editor) {
             editor.modifyNumber(-1);
         },
         scrollIntoView: "cursor",
@@ -11791,55 +11627,55 @@ ace.define("ace/commands/default_commands", ["require", "exports", "module", "ac
     }, {
         name: "replace",
         bindKey: bindKey("Ctrl-H", "Command-Option-F"),
-        exec: function(editor) {
-            config.loadModule("ace/ext/searchbox", function(e) {
+        exec(editor) {
+            config.loadModule("ace/ext/searchbox", e => {
                 e.Search(editor, true)
             });
         }
     }, {
         name: "undo",
         bindKey: bindKey("Ctrl-Z", "Command-Z"),
-        exec: function(editor) {
+        exec(editor) {
             editor.undo();
         }
     }, {
         name: "redo",
         bindKey: bindKey("Ctrl-Shift-Z|Ctrl-Y", "Command-Shift-Z|Command-Y"),
-        exec: function(editor) {
+        exec(editor) {
             editor.redo();
         }
     }, {
         name: "copylinesup",
         bindKey: bindKey("Alt-Shift-Up", "Command-Option-Up"),
-        exec: function(editor) {
+        exec(editor) {
             editor.copyLinesUp();
         },
         scrollIntoView: "cursor"
     }, {
         name: "movelinesup",
         bindKey: bindKey("Alt-Up", "Option-Up"),
-        exec: function(editor) {
+        exec(editor) {
             editor.moveLinesUp();
         },
         scrollIntoView: "cursor"
     }, {
         name: "copylinesdown",
         bindKey: bindKey("Alt-Shift-Down", "Command-Option-Down"),
-        exec: function(editor) {
+        exec(editor) {
             editor.copyLinesDown();
         },
         scrollIntoView: "cursor"
     }, {
         name: "movelinesdown",
         bindKey: bindKey("Alt-Down", "Option-Down"),
-        exec: function(editor) {
+        exec(editor) {
             editor.moveLinesDown();
         },
         scrollIntoView: "cursor"
     }, {
         name: "del",
         bindKey: bindKey("Delete", "Delete|Ctrl-D|Shift-Delete"),
-        exec: function(editor) {
+        exec(editor) {
             editor.remove("right");
         },
         multiSelectAction: "forEach",
@@ -11850,7 +11686,7 @@ ace.define("ace/commands/default_commands", ["require", "exports", "module", "ac
             "Shift-Backspace|Backspace",
             "Ctrl-Backspace|Shift-Backspace|Backspace|Ctrl-H"
         ),
-        exec: function(editor) {
+        exec(editor) {
             editor.remove("left");
         },
         multiSelectAction: "forEach",
@@ -11858,7 +11694,7 @@ ace.define("ace/commands/default_commands", ["require", "exports", "module", "ac
     }, {
         name: "cut_or_delete",
         bindKey: bindKey("Shift-Delete", null),
-        exec: function(editor) {
+        exec(editor) {
             if (editor.selection.isEmpty()) {
                 editor.remove("left");
             } else {
@@ -11870,7 +11706,7 @@ ace.define("ace/commands/default_commands", ["require", "exports", "module", "ac
     }, {
         name: "removetolinestart",
         bindKey: bindKey("Alt-Backspace", "Command-Backspace"),
-        exec: function(editor) {
+        exec(editor) {
             editor.removeToLineStart();
         },
         multiSelectAction: "forEach",
@@ -11878,7 +11714,7 @@ ace.define("ace/commands/default_commands", ["require", "exports", "module", "ac
     }, {
         name: "removetolineend",
         bindKey: bindKey("Alt-Delete", "Ctrl-K"),
-        exec: function(editor) {
+        exec(editor) {
             editor.removeToLineEnd();
         },
         multiSelectAction: "forEach",
@@ -11886,7 +11722,7 @@ ace.define("ace/commands/default_commands", ["require", "exports", "module", "ac
     }, {
         name: "removewordleft",
         bindKey: bindKey("Ctrl-Backspace", "Alt-Backspace|Ctrl-Alt-Backspace"),
-        exec: function(editor) {
+        exec(editor) {
             editor.removeWordLeft();
         },
         multiSelectAction: "forEach",
@@ -11894,7 +11730,7 @@ ace.define("ace/commands/default_commands", ["require", "exports", "module", "ac
     }, {
         name: "removewordright",
         bindKey: bindKey("Ctrl-Delete", "Alt-Delete"),
-        exec: function(editor) {
+        exec(editor) {
             editor.removeWordRight();
         },
         multiSelectAction: "forEach",
@@ -11902,7 +11738,7 @@ ace.define("ace/commands/default_commands", ["require", "exports", "module", "ac
     }, {
         name: "outdent",
         bindKey: bindKey("Shift-Tab", "Shift-Tab"),
-        exec: function(editor) {
+        exec(editor) {
             editor.blockOutdent();
         },
         multiSelectAction: "forEach",
@@ -11910,7 +11746,7 @@ ace.define("ace/commands/default_commands", ["require", "exports", "module", "ac
     }, {
         name: "indent",
         bindKey: bindKey("Tab", "Tab"),
-        exec: function(editor) {
+        exec(editor) {
             editor.indent();
         },
         multiSelectAction: "forEach",
@@ -11918,7 +11754,7 @@ ace.define("ace/commands/default_commands", ["require", "exports", "module", "ac
     }, {
         name: "blockoutdent",
         bindKey: bindKey("Ctrl-[", "Ctrl-["),
-        exec: function(editor) {
+        exec(editor) {
             editor.blockOutdent();
         },
         multiSelectAction: "forEachLine",
@@ -11926,21 +11762,21 @@ ace.define("ace/commands/default_commands", ["require", "exports", "module", "ac
     }, {
         name: "blockindent",
         bindKey: bindKey("Ctrl-]", "Ctrl-]"),
-        exec: function(editor) {
+        exec(editor) {
             editor.blockIndent();
         },
         multiSelectAction: "forEachLine",
         scrollIntoView: "selectionPart"
     }, {
         name: "insertstring",
-        exec: function(editor, str) {
+        exec(editor, str) {
             editor.insert(str);
         },
         multiSelectAction: "forEach",
         scrollIntoView: "cursor"
     }, {
         name: "inserttext",
-        exec: function(editor, args) {
+        exec(editor, args) {
             editor.insert(lang.stringRepeat(args.text || "", args.times || 1));
         },
         multiSelectAction: "forEach",
@@ -11948,7 +11784,7 @@ ace.define("ace/commands/default_commands", ["require", "exports", "module", "ac
     }, {
         name: "splitline",
         bindKey: bindKey(null, "Ctrl-O"),
-        exec: function(editor) {
+        exec(editor) {
             editor.splitLine();
         },
         multiSelectAction: "forEach",
@@ -11956,17 +11792,17 @@ ace.define("ace/commands/default_commands", ["require", "exports", "module", "ac
     }, {
         name: "transposeletters",
         bindKey: bindKey("Ctrl-T", "Ctrl-T"),
-        exec: function(editor) {
+        exec(editor) {
             editor.transposeLetters();
         },
-        multiSelectAction: function(editor) {
+        multiSelectAction(editor) {
             editor.transposeSelections(1);
         },
         scrollIntoView: "cursor"
     }, {
         name: "touppercase",
         bindKey: bindKey("Ctrl-U", "Ctrl-U"),
-        exec: function(editor) {
+        exec(editor) {
             editor.toUpperCase();
         },
         multiSelectAction: "forEach",
@@ -11974,7 +11810,7 @@ ace.define("ace/commands/default_commands", ["require", "exports", "module", "ac
     }, {
         name: "tolowercase",
         bindKey: bindKey("Ctrl-Shift-U", "Ctrl-Shift-U"),
-        exec: function(editor) {
+        exec(editor) {
             editor.toLowerCase();
         },
         multiSelectAction: "forEach",
@@ -11982,8 +11818,8 @@ ace.define("ace/commands/default_commands", ["require", "exports", "module", "ac
     }, {
         name: "expandtoline",
         bindKey: bindKey("Ctrl-Shift-L", "Command-Shift-L"),
-        exec: function(editor) {
-            var range = editor.selection.getRange();
+        exec(editor) {
+            const range = editor.selection.getRange();
 
             range.start.column = range.end.column = 0;
             range.end.row++;
@@ -11995,19 +11831,19 @@ ace.define("ace/commands/default_commands", ["require", "exports", "module", "ac
     }, {
         name: "joinlines",
         bindKey: bindKey(null, null),
-        exec: function(editor) {
-            var isBackwards = editor.selection.isBackwards();
-            var selectionStart = isBackwards ? editor.selection.getSelectionLead() : editor.selection.getSelectionAnchor();
-            var selectionEnd = isBackwards ? editor.selection.getSelectionAnchor() : editor.selection.getSelectionLead();
-            var firstLineEndCol = editor.session.doc.getLine(selectionStart.row).length;
-            var selectedText = editor.session.doc.getTextRange(editor.selection.getRange());
-            var selectedCount = selectedText.replace(/\n\s*/, " ").length;
-            var insertLine = editor.session.doc.getLine(selectionStart.row);
+        exec(editor) {
+            const isBackwards = editor.selection.isBackwards();
+            const selectionStart = isBackwards ? editor.selection.getSelectionLead() : editor.selection.getSelectionAnchor();
+            const selectionEnd = isBackwards ? editor.selection.getSelectionAnchor() : editor.selection.getSelectionLead();
+            let firstLineEndCol = editor.session.doc.getLine(selectionStart.row).length;
+            const selectedText = editor.session.doc.getTextRange(editor.selection.getRange());
+            const selectedCount = selectedText.replace(/\n\s*/, " ").length;
+            let insertLine = editor.session.doc.getLine(selectionStart.row);
 
-            for (var i = selectionStart.row + 1; i <= selectionEnd.row + 1; i++) {
-                var curLine = lang.stringTrimLeft(lang.stringTrimRight(editor.session.doc.getLine(i)));
+            for (let i = selectionStart.row + 1; i <= selectionEnd.row + 1; i++) {
+                let curLine = lang.stringTrimLeft(lang.stringTrimRight(editor.session.doc.getLine(i)));
                 if (curLine.length !== 0) {
-                    curLine = " " + curLine;
+                    curLine = ` ${curLine}`;
                 }
                 insertLine += curLine;
             }
@@ -12032,11 +11868,11 @@ ace.define("ace/commands/default_commands", ["require", "exports", "module", "ac
     }, {
         name: "invertSelection",
         bindKey: bindKey(null, null),
-        exec: function(editor) {
-            var endRow = editor.session.doc.getLength() - 1;
-            var endCol = editor.session.doc.getLine(endRow).length;
-            var ranges = editor.selection.rangeList.ranges;
-            var newRanges = [];
+        exec(editor) {
+            const endRow = editor.session.doc.getLength() - 1;
+            const endCol = editor.session.doc.getLine(endRow).length;
+            let ranges = editor.selection.rangeList.ranges;
+            const newRanges = [];
             if (ranges.length < 1) {
                 ranges = [editor.selection.getRange()];
             }
@@ -12067,32 +11903,29 @@ ace.define("ace/commands/default_commands", ["require", "exports", "module", "ac
         readOnly: true,
         scrollIntoView: "none"
     }];
-
 });
 
-ace.define("ace/editor", ["require", "exports", "module", "ace/lib/fixoldbrowsers", "ace/lib/oop", "ace/lib/dom", "ace/lib/lang", "ace/lib/useragent", "ace/keyboard/textinput", "ace/mouse/mouse_handler", "ace/mouse/fold_handler", "ace/keyboard/keybinding", "ace/edit_session", "ace/search", "ace/range", "ace/lib/event_emitter", "ace/commands/command_manager", "ace/commands/default_commands", "ace/config", "ace/token_iterator"], function(require, exports, module) {
-    "use strict";
-
+ace.define("ace/editor", ["require", "exports", "module", "ace/lib/fixoldbrowsers", "ace/lib/oop", "ace/lib/dom", "ace/lib/lang", "ace/lib/useragent", "ace/keyboard/textinput", "ace/mouse/mouse_handler", "ace/mouse/fold_handler", "ace/keyboard/keybinding", "ace/edit_session", "ace/search", "ace/range", "ace/lib/event_emitter", "ace/commands/command_manager", "ace/commands/default_commands", "ace/config", "ace/token_iterator"], (require, exports, module) => {
     require("./lib/fixoldbrowsers");
 
-    var oop = require("./lib/oop");
-    var dom = require("./lib/dom");
-    var lang = require("./lib/lang");
-    var useragent = require("./lib/useragent");
-    var TextInput = require("./keyboard/textinput").TextInput;
-    var MouseHandler = require("./mouse/mouse_handler").MouseHandler;
-    var FoldHandler = require("./mouse/fold_handler").FoldHandler;
-    var KeyBinding = require("./keyboard/keybinding").KeyBinding;
-    var EditSession = require("./edit_session").EditSession;
-    var Search = require("./search").Search;
-    var Range = require("./range").Range;
-    var EventEmitter = require("./lib/event_emitter").EventEmitter;
-    var CommandManager = require("./commands/command_manager").CommandManager;
-    var defaultCommands = require("./commands/default_commands").commands;
-    var config = require("./config");
-    var TokenIterator = require("./token_iterator").TokenIterator;
-    var Editor = function(renderer, session) {
-        var container = renderer.getContainerElement();
+    const oop = require("./lib/oop");
+    const dom = require("./lib/dom");
+    const lang = require("./lib/lang");
+    const useragent = require("./lib/useragent");
+    const TextInput = require("./keyboard/textinput").TextInput;
+    const MouseHandler = require("./mouse/mouse_handler").MouseHandler;
+    const FoldHandler = require("./mouse/fold_handler").FoldHandler;
+    const KeyBinding = require("./keyboard/keybinding").KeyBinding;
+    const EditSession = require("./edit_session").EditSession;
+    const Search = require("./search").Search;
+    const Range = require("./range").Range;
+    const EventEmitter = require("./lib/event_emitter").EventEmitter;
+    const CommandManager = require("./commands/command_manager").CommandManager;
+    const defaultCommands = require("./commands/default_commands").commands;
+    const config = require("./config");
+    const TokenIterator = require("./token_iterator").TokenIterator;
+    const Editor = function(renderer, session) {
+        const container = renderer.getContainerElement();
         this.container = container;
         this.renderer = renderer;
 
@@ -12113,13 +11946,13 @@ ace.define("ace/editor", ["require", "exports", "module", "ace/lib/fixoldbrowser
 
         this.$initOperationListeners();
 
-        this._$emitInputEvent = lang.delayedCall(function() {
+        this._$emitInputEvent = lang.delayedCall(() => {
             this._signal("input", {});
             if (this.session && this.session.bgTokenizer)
                 this.session.bgTokenizer.scheduleStart();
-        }.bind(this));
+        });
 
-        this.on("change", function(_, _self) {
+        this.on("change", (_, _self) => {
             _self._$emitInputEvent.schedule(31);
         });
 
@@ -12143,15 +11976,15 @@ ace.define("ace/editor", ["require", "exports", "module", "ace/lib/fixoldbrowser
 
             this.$opResetTimer = lang.delayedCall(this.endOperation.bind(this));
 
-            this.on("change", function() {
+            this.on("change", () => {
                 this.curOp || this.startOperation();
                 this.curOp.docChanged = true;
-            }.bind(this), true);
+            }, true);
 
-            this.on("changeSelection", function() {
+            this.on("changeSelection", () => {
                 this.curOp || this.startOperation();
                 this.curOp.selectionChanged = true;
-            }.bind(this), true);
+            }, true);
         };
 
         this.curOp = null;
@@ -12182,10 +12015,10 @@ ace.define("ace/editor", ["require", "exports", "module", "ace/lib/fixoldbrowser
                 if (e && e.returnValue === false)
                     return this.curOp = null;
                 this._signal("beforeEndOperation");
-                var command = this.curOp.command;
+                const command = this.curOp.command;
                 if (command.name && this.$blockScrolling > 0)
                     this.$blockScrolling--;
-                var scrollIntoView = command && command.scrollIntoView;
+                let scrollIntoView = command && command.scrollIntoView;
                 if (scrollIntoView) {
                     switch (scrollIntoView) {
                         case "center-animate":
@@ -12198,8 +12031,8 @@ ace.define("ace/editor", ["require", "exports", "module", "ace/lib/fixoldbrowser
                             this.renderer.scrollCursorIntoView();
                             break;
                         case "selectionPart":
-                            var range = this.selection.getRange();
-                            var config = this.renderer.layerConfig;
+                            const range = this.selection.getRange();
+                            const config = this.renderer.layerConfig;
                             if (range.start.row >= config.lastRow || range.end.row <= config.firstRow) {
                                 this.renderer.scrollSelectionIntoView(this.selection.anchor, this.selection.lead);
                             }
@@ -12220,11 +12053,11 @@ ace.define("ace/editor", ["require", "exports", "module", "ace/lib/fixoldbrowser
             if (!this.$mergeUndoDeltas)
                 return;
 
-            var prev = this.prevOp;
-            var mergeableCommands = this.$mergeableCommands;
-            var shouldMerge = prev.command && (e.command.name == prev.command.name);
+            const prev = this.prevOp;
+            const mergeableCommands = this.$mergeableCommands;
+            let shouldMerge = prev.command && (e.command.name == prev.command.name);
             if (e.command.name == "insertstring") {
-                var text = e.args;
+                const text = e.args;
                 if (this.mergeNextCommand === undefined)
                     this.mergeNextCommand = true;
 
@@ -12233,7 +12066,7 @@ ace.define("ace/editor", ["require", "exports", "module", "ace/lib/fixoldbrowser
 
                 this.mergeNextCommand = true;
             } else {
-                shouldMerge = shouldMerge && mergeableCommands.indexOf(e.command.name) !== -1; // the command is mergeable
+                shouldMerge = shouldMerge && mergeableCommands.includes(e.command.name); // the command is mergeable
             }
 
             if (
@@ -12244,14 +12077,14 @@ ace.define("ace/editor", ["require", "exports", "module", "ace/lib/fixoldbrowser
 
             if (shouldMerge)
                 this.session.mergeUndoDeltas = true;
-            else if (mergeableCommands.indexOf(e.command.name) !== -1)
+            else if (mergeableCommands.includes(e.command.name))
                 this.sequenceStartTime = Date.now();
         };
         this.setKeyboardHandler = function(keyboardHandler, cb) {
             if (keyboardHandler && typeof keyboardHandler === "string") {
                 this.$keybindingId = keyboardHandler;
-                var _self = this;
-                config.loadModule(["keybinding", keyboardHandler], function(module) {
+                const _self = this;
+                config.loadModule(["keybinding", keyboardHandler], module => {
                     if (_self.$keybindingId == keyboardHandler)
                         _self.keyBinding.setKeyboardHandler(module && module.handler);
                     cb && cb();
@@ -12271,7 +12104,7 @@ ace.define("ace/editor", ["require", "exports", "module", "ace/lib/fixoldbrowser
             if (this.curOp) this.endOperation();
             this.curOp = {};
 
-            var oldSession = this.session;
+            const oldSession = this.session;
             if (oldSession) {
                 this.session.off("change", this.$onDocumentChange);
                 this.session.off("changeMode", this.$onChangeMode);
@@ -12288,7 +12121,7 @@ ace.define("ace/editor", ["require", "exports", "module", "ace/lib/fixoldbrowser
                 this.session.off("changeScrollTop", this.$onScrollTopChange);
                 this.session.off("changeScrollLeft", this.$onScrollLeftChange);
 
-                var selection = this.session.getSelection();
+                const selection = this.session.getSelection();
                 selection.off("changeCursor", this.$onCursorChange);
                 selection.off("changeSelection", this.$onSelectionChange);
             }
@@ -12365,8 +12198,8 @@ ace.define("ace/editor", ["require", "exports", "module", "ace/lib/fixoldbrowser
             }
 
             this._signal("changeSession", {
-                session: session,
-                oldSession: oldSession
+                session,
+                oldSession
             });
 
             this.curOp = null;
@@ -12431,13 +12264,13 @@ ace.define("ace/editor", ["require", "exports", "module", "ace/lib/fixoldbrowser
             if (this.$highlightPending) {
                 return;
             }
-            var self = this;
+            const self = this;
             this.$highlightPending = true;
-            setTimeout(function() {
+            setTimeout(() => {
                 self.$highlightPending = false;
-                var session = self.session;
+                const session = self.session;
                 if (!session || !session.bgTokenizer) return;
-                var pos = session.findMatchingBracket(self.getCursorPosition());
+                const pos = session.findMatchingBracket(self.getCursorPosition());
                 if (pos) {
                     var range = new Range(pos.row, pos.column, pos.row, pos.column + 1);
                 } else if (session.$mode.getMatching) {
@@ -12450,17 +12283,17 @@ ace.define("ace/editor", ["require", "exports", "module", "ace/lib/fixoldbrowser
         this.$highlightTags = function() {
             if (this.$highlightTagPending)
                 return;
-            var self = this;
+            const self = this;
             this.$highlightTagPending = true;
-            setTimeout(function() {
+            setTimeout(() => {
                 self.$highlightTagPending = false;
 
-                var session = self.session;
+                const session = self.session;
                 if (!session || !session.bgTokenizer) return;
 
-                var pos = self.getCursorPosition();
-                var iterator = new TokenIterator(self.session, pos.row, pos.column);
-                var token = iterator.getCurrentToken();
+                const pos = self.getCursorPosition();
+                const iterator = new TokenIterator(self.session, pos.row, pos.column);
+                let token = iterator.getCurrentToken();
 
                 if (!token || !/\b(?:tag-open|tag-name)/.test(token.type)) {
                     session.removeMarker(session.$tagHighlight);
@@ -12468,22 +12301,22 @@ ace.define("ace/editor", ["require", "exports", "module", "ace/lib/fixoldbrowser
                     return;
                 }
 
-                if (token.type.indexOf("tag-open") != -1) {
+                if (token.type.includes("tag-open")) {
                     token = iterator.stepForward();
                     if (!token)
                         return;
                 }
 
-                var tag = token.value;
-                var depth = 0;
-                var prevToken = iterator.stepBackward();
+                const tag = token.value;
+                let depth = 0;
+                let prevToken = iterator.stepBackward();
 
                 if (prevToken.value == '<') {
                     do {
                         prevToken = token;
                         token = iterator.stepForward();
 
-                        if (token && token.value === tag && token.type.indexOf('tag-name') !== -1) {
+                        if (token && token.value === tag && token.type.includes('tag-name')) {
                             if (prevToken.value === '<') {
                                 depth++;
                             } else if (prevToken.value === '</') {
@@ -12497,7 +12330,7 @@ ace.define("ace/editor", ["require", "exports", "module", "ace/lib/fixoldbrowser
                         token = prevToken;
                         prevToken = iterator.stepBackward();
 
-                        if (token && token.value === tag && token.type.indexOf('tag-name') !== -1) {
+                        if (token && token.value === tag && token.type.includes('tag-name')) {
                             if (prevToken.value === '<') {
                                 depth++;
                             } else if (prevToken.value === '</') {
@@ -12514,9 +12347,9 @@ ace.define("ace/editor", ["require", "exports", "module", "ace/lib/fixoldbrowser
                     return;
                 }
 
-                var row = iterator.getCurrentTokenRow();
-                var column = iterator.getCurrentTokenColumn();
-                var range = new Range(row, column, row, column + token.value.length);
+                const row = iterator.getCurrentTokenRow();
+                const column = iterator.getCurrentTokenColumn();
+                const range = new Range(row, column, row, column + token.value.length);
                 if (session.$tagHighlight && range.compareRange(session.$backMarkers[session.$tagHighlight].range) !== 0) {
                     session.removeMarker(session.$tagHighlight);
                     session.$tagHighlight = null;
@@ -12527,8 +12360,8 @@ ace.define("ace/editor", ["require", "exports", "module", "ace/lib/fixoldbrowser
             }, 50);
         };
         this.focus = function() {
-            var _self = this;
-            setTimeout(function() {
+            const _self = this;
+            setTimeout(() => {
                 _self.textInput.focus();
             });
             this.textInput.focus();
@@ -12560,8 +12393,8 @@ ace.define("ace/editor", ["require", "exports", "module", "ace/lib/fixoldbrowser
             this.renderer.updateCursor();
         };
         this.onDocumentChange = function(delta) {
-            var wrap = this.session.$useWrapMode;
-            var lastRow = (delta.start.row == delta.end.row ? delta.end.row : Infinity);
+            const wrap = this.session.$useWrapMode;
+            const lastRow = (delta.start.row == delta.end.row ? delta.end.row : Infinity);
             this.renderer.updateLines(delta.start.row, lastRow, wrap);
 
             this._signal("change", delta);
@@ -12570,7 +12403,7 @@ ace.define("ace/editor", ["require", "exports", "module", "ace/lib/fixoldbrowser
         };
 
         this.onTokenizerUpdate = function(e) {
-            var rows = e.data;
+            const rows = e.data;
             this.renderer.updateLines(rows.first, rows.last);
         };
 
@@ -12600,9 +12433,9 @@ ace.define("ace/editor", ["require", "exports", "module", "ace/lib/fixoldbrowser
         };
 
         this.$updateHighlightActiveLine = function() {
-            var session = this.getSession();
+            const session = this.getSession();
 
-            var highlight;
+            let highlight;
             if (this.$highlightActiveLine) {
                 if ((this.$selectionStyle != "line" || !this.selection.isMultiLine()))
                     highlight = this.getCursorPosition();
@@ -12614,7 +12447,7 @@ ace.define("ace/editor", ["require", "exports", "module", "ace/lib/fixoldbrowser
                 session.removeMarker(session.$highlightLineMarker.id);
                 session.$highlightLineMarker = null;
             } else if (!session.$highlightLineMarker && highlight) {
-                var range = new Range(highlight.row, highlight.column, highlight.row, Infinity);
+                const range = new Range(highlight.row, highlight.column, highlight.row, Infinity);
                 range.id = session.addMarker(range, "ace_active-line", "screenLine");
                 session.$highlightLineMarker = range;
             } else if (highlight) {
@@ -12626,7 +12459,7 @@ ace.define("ace/editor", ["require", "exports", "module", "ace/lib/fixoldbrowser
         };
 
         this.onSelectionChange = function(e) {
-            var session = this.session;
+            const session = this.session;
 
             if (session.$selectionMarker) {
                 session.removeMarker(session.$selectionMarker);
@@ -12634,31 +12467,31 @@ ace.define("ace/editor", ["require", "exports", "module", "ace/lib/fixoldbrowser
             session.$selectionMarker = null;
 
             if (!this.selection.isEmpty()) {
-                var range = this.selection.getRange();
-                var style = this.getSelectionStyle();
+                const range = this.selection.getRange();
+                const style = this.getSelectionStyle();
                 session.$selectionMarker = session.addMarker(range, "ace_selection", style);
             } else {
                 this.$updateHighlightActiveLine();
             }
 
-            var re = this.$highlightSelectedWord && this.$getSelectionHighLightRegexp();
+            const re = this.$highlightSelectedWord && this.$getSelectionHighLightRegexp();
             this.session.highlight(re);
 
             this._signal("changeSelection");
         };
 
         this.$getSelectionHighLightRegexp = function() {
-            var session = this.session;
+            const session = this.session;
 
-            var selection = this.getSelectionRange();
+            const selection = this.getSelectionRange();
             if (selection.isEmpty() || selection.isMultiLine())
                 return;
 
-            var startOuter = selection.start.column - 1;
-            var endOuter = selection.end.column + 1;
-            var line = session.getLine(selection.start.row);
-            var lineCols = line.length;
-            var needle = line.substring(Math.max(startOuter, 0),
+            const startOuter = selection.start.column - 1;
+            const endOuter = selection.end.column + 1;
+            const line = session.getLine(selection.start.row);
+            const lineCols = line.length;
+            let needle = line.substring(Math.max(startOuter, 0),
                 Math.min(endOuter, lineCols));
             if ((startOuter >= 0 && /^[\w\d]/.test(needle)) ||
                 (endOuter <= lineCols && /[\w\d]$/.test(needle)))
@@ -12668,10 +12501,10 @@ ace.define("ace/editor", ["require", "exports", "module", "ace/lib/fixoldbrowser
             if (!/^[\w\d]+$/.test(needle))
                 return;
 
-            var re = this.$search.$assembleRegExp({
+            const re = this.$search.$assembleRegExp({
                 wholeWord: true,
                 caseSensitive: true,
-                needle: needle
+                needle
             });
 
             return re;
@@ -12719,7 +12552,7 @@ ace.define("ace/editor", ["require", "exports", "module", "ace/lib/fixoldbrowser
             return this.session.getTextRange(this.getSelectionRange());
         };
         this.getCopyText = function() {
-            var text = this.getSelectedText();
+            const text = this.getSelectedText();
             this._signal("copy", text);
             return text;
         };
@@ -12730,9 +12563,9 @@ ace.define("ace/editor", ["require", "exports", "module", "ace/lib/fixoldbrowser
             this.commands.exec("cut", this);
         };
         this.onPaste = function(text, event) {
-            var e = {
-                text: text,
-                event: event
+            const e = {
+                text,
+                event
             };
             this.commands.exec("paste", this, e);
         };
@@ -12743,18 +12576,18 @@ ace.define("ace/editor", ["require", "exports", "module", "ace/lib/fixoldbrowser
                     text: e
                 };
             this._signal("paste", e);
-            var text = e.text;
+            const text = e.text;
             if (!this.inMultiSelectMode || this.inVirtualSelectionMode) {
                 this.insert(text);
             } else {
-                var lines = text.split(/\r\n|\r|\n/);
-                var ranges = this.selection.rangeList.ranges;
+                const lines = text.split(/\r\n|\r|\n/);
+                const ranges = this.selection.rangeList.ranges;
 
                 if (lines.length > ranges.length || lines.length < 2 || !lines[1])
                     return this.commands.exec("insertstring", this, text);
 
-                for (var i = ranges.length; i--;) {
-                    var range = ranges[i];
+                for (let i = ranges.length; i--;) {
+                    const range = ranges[i];
                     if (!range.isEmpty())
                         this.session.remove(range);
 
@@ -12767,9 +12600,9 @@ ace.define("ace/editor", ["require", "exports", "module", "ace/lib/fixoldbrowser
             return this.commands.exec(command, this, args);
         };
         this.insert = function(text, pasted) {
-            var session = this.session;
-            var mode = session.getMode();
-            var cursor = this.getCursorPosition();
+            const session = this.session;
+            const mode = session.getMode();
+            let cursor = this.getCursorPosition();
 
             if (this.getBehavioursEnabled() && !pasted) {
                 var transform = mode.transformAction(session.getState(cursor.row), 'insertion', this, session, text);
@@ -12798,17 +12631,17 @@ ace.define("ace/editor", ["require", "exports", "module", "ace/lib/fixoldbrowser
             if (text == "\n" || text == "\r\n") {
                 var line = session.getLine(cursor.row);
                 if (cursor.column > line.search(/\S|$/)) {
-                    var d = line.substr(cursor.column).search(/\S|$/);
+                    const d = line.substr(cursor.column).search(/\S|$/);
                     session.doc.removeInLine(cursor.row, cursor.column, cursor.column + d);
                 }
             }
             this.clearSelection();
 
-            var start = cursor.column;
-            var lineState = session.getState(cursor.row);
+            const start = cursor.column;
+            const lineState = session.getState(cursor.row);
             var line = session.getLine(cursor.row);
-            var shouldOutdent = mode.checkOutdent(lineState, line, text);
-            var end = session.insert(cursor, text);
+            const shouldOutdent = mode.checkOutdent(lineState, line, text);
+            const end = session.insert(cursor, text);
 
             if (transform && transform.selection) {
                 if (transform.selection.length == 2) { // Transform relative to the current column
@@ -12825,7 +12658,7 @@ ace.define("ace/editor", ["require", "exports", "module", "ace/lib/fixoldbrowser
             }
 
             if (session.getDocument().isNewLine(text)) {
-                var lineIndent = mode.getNextLineIndent(lineState, line.slice(0, cursor.column), session.getTabString());
+                const lineIndent = mode.getNextLineIndent(lineState, line.slice(0, cursor.column), session.getTabString());
 
                 session.insert({
                     row: cursor.row + 1,
@@ -12964,16 +12797,16 @@ ace.define("ace/editor", ["require", "exports", "module", "ace/lib/fixoldbrowser
                     this.selection.selectRight();
             }
 
-            var range = this.getSelectionRange();
+            let range = this.getSelectionRange();
             if (this.getBehavioursEnabled()) {
-                var session = this.session;
-                var state = session.getState(range.start.row);
-                var new_range = session.getMode().transformAction(state, 'deletion', this, session, range);
+                const session = this.session;
+                const state = session.getState(range.start.row);
+                const new_range = session.getMode().transformAction(state, 'deletion', this, session, range);
 
                 if (range.end.column === 0) {
-                    var text = session.getTextRange(range);
+                    const text = session.getTextRange(range);
                     if (text[text.length - 1] == "\n") {
-                        var line = session.getLine(range.end.row);
+                        const line = session.getLine(range.end.row);
                         if (/^\s+$/.test(line)) {
                             range.end.column = line.length;
                         }
@@ -13011,7 +12844,7 @@ ace.define("ace/editor", ["require", "exports", "module", "ace/lib/fixoldbrowser
             if (this.selection.isEmpty())
                 this.selection.selectLineEnd();
 
-            var range = this.getSelectionRange();
+            const range = this.getSelectionRange();
             if (range.start.column == range.end.column && range.start.row == range.end.row) {
                 range.end.column = 0;
                 range.end.row++;
@@ -13026,7 +12859,7 @@ ace.define("ace/editor", ["require", "exports", "module", "ace/lib/fixoldbrowser
                 this.clearSelection();
             }
 
-            var cursor = this.getCursorPosition();
+            const cursor = this.getCursorPosition();
             this.insert("\n");
             this.moveCursorToPosition(cursor);
         };
@@ -13035,13 +12868,14 @@ ace.define("ace/editor", ["require", "exports", "module", "ace/lib/fixoldbrowser
                 return;
             }
 
-            var cursor = this.getCursorPosition();
-            var column = cursor.column;
+            const cursor = this.getCursorPosition();
+            const column = cursor.column;
             if (column === 0)
                 return;
 
-            var line = this.session.getLine(cursor.row);
-            var swap, range;
+            const line = this.session.getLine(cursor.row);
+            let swap;
+            let range;
             if (column < line.length) {
                 swap = line.charAt(column) + line.charAt(column - 1);
                 range = new Range(cursor.row, column - 1, cursor.row, column + 1);
@@ -13052,37 +12886,37 @@ ace.define("ace/editor", ["require", "exports", "module", "ace/lib/fixoldbrowser
             this.session.replace(range, swap);
         };
         this.toLowerCase = function() {
-            var originalRange = this.getSelectionRange();
+            const originalRange = this.getSelectionRange();
             if (this.selection.isEmpty()) {
                 this.selection.selectWord();
             }
 
-            var range = this.getSelectionRange();
-            var text = this.session.getTextRange(range);
+            const range = this.getSelectionRange();
+            const text = this.session.getTextRange(range);
             this.session.replace(range, text.toLowerCase());
             this.selection.setSelectionRange(originalRange);
         };
         this.toUpperCase = function() {
-            var originalRange = this.getSelectionRange();
+            const originalRange = this.getSelectionRange();
             if (this.selection.isEmpty()) {
                 this.selection.selectWord();
             }
 
-            var range = this.getSelectionRange();
-            var text = this.session.getTextRange(range);
+            const range = this.getSelectionRange();
+            const text = this.session.getTextRange(range);
             this.session.replace(range, text.toUpperCase());
             this.selection.setSelectionRange(originalRange);
         };
         this.indent = function() {
-            var session = this.session;
-            var range = this.getSelectionRange();
+            const session = this.session;
+            const range = this.getSelectionRange();
 
             if (range.start.row < range.end.row) {
                 var rows = this.$getSelectedRows();
                 session.indentRows(rows.first, rows.last, "\t");
                 return;
             } else if (range.start.column < range.end.column) {
-                var text = session.getTextRange(range);
+                const text = session.getTextRange(range);
                 if (!/^\s+$/.test(text)) {
                     var rows = this.$getSelectedRows();
                     session.indentRows(rows.first, rows.last, "\t");
@@ -13090,10 +12924,10 @@ ace.define("ace/editor", ["require", "exports", "module", "ace/lib/fixoldbrowser
                 }
             }
 
-            var line = session.getLine(range.start.row);
-            var position = range.start;
-            var size = session.getTabSize();
-            var column = session.documentToScreenColumn(position.row, position.column);
+            const line = session.getLine(range.start.row);
+            const position = range.start;
+            const size = session.getTabSize();
+            const column = session.documentToScreenColumn(position.row, position.column);
 
             if (this.session.getUseSoftTabs()) {
                 var count = (size - column % size);
@@ -13110,30 +12944,30 @@ ace.define("ace/editor", ["require", "exports", "module", "ace/lib/fixoldbrowser
             return this.insert(indentString);
         };
         this.blockIndent = function() {
-            var rows = this.$getSelectedRows();
+            const rows = this.$getSelectedRows();
             this.session.indentRows(rows.first, rows.last, "\t");
         };
         this.blockOutdent = function() {
-            var selection = this.session.getSelection();
+            const selection = this.session.getSelection();
             this.session.outdentRows(selection.getRange());
         };
         this.sortLines = function() {
-            var rows = this.$getSelectedRows();
-            var session = this.session;
+            const rows = this.$getSelectedRows();
+            const session = this.session;
 
-            var lines = [];
+            const lines = [];
             for (i = rows.first; i <= rows.last; i++)
                 lines.push(session.getLine(i));
 
-            lines.sort(function(a, b) {
+            lines.sort((a, b) => {
                 if (a.toLowerCase() < b.toLowerCase()) return -1;
                 if (a.toLowerCase() > b.toLowerCase()) return 1;
                 return 0;
             });
 
-            var deleteRange = new Range(0, 0, 0, 0);
+            const deleteRange = new Range(0, 0, 0, 0);
             for (var i = rows.first; i <= rows.last; i++) {
-                var line = session.getLine(i);
+                const line = session.getLine(i);
                 deleteRange.start.row = i;
                 deleteRange.end.row = i;
                 deleteRange.end.column = line.length;
@@ -13141,26 +12975,26 @@ ace.define("ace/editor", ["require", "exports", "module", "ace/lib/fixoldbrowser
             }
         };
         this.toggleCommentLines = function() {
-            var state = this.session.getState(this.getCursorPosition().row);
-            var rows = this.$getSelectedRows();
+            const state = this.session.getState(this.getCursorPosition().row);
+            const rows = this.$getSelectedRows();
             this.session.getMode().toggleCommentLines(state, this.session, rows.first, rows.last);
         };
 
         this.toggleBlockComment = function() {
-            var cursor = this.getCursorPosition();
-            var state = this.session.getState(cursor.row);
-            var range = this.getSelectionRange();
+            const cursor = this.getCursorPosition();
+            const state = this.session.getState(cursor.row);
+            const range = this.getSelectionRange();
             this.session.getMode().toggleBlockComment(state, this.session, range, cursor);
         };
         this.getNumberAt = function(row, column) {
-            var _numberRx = /[\-]?[0-9]+(?:\.[0-9]+)?/g;
+            const _numberRx = /[\-]?[0-9]+(?:\.[0-9]+)?/g;
             _numberRx.lastIndex = 0;
 
-            var s = this.session.getLine(row);
+            const s = this.session.getLine(row);
             while (_numberRx.lastIndex < column) {
-                var m = _numberRx.exec(s);
+                const m = _numberRx.exec(s);
                 if (m.index <= column && m.index + m[0].length >= column) {
-                    var number = {
+                    const number = {
                         value: m[0],
                         start: m.index,
                         end: m.index + m[0].length
@@ -13171,31 +13005,31 @@ ace.define("ace/editor", ["require", "exports", "module", "ace/lib/fixoldbrowser
             return null;
         };
         this.modifyNumber = function(amount) {
-            var row = this.selection.getCursor().row;
-            var column = this.selection.getCursor().column;
-            var charRange = new Range(row, column - 1, row, column);
+            const row = this.selection.getCursor().row;
+            const column = this.selection.getCursor().column;
+            const charRange = new Range(row, column - 1, row, column);
 
-            var c = this.session.getTextRange(charRange);
+            const c = this.session.getTextRange(charRange);
             if (!isNaN(parseFloat(c)) && isFinite(c)) {
-                var nr = this.getNumberAt(row, column);
+                const nr = this.getNumberAt(row, column);
                 if (nr) {
-                    var fp = nr.value.indexOf(".") >= 0 ? nr.start + nr.value.indexOf(".") + 1 : nr.end;
-                    var decimals = nr.start + nr.value.length - fp;
+                    const fp = nr.value.includes(".") ? nr.start + nr.value.indexOf(".") + 1 : nr.end;
+                    const decimals = nr.start + nr.value.length - fp;
 
-                    var t = parseFloat(nr.value);
-                    t *= Math.pow(10, decimals);
+                    let t = parseFloat(nr.value);
+                    t *= 10 ** decimals;
 
 
                     if (fp !== nr.end && column < fp) {
-                        amount *= Math.pow(10, nr.end - column - 1);
+                        amount *= 10 ** (nr.end - column - 1);
                     } else {
-                        amount *= Math.pow(10, nr.end - column);
+                        amount *= 10 ** (nr.end - column);
                     }
 
                     t += amount;
-                    t /= Math.pow(10, decimals);
-                    var nnr = t.toFixed(decimals);
-                    var replaceRange = new Range(row, nr.start, row, nr.end);
+                    t /= 10 ** decimals;
+                    const nnr = t.toFixed(decimals);
+                    const replaceRange = new Range(row, nr.start, row, nr.end);
                     this.session.replace(replaceRange, nnr);
                     this.moveCursorTo(row, Math.max(nr.start + 1, column + nnr.length - nr.value.length));
 
@@ -13203,22 +13037,22 @@ ace.define("ace/editor", ["require", "exports", "module", "ace/lib/fixoldbrowser
             }
         };
         this.removeLines = function() {
-            var rows = this.$getSelectedRows();
+            const rows = this.$getSelectedRows();
             this.session.removeFullLines(rows.first, rows.last);
             this.clearSelection();
         };
 
         this.duplicateSelection = function() {
-            var sel = this.selection;
-            var doc = this.session;
-            var range = sel.getRange();
-            var reverse = sel.isBackwards();
+            const sel = this.selection;
+            const doc = this.session;
+            const range = sel.getRange();
+            const reverse = sel.isBackwards();
             if (range.isEmpty()) {
-                var row = range.start.row;
+                const row = range.start.row;
                 doc.duplicateLines(row, row);
             } else {
-                var point = reverse ? range.start : range.end;
-                var endPoint = doc.insert(point, doc.getTextRange(range), false);
+                const point = reverse ? range.start : range.end;
+                const endPoint = doc.insert(point, doc.getTextRange(range), false);
                 range.start = point;
                 range.end = endPoint;
 
@@ -13241,32 +13075,33 @@ ace.define("ace/editor", ["require", "exports", "module", "ace/lib/fixoldbrowser
             this.$moveLines(1, true);
         };
         this.$moveLines = function(dir, copy) {
-            var rows, moved;
-            var selection = this.selection;
+            let rows;
+            let moved;
+            const selection = this.selection;
             if (!selection.inMultiSelectMode || this.inVirtualSelectionMode) {
-                var range = selection.toOrientedRange();
+                const range = selection.toOrientedRange();
                 rows = this.$getSelectedRows(range);
                 moved = this.session.$moveLines(rows.first, rows.last, copy ? 0 : dir);
                 if (copy && dir == -1) moved = 0;
                 range.moveBy(moved, 0);
                 selection.fromOrientedRange(range);
             } else {
-                var ranges = selection.rangeList.ranges;
+                const ranges = selection.rangeList.ranges;
                 selection.rangeList.detach(this.session);
                 this.inVirtualSelectionMode = true;
 
-                var diff = 0;
-                var totalDiff = 0;
-                var l = ranges.length;
-                for (var i = 0; i < l; i++) {
-                    var rangeIndex = i;
+                let diff = 0;
+                let totalDiff = 0;
+                const l = ranges.length;
+                for (let i = 0; i < l; i++) {
+                    let rangeIndex = i;
                     ranges[i].moveBy(diff, 0);
                     rows = this.$getSelectedRows(ranges[i]);
-                    var first = rows.first;
-                    var last = rows.last;
+                    const first = rows.first;
+                    let last = rows.last;
                     while (++i < l) {
                         if (totalDiff) ranges[i].moveBy(totalDiff, 0);
-                        var subRows = this.$getSelectedRows(ranges[i]);
+                        const subRows = this.$getSelectedRows(ranges[i]);
                         if (copy && subRows.first != last)
                             break;
                         else if (!copy && subRows.first > last + 1)
@@ -13326,9 +13161,9 @@ ace.define("ace/editor", ["require", "exports", "module", "ace/lib/fixoldbrowser
         };
 
         this.$moveByPage = function(dir, select) {
-            var renderer = this.renderer;
-            var config = this.renderer.layerConfig;
-            var rows = dir * Math.floor(config.height / config.lineHeight);
+            const renderer = this.renderer;
+            const config = this.renderer.layerConfig;
+            const rows = dir * Math.floor(config.height / config.lineHeight);
 
             this.$blockScrolling++;
             if (select === true) {
@@ -13341,7 +13176,7 @@ ace.define("ace/editor", ["require", "exports", "module", "ace/lib/fixoldbrowser
             }
             this.$blockScrolling--;
 
-            var scrollTop = renderer.scrollTop;
+            const scrollTop = renderer.scrollTop;
 
             renderer.scrollBy(0, rows * config.lineHeight);
             if (select != null)
@@ -13374,8 +13209,8 @@ ace.define("ace/editor", ["require", "exports", "module", "ace/lib/fixoldbrowser
             this.renderer.scrollToLine(line, center, animate, callback);
         };
         this.centerSelection = function() {
-            var range = this.getSelectionRange();
-            var pos = {
+            const range = this.getSelectionRange();
+            const pos = {
                 row: Math.floor(range.start.row + (range.end.row - range.start.row) / 2),
                 column: Math.floor(range.start.column + (range.end.column - range.start.column) / 2)
             };
@@ -13405,18 +13240,18 @@ ace.define("ace/editor", ["require", "exports", "module", "ace/lib/fixoldbrowser
             this.selection.moveCursorToPosition(pos);
         };
         this.jumpToMatching = function(select, expand) {
-            var cursor = this.getCursorPosition();
-            var iterator = new TokenIterator(this.session, cursor.row, cursor.column);
-            var prevToken = iterator.getCurrentToken();
-            var token = prevToken || iterator.stepForward();
+            const cursor = this.getCursorPosition();
+            const iterator = new TokenIterator(this.session, cursor.row, cursor.column);
+            let prevToken = iterator.getCurrentToken();
+            let token = prevToken || iterator.stepForward();
 
             if (!token) return;
-            var matchType;
-            var found = false;
-            var depth = {};
-            var i = cursor.column - token.start;
-            var bracketType;
-            var brackets = {
+            let matchType;
+            let found = false;
+            const depth = {};
+            let i = cursor.column - token.start;
+            let bracketType;
+            const brackets = {
                 ")": "(",
                 "(": "(",
                 "]": "[",
@@ -13432,7 +13267,7 @@ ace.define("ace/editor", ["require", "exports", "module", "ace/lib/fixoldbrowser
                             continue;
                         }
 
-                        bracketType = brackets[token.value[i]] + '.' + token.type.replace("rparen", "lparen");
+                        bracketType = `${brackets[token.value[i]]}.${token.type.replace("rparen", "lparen")}`;
 
                         if (isNaN(depth[bracketType])) {
                             depth[bracketType] = 0;
@@ -13456,7 +13291,7 @@ ace.define("ace/editor", ["require", "exports", "module", "ace/lib/fixoldbrowser
                                 break;
                         }
                     }
-                } else if (token && token.type.indexOf('tag-name') !== -1) {
+                } else if (token && token.type.includes('tag-name')) {
                     if (isNaN(depth[token.value])) {
                         depth[token.value] = 0;
                     }
@@ -13482,7 +13317,8 @@ ace.define("ace/editor", ["require", "exports", "module", "ace/lib/fixoldbrowser
             if (!matchType)
                 return;
 
-            var range, pos;
+            let range;
+            let pos;
             if (matchType === 'bracket') {
                 range = this.session.getBracketRange(cursor);
                 if (!range) {
@@ -13497,8 +13333,8 @@ ace.define("ace/editor", ["require", "exports", "module", "ace/lib/fixoldbrowser
                         range = this.session.getBracketRange(pos);
                 }
             } else if (matchType === 'tag') {
-                if (token && token.type.indexOf('tag-name') !== -1)
-                    var tag = token.value;
+                if (token && token.type.includes('tag-name'))
+                    const tag = token.value;
                 else
                     return;
 
@@ -13515,11 +13351,11 @@ ace.define("ace/editor", ["require", "exports", "module", "ace/lib/fixoldbrowser
                         prevToken = iterator.stepBackward();
 
                         if (prevToken) {
-                            if (prevToken.type.indexOf('tag-close') !== -1) {
+                            if (prevToken.type.includes('tag-close')) {
                                 range.setEnd(iterator.getCurrentTokenRow(), iterator.getCurrentTokenColumn() + 1);
                             }
 
-                            if (token.value === tag && token.type.indexOf('tag-name') !== -1) {
+                            if (token.value === tag && token.type.includes('tag-name')) {
                                 if (prevToken.value === '<') {
                                     depth[tag]++;
                                 } else if (prevToken.value === '</') {
@@ -13574,7 +13410,7 @@ ace.define("ace/editor", ["require", "exports", "module", "ace/lib/fixoldbrowser
         };
         this.navigateUp = function(times) {
             if (this.selection.isMultiLine() && !this.selection.isBackwards()) {
-                var selectionStart = this.selection.anchor.getPosition();
+                const selectionStart = this.selection.anchor.getPosition();
                 return this.moveCursorToPosition(selectionStart);
             }
             this.selection.clearSelection();
@@ -13582,7 +13418,7 @@ ace.define("ace/editor", ["require", "exports", "module", "ace/lib/fixoldbrowser
         };
         this.navigateDown = function(times) {
             if (this.selection.isMultiLine() && this.selection.isBackwards()) {
-                var selectionEnd = this.selection.anchor.getPosition();
+                const selectionEnd = this.selection.anchor.getPosition();
                 return this.moveCursorToPosition(selectionEnd);
             }
             this.selection.clearSelection();
@@ -13590,7 +13426,7 @@ ace.define("ace/editor", ["require", "exports", "module", "ace/lib/fixoldbrowser
         };
         this.navigateLeft = function(times) {
             if (!this.selection.isEmpty()) {
-                var selectionStart = this.getSelectionRange().start;
+                const selectionStart = this.getSelectionRange().start;
                 this.moveCursorToPosition(selectionStart);
             } else {
                 times = times || 1;
@@ -13602,7 +13438,7 @@ ace.define("ace/editor", ["require", "exports", "module", "ace/lib/fixoldbrowser
         };
         this.navigateRight = function(times) {
             if (!this.selection.isEmpty()) {
-                var selectionEnd = this.getSelectionRange().end;
+                const selectionEnd = this.getSelectionRange().end;
                 this.moveCursorToPosition(selectionEnd);
             } else {
                 times = times || 1;
@@ -13640,8 +13476,8 @@ ace.define("ace/editor", ["require", "exports", "module", "ace/lib/fixoldbrowser
             if (options)
                 this.$search.set(options);
 
-            var range = this.$search.find(this.session);
-            var replaced = 0;
+            const range = this.$search.find(this.session);
+            let replaced = 0;
             if (!range)
                 return replaced;
 
@@ -13660,17 +13496,17 @@ ace.define("ace/editor", ["require", "exports", "module", "ace/lib/fixoldbrowser
                 this.$search.set(options);
             }
 
-            var ranges = this.$search.findAll(this.session);
-            var replaced = 0;
+            const ranges = this.$search.findAll(this.session);
+            let replaced = 0;
             if (!ranges.length)
                 return replaced;
 
             this.$blockScrolling += 1;
 
-            var selection = this.getSelectionRange();
+            const selection = this.getSelectionRange();
             this.selection.moveTo(0, 0);
 
-            for (var i = ranges.length - 1; i >= 0; --i) {
+            for (let i = ranges.length - 1; i >= 0; --i) {
                 if (this.$tryReplace(ranges[i], replacement)) {
                     replaced++;
                 }
@@ -13683,7 +13519,7 @@ ace.define("ace/editor", ["require", "exports", "module", "ace/lib/fixoldbrowser
         };
 
         this.$tryReplace = function(range, replacement) {
-            var input = this.session.getTextRange(range);
+            const input = this.session.getTextRange(range);
             replacement = this.$search.replace(input, replacement);
             if (replacement !== null) {
                 range.end = this.session.replace(range, replacement);
@@ -13704,7 +13540,7 @@ ace.define("ace/editor", ["require", "exports", "module", "ace/lib/fixoldbrowser
             else if (typeof needle == "object")
                 oop.mixin(options, needle);
 
-            var range = this.selection.getRange();
+            let range = this.selection.getRange();
             if (options.needle == null) {
                 needle = this.session.getTextRange(range) || this.$search.$options.needle;
                 if (!needle) {
@@ -13712,7 +13548,7 @@ ace.define("ace/editor", ["require", "exports", "module", "ace/lib/fixoldbrowser
                     needle = this.session.getTextRange(range);
                 }
                 this.$search.set({
-                    needle: needle
+                    needle
                 });
             }
 
@@ -13722,7 +13558,7 @@ ace.define("ace/editor", ["require", "exports", "module", "ace/lib/fixoldbrowser
                     start: range
                 });
 
-            var newRange = this.$search.find(this.session);
+            const newRange = this.$search.find(this.session);
             if (options.preventScroll)
                 return newRange;
             if (newRange) {
@@ -13754,7 +13590,7 @@ ace.define("ace/editor", ["require", "exports", "module", "ace/lib/fixoldbrowser
             this.selection.setSelectionRange(range);
             this.$blockScrolling -= 1;
 
-            var scrollTop = this.renderer.scrollTop;
+            const scrollTop = this.renderer.scrollTop;
             this.renderer.scrollSelectionIntoView(range.start, range.end, 0.5);
             if (animate !== false)
                 this.renderer.animateScrolling(scrollTop);
@@ -13781,27 +13617,27 @@ ace.define("ace/editor", ["require", "exports", "module", "ace/lib/fixoldbrowser
         this.setAutoScrollEditorIntoView = function(enable) {
             if (!enable)
                 return;
-            var rect;
-            var self = this;
-            var shouldScroll = false;
+            let rect;
+            const self = this;
+            let shouldScroll = false;
             if (!this.$scrollAnchor)
                 this.$scrollAnchor = document.createElement("div");
-            var scrollAnchor = this.$scrollAnchor;
+            const scrollAnchor = this.$scrollAnchor;
             scrollAnchor.style.cssText = "position:absolute";
             this.container.insertBefore(scrollAnchor, this.container.firstChild);
-            var onChangeSelection = this.on("changeSelection", function() {
+            const onChangeSelection = this.on("changeSelection", () => {
                 shouldScroll = true;
             });
-            var onBeforeRender = this.renderer.on("beforeRender", function() {
+            const onBeforeRender = this.renderer.on("beforeRender", () => {
                 if (shouldScroll)
                     rect = self.renderer.container.getBoundingClientRect();
             });
-            var onAfterRender = this.renderer.on("afterRender", function() {
+            const onAfterRender = this.renderer.on("afterRender", () => {
                 if (shouldScroll && rect && (self.isFocused() || self.searchBox && self.searchBox.isFocused())) {
-                    var renderer = self.renderer;
-                    var pos = renderer.$cursorLayer.$pixelPos;
-                    var config = renderer.layerConfig;
-                    var top = pos.top - config.offset;
+                    const renderer = self.renderer;
+                    const pos = renderer.$cursorLayer.$pixelPos;
+                    const config = renderer.layerConfig;
+                    const top = pos.top - config.offset;
                     if (pos.top >= 0 && top + rect.top < 0) {
                         shouldScroll = true;
                     } else if (pos.top < config.height &&
@@ -13811,9 +13647,9 @@ ace.define("ace/editor", ["require", "exports", "module", "ace/lib/fixoldbrowser
                         shouldScroll = null;
                     }
                     if (shouldScroll != null) {
-                        scrollAnchor.style.top = top + "px";
-                        scrollAnchor.style.left = pos.left + "px";
-                        scrollAnchor.style.height = config.lineHeight + "px";
+                        scrollAnchor.style.top = `${top}px`;
+                        scrollAnchor.style.left = `${pos.left}px`;
+                        scrollAnchor.style.height = `${config.lineHeight}px`;
                         scrollAnchor.scrollIntoView(shouldScroll);
                     }
                     shouldScroll = rect = null;
@@ -13831,8 +13667,8 @@ ace.define("ace/editor", ["require", "exports", "module", "ace/lib/fixoldbrowser
 
 
         this.$resetCursorStyle = function() {
-            var style = this.$cursorStyle || "ace";
-            var cursorLayer = this.renderer.$cursorLayer;
+            const style = this.$cursorStyle || "ace";
+            const cursorLayer = this.renderer.$cursorLayer;
             if (!cursorLayer)
                 return;
             cursorLayer.setSmoothBlinking(/smooth/.test(style));
@@ -13846,7 +13682,7 @@ ace.define("ace/editor", ["require", "exports", "module", "ace/lib/fixoldbrowser
 
     config.defineOptions(Editor.prototype, "editor", {
         selectionStyle: {
-            set: function(style) {
+            set(style) {
                 this.onSelectionChange();
                 this._signal("changeSelectionStyle", {
                     data: style
@@ -13855,25 +13691,25 @@ ace.define("ace/editor", ["require", "exports", "module", "ace/lib/fixoldbrowser
             initialValue: "line"
         },
         highlightActiveLine: {
-            set: function() {
+            set() {
                 this.$updateHighlightActiveLine();
             },
             initialValue: true
         },
         highlightSelectedWord: {
-            set: function(shouldHighlight) {
+            set(shouldHighlight) {
                 this.$onSelectionChange();
             },
             initialValue: true
         },
         readOnly: {
-            set: function(readOnly) {
+            set(readOnly) {
                 this.$resetCursorStyle();
             },
             initialValue: false
         },
         cursorStyle: {
-            set: function(val) {
+            set(val) {
                 this.$resetCursorStyle();
             },
             values: ["ace", "slim", "smooth", "wide"],
@@ -13890,15 +13726,15 @@ ace.define("ace/editor", ["require", "exports", "module", "ace/lib/fixoldbrowser
             initialValue: true
         },
         autoScrollEditorIntoView: {
-            set: function(val) {
+            set(val) {
                 this.setAutoScrollEditorIntoView(val)
             }
         },
         keyboardHandler: {
-            set: function(val) {
+            set(val) {
                 this.setKeyboardHandler(val);
             },
-            get: function() {
+            get() {
                 return this.keybindingId;
             },
             handlesSet: true
@@ -13946,15 +13782,14 @@ ace.define("ace/editor", ["require", "exports", "module", "ace/lib/fixoldbrowser
     exports.Editor = Editor;
 });
 
-ace.define("ace/undomanager", ["require", "exports", "module"], function(require, exports, module) {
-    "use strict";
-    var UndoManager = function() {
+ace.define("ace/undomanager", ["require", "exports", "module"], (require, exports, module) => {
+    const UndoManager = function() {
         this.reset();
     };
 
     (function() {
         this.execute = function(options) {
-            var deltaSets = options.args[0];
+            let deltaSets = options.args[0];
             this.$doc = options.args[1];
             if (options.merge && this.hasUndo()) {
                 this.dirtyCounter--;
@@ -13968,8 +13803,8 @@ ace.define("ace/undomanager", ["require", "exports", "module"], function(require
             this.dirtyCounter++;
         };
         this.undo = function(dontSelect) {
-            var deltaSets = this.$undoStack.pop();
-            var undoSelectionRange = null;
+            const deltaSets = this.$undoStack.pop();
+            let undoSelectionRange = null;
             if (deltaSets) {
                 undoSelectionRange = this.$doc.undoChanges(deltaSets, dontSelect);
                 this.$redoStack.push(deltaSets);
@@ -13979,8 +13814,8 @@ ace.define("ace/undomanager", ["require", "exports", "module"], function(require
             return undoSelectionRange;
         };
         this.redo = function(dontSelect) {
-            var deltaSets = this.$redoStack.pop();
-            var redoSelectionRange = null;
+            const deltaSets = this.$redoStack.pop();
+            let redoSelectionRange = null;
             if (deltaSets) {
                 redoSelectionRange =
                     this.$doc.redoChanges(this.$deserializeDeltas(deltaSets), dontSelect);
@@ -14006,12 +13841,8 @@ ace.define("ace/undomanager", ["require", "exports", "module"], function(require
         this.isClean = function() {
             return this.dirtyCounter === 0;
         };
-        this.$serializeDeltas = function(deltaSets) {
-            return cloneDeltaSetsObj(deltaSets, $serializeDelta);
-        };
-        this.$deserializeDeltas = function(deltaSets) {
-            return cloneDeltaSetsObj(deltaSets, $deserializeDelta);
-        };
+        this.$serializeDeltas = deltaSets => cloneDeltaSetsObj(deltaSets, $serializeDelta);
+        this.$deserializeDeltas = deltaSets => cloneDeltaSetsObj(deltaSets, $deserializeDelta);
 
         function $serializeDelta(delta) {
             return {
@@ -14033,21 +13864,21 @@ ace.define("ace/undomanager", ["require", "exports", "module"], function(require
         }
 
         function cloneDeltaSetsObj(deltaSets_old, fnGetModifiedDelta) {
-            var deltaSets_new = new Array(deltaSets_old.length);
-            for (var i = 0; i < deltaSets_old.length; i++) {
-                var deltaSet_old = deltaSets_old[i];
-                var deltaSet_new = {
+            const deltaSets_new = new Array(deltaSets_old.length);
+
+            for (const deltaSet_old of deltaSets_old) {
+                const deltaSet_new = {
                     group: deltaSet_old.group,
                     deltas: new Array(deltaSet_old.length)
                 };
 
-                for (var j = 0; j < deltaSet_old.deltas.length; j++) {
-                    var delta_old = deltaSet_old.deltas[j];
+                for (const delta_old of deltaSet_old.deltas) {
                     deltaSet_new.deltas[j] = fnGetModifiedDelta(delta_old);
                 }
 
                 deltaSets_new[i] = deltaSet_new;
             }
+
             return deltaSets_new;
         }
 
@@ -14056,15 +13887,13 @@ ace.define("ace/undomanager", ["require", "exports", "module"], function(require
     exports.UndoManager = UndoManager;
 });
 
-ace.define("ace/layer/gutter", ["require", "exports", "module", "ace/lib/dom", "ace/lib/oop", "ace/lib/lang", "ace/lib/event_emitter"], function(require, exports, module) {
-    "use strict";
+ace.define("ace/layer/gutter", ["require", "exports", "module", "ace/lib/dom", "ace/lib/oop", "ace/lib/lang", "ace/lib/event_emitter"], (require, exports, module) => {
+    const dom = require("../lib/dom");
+    const oop = require("../lib/oop");
+    const lang = require("../lib/lang");
+    const EventEmitter = require("../lib/event_emitter").EventEmitter;
 
-    var dom = require("../lib/dom");
-    var oop = require("../lib/oop");
-    var lang = require("../lib/lang");
-    var EventEmitter = require("../lib/event_emitter").EventEmitter;
-
-    var Gutter = function(parentEl) {
+    const Gutter = function(parentEl) {
         this.element = dom.createElement("div");
         this.element.className = "ace_layer ace_gutter-layer";
         parentEl.appendChild(this.element);
@@ -14104,22 +13933,22 @@ ace.define("ace/layer/gutter", ["require", "exports", "module", "ace/lib/dom", "
 
         this.setAnnotations = function(annotations) {
             this.$annotations = [];
-            for (var i = 0; i < annotations.length; i++) {
-                var annotation = annotations[i];
-                var row = annotation.row;
-                var rowInfo = this.$annotations[row];
+
+            for (const annotation of annotations) {
+                const row = annotation.row;
+                let rowInfo = this.$annotations[row];
                 if (!rowInfo)
                     rowInfo = this.$annotations[row] = {
                         text: []
                     };
 
-                var annoText = annotation.text;
+                let annoText = annotation.text;
                 annoText = annoText ? lang.escapeHTML(annoText) : annotation.html || "";
 
-                if (rowInfo.text.indexOf(annoText) === -1)
+                if (!rowInfo.text.includes(annoText))
                     rowInfo.text.push(annoText);
 
-                var type = annotation.type;
+                const type = annotation.type;
                 if (type == "error")
                     rowInfo.className = " ace_error";
                 else if (type == "warning" && rowInfo.className != " ace_error")
@@ -14132,35 +13961,35 @@ ace.define("ace/layer/gutter", ["require", "exports", "module", "ace/lib/dom", "
         this.$updateAnnotations = function(delta) {
             if (!this.$annotations.length)
                 return;
-            var firstRow = delta.start.row;
-            var len = delta.end.row - firstRow;
+            const firstRow = delta.start.row;
+            const len = delta.end.row - firstRow;
             if (len === 0) {} else if (delta.action == 'remove') {
                 this.$annotations.splice(firstRow, len + 1, null);
             } else {
-                var args = new Array(len + 1);
+                const args = new Array(len + 1);
                 args.unshift(firstRow, 1);
-                this.$annotations.splice.apply(this.$annotations, args);
+                this.$annotations.splice(...args);
             }
         };
 
         this.update = function(config) {
-            var session = this.session;
-            var firstRow = config.firstRow;
-            var lastRow = Math.min(config.lastRow + config.gutterOffset, // needed to compensate for hor scollbar
+            const session = this.session;
+            const firstRow = config.firstRow;
+            const lastRow = Math.min(config.lastRow + config.gutterOffset, // needed to compensate for hor scollbar
                 session.getLength() - 1);
-            var fold = session.getNextFoldLine(firstRow);
-            var foldStart = fold ? fold.start.row : Infinity;
-            var foldWidgets = this.$showFoldWidgets && session.foldWidgets;
-            var breakpoints = session.$breakpoints;
-            var decorations = session.$decorations;
-            var firstLineNumber = session.$firstLineNumber;
-            var lastLineNumber = 0;
+            let fold = session.getNextFoldLine(firstRow);
+            let foldStart = fold ? fold.start.row : Infinity;
+            const foldWidgets = this.$showFoldWidgets && session.foldWidgets;
+            const breakpoints = session.$breakpoints;
+            const decorations = session.$decorations;
+            const firstLineNumber = session.$firstLineNumber;
+            let lastLineNumber = 0;
 
-            var gutterRenderer = session.gutterRenderer || this.$renderer;
+            const gutterRenderer = session.gutterRenderer || this.$renderer;
 
-            var cell = null;
-            var index = -1;
-            var row = firstRow;
+            let cell = null;
+            let index = -1;
+            let row = firstRow;
             while (true) {
                 if (row > foldStart) {
                     row = fold.end.row + 1;
@@ -14199,7 +14028,7 @@ ace.define("ace/layer/gutter", ["require", "exports", "module", "ace/lib/dom", "
                 if (cell.element.className != className)
                     cell.element.className = className;
 
-                var height = session.getRowLength(row) * config.lineHeight + "px";
+                var height = `${session.getRowLength(row) * config.lineHeight}px`;
                 if (height != cell.element.style.height)
                     cell.element.style.height = height;
 
@@ -14214,7 +14043,7 @@ ace.define("ace/layer/gutter", ["require", "exports", "module", "ace/lib/dom", "
                         cell.foldWidget = dom.createElement("span");
                         cell.element.appendChild(cell.foldWidget);
                     }
-                    var className = "ace_fold-widget ace_" + c;
+                    var className = `ace_fold-widget ace_${c}`;
                     if (c == "start" && row == foldStart && row < fold.end.row)
                         className += " ace_closed";
                     else
@@ -14222,7 +14051,7 @@ ace.define("ace/layer/gutter", ["require", "exports", "module", "ace/lib/dom", "
                     if (cell.foldWidget.className != className)
                         cell.foldWidget.className = className;
 
-                    var height = config.lineHeight + "px";
+                    var height = `${config.lineHeight}px`;
                     if (cell.foldWidget.style.height != height)
                         cell.foldWidget.style.height = height;
                 } else {
@@ -14232,25 +14061,25 @@ ace.define("ace/layer/gutter", ["require", "exports", "module", "ace/lib/dom", "
                     }
                 }
 
-                var text = lastLineNumber = gutterRenderer ? gutterRenderer.getText(session, row) : row + firstLineNumber;
+                const text = lastLineNumber = gutterRenderer ? gutterRenderer.getText(session, row) : row + firstLineNumber;
                 if (text != cell.textNode.data)
                     cell.textNode.data = text;
 
                 row++;
             }
 
-            this.element.style.height = config.minHeight + "px";
+            this.element.style.height = `${config.minHeight}px`;
 
             if (this.$fixedWidth || session.$useWrapMode)
                 lastLineNumber = session.getLength() + firstLineNumber;
 
-            var gutterWidth = gutterRenderer ? gutterRenderer.getWidth(session, lastLineNumber, config) : lastLineNumber.toString().length * config.characterWidth;
+            let gutterWidth = gutterRenderer ? gutterRenderer.getWidth(session, lastLineNumber, config) : lastLineNumber.toString().length * config.characterWidth;
 
-            var padding = this.$padding || this.$computePadding();
+            const padding = this.$padding || this.$computePadding();
             gutterWidth += padding.left + padding.right;
             if (gutterWidth !== this.gutterWidth && !isNaN(gutterWidth)) {
                 this.gutterWidth = gutterWidth;
-                this.element.style.width = Math.ceil(this.gutterWidth) + "px";
+                this.element.style.width = `${Math.ceil(this.gutterWidth)}px`;
                 this._emit("changeGutterWidth", gutterWidth);
             }
         };
@@ -14261,10 +14090,10 @@ ace.define("ace/layer/gutter", ["require", "exports", "module", "ace/lib/dom", "
         this.$renderer = "";
         this.setShowLineNumbers = function(show) {
             this.$renderer = !show && {
-                getWidth: function() {
+                getWidth() {
                     return ""
                 },
-                getText: function() {
+                getText() {
                     return ""
                 }
             };
@@ -14295,7 +14124,7 @@ ace.define("ace/layer/gutter", ["require", "exports", "module", "ace/lib/dom", "
                     left: 0,
                     right: 0
                 };
-            var style = dom.computedStyle(this.element.firstChild);
+            const style = dom.computedStyle(this.element.firstChild);
             this.$padding = {};
             this.$padding.left = parseInt(style.paddingLeft) + 1 || 0;
             this.$padding.right = parseInt(style.paddingRight) || 0;
@@ -14303,8 +14132,8 @@ ace.define("ace/layer/gutter", ["require", "exports", "module", "ace/lib/dom", "
         };
 
         this.getRegion = function(point) {
-            var padding = this.$padding || this.$computePadding();
-            var rect = this.element.getBoundingClientRect();
+            const padding = this.$padding || this.$computePadding();
+            const rect = this.element.getBoundingClientRect();
             if (point.x < padding.left + rect.left)
                 return "markers";
             if (this.$showFoldWidgets && point.x > rect.right - padding.right)
@@ -14314,16 +14143,13 @@ ace.define("ace/layer/gutter", ["require", "exports", "module", "ace/lib/dom", "
     }).call(Gutter.prototype);
 
     exports.Gutter = Gutter;
-
 });
 
-ace.define("ace/layer/marker", ["require", "exports", "module", "ace/range", "ace/lib/dom"], function(require, exports, module) {
-    "use strict";
+ace.define("ace/layer/marker", ["require", "exports", "module", "ace/range", "ace/lib/dom"], (require, exports, module) => {
+    const Range = require("../range").Range;
+    const dom = require("../lib/dom");
 
-    var Range = require("../range").Range;
-    var dom = require("../lib/dom");
-
-    var Marker = function(parentEl) {
+    const Marker = function(parentEl) {
         this.element = dom.createElement("div");
         this.element.className = "ace_layer ace_marker-layer";
         parentEl.appendChild(this.element);
@@ -14352,22 +14178,22 @@ ace.define("ace/layer/marker", ["require", "exports", "module", "ace/range", "ac
             this.config = config;
 
 
-            var html = [];
-            for (var key in this.markers) {
-                var marker = this.markers[key];
+            const html = [];
+            for (const key in this.markers) {
+                const marker = this.markers[key];
 
                 if (!marker.range) {
                     marker.update(html, this, this.session, config);
                     continue;
                 }
 
-                var range = marker.range.clipRows(config.firstRow, config.lastRow);
+                let range = marker.range.clipRows(config.firstRow, config.lastRow);
                 if (range.isEmpty()) continue;
 
                 range = range.toScreenRange(this.session);
                 if (marker.renderer) {
-                    var top = this.$getTop(range.start.row, config);
-                    var left = this.$padding + range.start.column * config.characterWidth;
+                    const top = this.$getTop(range.start.row, config);
+                    const left = this.$padding + range.start.column * config.characterWidth;
                     marker.renderer(html, range, left, top, config);
                 } else if (marker.type == "fullLine") {
                     this.drawFullLineMarker(html, range, marker.clazz, config);
@@ -14379,28 +14205,26 @@ ace.define("ace/layer/marker", ["require", "exports", "module", "ace/range", "ac
                     else
                         this.drawMultiLineMarker(html, range, marker.clazz, config);
                 } else {
-                    this.drawSingleLineMarker(html, range, marker.clazz + " ace_start" + " ace_br15", config);
+                    this.drawSingleLineMarker(html, range, `${marker.clazz} ace_start ace_br15`, config);
                 }
             }
             this.element.innerHTML = html.join("");
         };
 
-        this.$getTop = function(row, layerConfig) {
-            return (row - layerConfig.firstRowScreen) * layerConfig.lineHeight;
-        };
+        this.$getTop = (row, layerConfig) => (row - layerConfig.firstRowScreen) * layerConfig.lineHeight;
 
         function getBorderClass(tl, tr, br, bl) {
             return (tl ? 1 : 0) | (tr ? 2 : 0) | (br ? 4 : 0) | (bl ? 8 : 0);
         }
         this.drawTextMarker = function(stringBuilder, range, clazz, layerConfig, extraStyle) {
-            var session = this.session;
-            var start = range.start.row;
-            var end = range.end.row;
-            var row = start;
-            var prev = 0;
-            var curr = 0;
-            var next = session.getScreenLastRowColumn(row);
-            var lineRange = new Range(row, range.start.column, row, curr);
+            const session = this.session;
+            const start = range.start.row;
+            const end = range.end.row;
+            let row = start;
+            let prev = 0;
+            let curr = 0;
+            let next = session.getScreenLastRowColumn(row);
+            const lineRange = new Range(row, range.start.column, row, curr);
             for (; row <= end; row++) {
                 lineRange.start.row = lineRange.end.row = row;
                 lineRange.start.column = row == start ? range.start.column : session.getRowWrapIndent(row);
@@ -14409,15 +14233,15 @@ ace.define("ace/layer/marker", ["require", "exports", "module", "ace/range", "ac
                 curr = next;
                 next = row + 1 < end ? session.getScreenLastRowColumn(row + 1) : row == end ? 0 : range.end.column;
                 this.drawSingleLineMarker(stringBuilder, lineRange,
-                    clazz + (row == start ? " ace_start" : "") + " ace_br" + getBorderClass(row == start || row == start + 1 && range.start.column, prev < curr, curr > next, row == end),
+                    `${clazz + (row == start ? " ace_start" : "")} ace_br${getBorderClass(row == start || row == start + 1 && range.start.column, prev < curr, curr > next, row == end)}`,
                     layerConfig, row == end ? 0 : 1, extraStyle);
             }
         };
         this.drawMultiLineMarker = function(stringBuilder, range, clazz, config, extraStyle) {
-            var padding = this.$padding;
-            var height = config.lineHeight;
-            var top = this.$getTop(range.start.row, config);
-            var left = padding + range.start.column * config.characterWidth;
+            const padding = this.$padding;
+            let height = config.lineHeight;
+            let top = this.$getTop(range.start.row, config);
+            const left = padding + range.start.column * config.characterWidth;
             extraStyle = extraStyle || "";
 
             stringBuilder.push(
@@ -14428,7 +14252,7 @@ ace.define("ace/layer/marker", ["require", "exports", "module", "ace/range", "ac
                 "left:", left, "px;", extraStyle, "'></div>"
             );
             top = this.$getTop(range.end.row, config);
-            var width = range.end.column * config.characterWidth;
+            const width = range.end.column * config.characterWidth;
 
             stringBuilder.push(
                 "<div class='", clazz, " ace_br12' style='",
@@ -14442,10 +14266,10 @@ ace.define("ace/layer/marker", ["require", "exports", "module", "ace/range", "ac
                 return;
             top = this.$getTop(range.start.row + 1, config);
 
-            var radiusClass = (range.start.column ? 1 : 0) | (range.end.column ? 0 : 8);
+            const radiusClass = (range.start.column ? 1 : 0) | (range.end.column ? 0 : 8);
 
             stringBuilder.push(
-                "<div class='", clazz, (radiusClass ? " ace_br" + radiusClass : ""), "' style='",
+                "<div class='", clazz, (radiusClass ? ` ace_br${radiusClass}` : ""), "' style='",
                 "height:", height, "px;",
                 "right:0;",
                 "top:", top, "px;",
@@ -14453,11 +14277,11 @@ ace.define("ace/layer/marker", ["require", "exports", "module", "ace/range", "ac
             );
         };
         this.drawSingleLineMarker = function(stringBuilder, range, clazz, config, extraLength, extraStyle) {
-            var height = config.lineHeight;
-            var width = (range.end.column + (extraLength || 0) - range.start.column) * config.characterWidth;
+            const height = config.lineHeight;
+            const width = (range.end.column + (extraLength || 0) - range.start.column) * config.characterWidth;
 
-            var top = this.$getTop(range.start.row, config);
-            var left = this.$padding + range.start.column * config.characterWidth;
+            const top = this.$getTop(range.start.row, config);
+            const left = this.$padding + range.start.column * config.characterWidth;
 
             stringBuilder.push(
                 "<div class='", clazz, "' style='",
@@ -14469,8 +14293,8 @@ ace.define("ace/layer/marker", ["require", "exports", "module", "ace/range", "ac
         };
 
         this.drawFullLineMarker = function(stringBuilder, range, clazz, config, extraStyle) {
-            var top = this.$getTop(range.start.row, config);
-            var height = config.lineHeight;
+            const top = this.$getTop(range.start.row, config);
+            let height = config.lineHeight;
             if (range.start.row != range.end.row)
                 height += this.$getTop(range.end.row, config) - top;
 
@@ -14483,8 +14307,8 @@ ace.define("ace/layer/marker", ["require", "exports", "module", "ace/range", "ac
         };
 
         this.drawScreenLineMarker = function(stringBuilder, range, clazz, config, extraStyle) {
-            var top = this.$getTop(range.start.row, config);
-            var height = config.lineHeight;
+            const top = this.$getTop(range.start.row, config);
+            const height = config.lineHeight;
 
             stringBuilder.push(
                 "<div class='", clazz, "' style='",
@@ -14497,19 +14321,16 @@ ace.define("ace/layer/marker", ["require", "exports", "module", "ace/range", "ac
     }).call(Marker.prototype);
 
     exports.Marker = Marker;
-
 });
 
-ace.define("ace/layer/text", ["require", "exports", "module", "ace/lib/oop", "ace/lib/dom", "ace/lib/lang", "ace/lib/useragent", "ace/lib/event_emitter"], function(require, exports, module) {
-    "use strict";
+ace.define("ace/layer/text", ["require", "exports", "module", "ace/lib/oop", "ace/lib/dom", "ace/lib/lang", "ace/lib/useragent", "ace/lib/event_emitter"], (require, exports, module) => {
+    const oop = require("../lib/oop");
+    const dom = require("../lib/dom");
+    const lang = require("../lib/lang");
+    const useragent = require("../lib/useragent");
+    const EventEmitter = require("../lib/event_emitter").EventEmitter;
 
-    var oop = require("../lib/oop");
-    var dom = require("../lib/dom");
-    var lang = require("../lib/lang");
-    var useragent = require("../lib/useragent");
-    var EventEmitter = require("../lib/event_emitter").EventEmitter;
-
-    var Text = function(parentEl) {
+    const Text = function(parentEl) {
         this.element = dom.createElement("div");
         this.element.className = "ace_layer ace_text-layer";
         parentEl.appendChild(this.element);
@@ -14529,7 +14350,7 @@ ace.define("ace/layer/text", ["require", "exports", "module", "ace/lib/oop", "ac
         this.$padding = 0;
 
         this.$updateEolChar = function() {
-            var EOL_CHAR = this.session.doc.getNewLineCharacter() == "\n" ? this.EOL_CHAR_LF : this.EOL_CHAR_CRLF;
+            const EOL_CHAR = this.session.doc.getNewLineCharacter() == "\n" ? this.EOL_CHAR_LF : this.EOL_CHAR_CRLF;
             if (this.EOL_CHAR != EOL_CHAR) {
                 this.EOL_CHAR = EOL_CHAR;
                 return true;
@@ -14538,7 +14359,7 @@ ace.define("ace/layer/text", ["require", "exports", "module", "ace/lib/oop", "ac
 
         this.setPadding = function(padding) {
             this.$padding = padding;
-            this.element.style.padding = "0 " + padding + "px";
+            this.element.style.padding = `0 ${padding}px`;
         };
 
         this.getLineHeight = function() {
@@ -14551,9 +14372,9 @@ ace.define("ace/layer/text", ["require", "exports", "module", "ace/lib/oop", "ac
 
         this.$setFontMetrics = function(measure) {
             this.$fontMetrics = measure;
-            this.$fontMetrics.on("changeCharacterSize", function(e) {
+            this.$fontMetrics.on("changeCharacterSize", e => {
                 this._signal("changeCharacterSize", e);
-            }.bind(this));
+            });
             this.$pollSizeChanges();
         }
 
@@ -14592,21 +14413,21 @@ ace.define("ace/layer/text", ["require", "exports", "module", "ace/lib/oop", "ac
         this.$tabStrings = [];
         this.onChangeTabSize =
             this.$computeTabString = function() {
-                var tabSize = this.session.getTabSize();
+                const tabSize = this.session.getTabSize();
                 this.tabSize = tabSize;
-                var tabStr = this.$tabStrings = [0];
-                for (var i = 1; i < tabSize + 1; i++) {
+                const tabStr = this.$tabStrings = [0];
+                for (let i = 1; i < tabSize + 1; i++) {
                     if (this.showInvisibles) {
-                        tabStr.push("<span class='ace_invisible ace_invisible_tab'>" + lang.stringRepeat(this.TAB_CHAR, i) + "</span>");
+                        tabStr.push(`<span class='ace_invisible ace_invisible_tab'>${lang.stringRepeat(this.TAB_CHAR, i)}</span>`);
                     } else {
                         tabStr.push(lang.stringRepeat(" ", i));
                     }
                 }
                 if (this.displayIndentGuides) {
                     this.$indentGuideRe = /\s\S| \t|\t |\s$/;
-                    var className = "ace_indent-guide";
-                    var spaceClass = "";
-                    var tabClass = "";
+                    let className = "ace_indent-guide";
+                    let spaceClass = "";
+                    let tabClass = "";
                     if (this.showInvisibles) {
                         className += " ace_invisible";
                         spaceClass = " ace_invisible_space";
@@ -14618,8 +14439,8 @@ ace.define("ace/layer/text", ["require", "exports", "module", "ace/lib/oop", "ac
                         var tabContent = spaceContent;
                     }
 
-                    this.$tabStrings[" "] = "<span class='" + className + spaceClass + "'>" + spaceContent + "</span>";
-                    this.$tabStrings["\t"] = "<span class='" + className + tabClass + "'>" + tabContent + "</span>";
+                    this.$tabStrings[" "] = `<span class='${className}${spaceClass}'>${spaceContent}</span>`;
+                    this.$tabStrings["\t"] = `<span class='${className}${tabClass}'>${tabContent}</span>`;
                 }
             };
 
@@ -14630,11 +14451,11 @@ ace.define("ace/layer/text", ["require", "exports", "module", "ace/lib/oop", "ac
             }
             this.config = config;
 
-            var first = Math.max(firstRow, config.firstRow);
-            var last = Math.min(lastRow, config.lastRow);
+            let first = Math.max(firstRow, config.firstRow);
+            const last = Math.min(lastRow, config.lastRow);
 
-            var lineElements = this.element.childNodes;
-            var lineElementsIdx = 0;
+            const lineElements = this.element.childNodes;
+            let lineElementsIdx = 0;
 
             for (var row = config.firstRow; row < first; row++) {
                 var foldLine = this.session.getFoldLine(row);
@@ -14651,7 +14472,7 @@ ace.define("ace/layer/text", ["require", "exports", "module", "ace/lib/oop", "ac
 
             var row = first;
             var foldLine = this.session.getNextFoldLine(row);
-            var foldStart = foldLine ? foldLine.start.row : Infinity;
+            let foldStart = foldLine ? foldLine.start.row : Infinity;
 
             while (true) {
                 if (row > foldStart) {
@@ -14662,13 +14483,13 @@ ace.define("ace/layer/text", ["require", "exports", "module", "ace/lib/oop", "ac
                 if (row > last)
                     break;
 
-                var lineElement = lineElements[lineElementsIdx++];
+                const lineElement = lineElements[lineElementsIdx++];
                 if (lineElement) {
-                    var html = [];
+                    const html = [];
                     this.$renderLine(
                         html, row, !this.$useLineGroups(), row == foldStart ? foldLine : false
                     );
-                    lineElement.style.height = config.lineHeight * this.session.getRowLength(row) + "px";
+                    lineElement.style.height = `${config.lineHeight * this.session.getRowLength(row)}px`;
                     lineElement.innerHTML = html.join("");
                 }
                 row++;
@@ -14676,7 +14497,7 @@ ace.define("ace/layer/text", ["require", "exports", "module", "ace/lib/oop", "ac
         };
 
         this.scrollLines = function(config) {
-            var oldConfig = this.config;
+            const oldConfig = this.config;
             this.config = config;
 
             if (!oldConfig || oldConfig.lastRow < config.firstRow)
@@ -14685,7 +14506,7 @@ ace.define("ace/layer/text", ["require", "exports", "module", "ace/lib/oop", "ac
             if (config.lastRow < oldConfig.firstRow)
                 return this.update(config);
 
-            var el = this.element;
+            const el = this.element;
             if (oldConfig.firstRow < config.firstRow)
                 for (var row = this.session.getFoldedRowCount(oldConfig.firstRow, config.firstRow - 1); row > 0; row--)
                     el.removeChild(el.firstChild);
@@ -14709,10 +14530,10 @@ ace.define("ace/layer/text", ["require", "exports", "module", "ace/lib/oop", "ac
         };
 
         this.$renderLinesFragment = function(config, firstRow, lastRow) {
-            var fragment = this.element.ownerDocument.createDocumentFragment();
-            var row = firstRow;
-            var foldLine = this.session.getNextFoldLine(row);
-            var foldStart = foldLine ? foldLine.start.row : Infinity;
+            const fragment = this.element.ownerDocument.createDocumentFragment();
+            let row = firstRow;
+            let foldLine = this.session.getNextFoldLine(row);
+            let foldStart = foldLine ? foldLine.start.row : Infinity;
 
             while (true) {
                 if (row > foldStart) {
@@ -14723,15 +14544,15 @@ ace.define("ace/layer/text", ["require", "exports", "module", "ace/lib/oop", "ac
                 if (row > lastRow)
                     break;
 
-                var container = dom.createElement("div");
+                const container = dom.createElement("div");
 
-                var html = [];
+                const html = [];
                 this.$renderLine(html, row, false, row == foldStart ? foldLine : false);
                 container.innerHTML = html.join("");
                 if (this.$useLineGroups()) {
                     container.className = 'ace_line_group';
                     fragment.appendChild(container);
-                    container.style.height = config.lineHeight * this.session.getRowLength(row) + "px";
+                    container.style.height = `${config.lineHeight * this.session.getRowLength(row)}px`;
 
                 } else {
                     while (container.firstChild)
@@ -14746,13 +14567,13 @@ ace.define("ace/layer/text", ["require", "exports", "module", "ace/lib/oop", "ac
         this.update = function(config) {
             this.config = config;
 
-            var html = [];
-            var firstRow = config.firstRow,
-                lastRow = config.lastRow;
+            const html = [];
+            const firstRow = config.firstRow;
+            const lastRow = config.lastRow;
 
-            var row = firstRow;
-            var foldLine = this.session.getNextFoldLine(row);
-            var foldStart = foldLine ? foldLine.start.row : Infinity;
+            let row = firstRow;
+            let foldLine = this.session.getNextFoldLine(row);
+            let foldStart = foldLine ? foldLine.start.row : Infinity;
 
             while (true) {
                 if (row > foldStart) {
@@ -14783,11 +14604,11 @@ ace.define("ace/layer/text", ["require", "exports", "module", "ace/lib/oop", "ac
         };
 
         this.$renderToken = function(stringBuilder, screenColumn, token, value) {
-            var self = this;
-            var replaceReg = /\t|&|<|>|( +)|([\x00-\x1f\x80-\xa0\xad\u1680\u180E\u2000-\u200f\u2028\u2029\u202F\u205F\u3000\uFEFF\uFFF9-\uFFFC])|[\u1100-\u115F\u11A3-\u11A7\u11FA-\u11FF\u2329-\u232A\u2E80-\u2E99\u2E9B-\u2EF3\u2F00-\u2FD5\u2FF0-\u2FFB\u3000-\u303E\u3041-\u3096\u3099-\u30FF\u3105-\u312D\u3131-\u318E\u3190-\u31BA\u31C0-\u31E3\u31F0-\u321E\u3220-\u3247\u3250-\u32FE\u3300-\u4DBF\u4E00-\uA48C\uA490-\uA4C6\uA960-\uA97C\uAC00-\uD7A3\uD7B0-\uD7C6\uD7CB-\uD7FB\uF900-\uFAFF\uFE10-\uFE19\uFE30-\uFE52\uFE54-\uFE66\uFE68-\uFE6B\uFF01-\uFF60\uFFE0-\uFFE6]/g;
-            var replaceFunc = function(c, a, b, tabIdx, idx4) {
+            const self = this;
+            const replaceReg = /\t|&|<|>|( +)|([\x00-\x1f\x80-\xa0\xad\u1680\u180E\u2000-\u200f\u2028\u2029\u202F\u205F\u3000\uFEFF\uFFF9-\uFFFC])|[\u1100-\u115F\u11A3-\u11A7\u11FA-\u11FF\u2329-\u232A\u2E80-\u2E99\u2E9B-\u2EF3\u2F00-\u2FD5\u2FF0-\u2FFB\u3000-\u303E\u3041-\u3096\u3099-\u30FF\u3105-\u312D\u3131-\u318E\u3190-\u31BA\u31C0-\u31E3\u31F0-\u321E\u3220-\u3247\u3250-\u32FE\u3300-\u4DBF\u4E00-\uA48C\uA490-\uA4C6\uA960-\uA97C\uAC00-\uD7A3\uD7B0-\uD7C6\uD7CB-\uD7FB\uF900-\uFAFF\uFE10-\uFE19\uFE30-\uFE52\uFE54-\uFE66\uFE68-\uFE6B\uFF01-\uFF60\uFFE0-\uFFE6]/g;
+            const replaceFunc = (c, a, b, tabIdx, idx4) => {
                 if (a) {
-                    return self.showInvisibles ? "<span class='ace_invisible ace_invisible_space'>" + lang.stringRepeat(self.SPACE_CHAR, c.length) + "</span>" : c;
+                    return self.showInvisibles ? `<span class='ace_invisible ace_invisible_space'>${lang.stringRepeat(self.SPACE_CHAR, c.length)}</span>` : c;
                 } else if (c == "&") {
                     return "&#38;";
                 } else if (c == "<") {
@@ -14795,33 +14616,29 @@ ace.define("ace/layer/text", ["require", "exports", "module", "ace/lib/oop", "ac
                 } else if (c == ">") {
                     return "&#62;";
                 } else if (c == "\t") {
-                    var tabSize = self.session.getScreenTabSize(screenColumn + tabIdx);
+                    const tabSize = self.session.getScreenTabSize(screenColumn + tabIdx);
                     screenColumn += tabSize - 1;
                     return self.$tabStrings[tabSize];
                 } else if (c == "\u3000") {
-                    var classToUse = self.showInvisibles ? "ace_cjk ace_invisible ace_invisible_space" : "ace_cjk";
-                    var space = self.showInvisibles ? self.SPACE_CHAR : "";
+                    const classToUse = self.showInvisibles ? "ace_cjk ace_invisible ace_invisible_space" : "ace_cjk";
+                    const space = self.showInvisibles ? self.SPACE_CHAR : "";
                     screenColumn += 1;
-                    return "<span class='" + classToUse + "' style='width:" +
-                        (self.config.characterWidth * 2) +
-                        "px'>" + space + "</span>";
+                    return `<span class='${classToUse}' style='width:${self.config.characterWidth * 2}px'>${space}</span>`;
                 } else if (b) {
-                    return "<span class='ace_invisible ace_invisible_space ace_invalid'>" + self.SPACE_CHAR + "</span>";
+                    return `<span class='ace_invisible ace_invisible_space ace_invalid'>${self.SPACE_CHAR}</span>`;
                 } else {
                     screenColumn += 1;
-                    return "<span class='ace_cjk' style='width:" +
-                        (self.config.characterWidth * 2) +
-                        "px'>" + c + "</span>";
+                    return `<span class='ace_cjk' style='width:${self.config.characterWidth * 2}px'>${c}</span>`;
                 }
             };
 
-            var output = value.replace(replaceReg, replaceFunc);
+            const output = value.replace(replaceReg, replaceFunc);
 
             if (!this.$textToken[token.type]) {
-                var classes = "ace_" + token.type.replace(/\./g, " ace_");
-                var style = "";
+                const classes = `ace_${token.type.replace(/\./g, " ace_")}`;
+                let style = "";
                 if (token.type == "fold")
-                    style = " style='width:" + (token.value.length * this.config.characterWidth) + "px;' ";
+                    style = ` style='width:${token.value.length * this.config.characterWidth}px;' `;
                 stringBuilder.push("<span class='", classes, "'", style, ">", output, "</span>");
             } else {
                 stringBuilder.push(output);
@@ -14830,7 +14647,7 @@ ace.define("ace/layer/text", ["require", "exports", "module", "ace/lib/oop", "ac
         };
 
         this.renderIndentGuide = function(stringBuilder, value, max) {
-            var cols = value.search(this.$indentGuideRe);
+            let cols = value.search(this.$indentGuideRe);
             if (cols <= 0 || cols >= max)
                 return value;
             if (value[0] == " ") {
@@ -14845,14 +14662,14 @@ ace.define("ace/layer/text", ["require", "exports", "module", "ace/lib/oop", "ac
         };
 
         this.$renderWrappedLine = function(stringBuilder, tokens, splits, onlyContents) {
-            var chars = 0;
-            var split = 0;
-            var splitChars = splits[0];
-            var screenColumn = 0;
+            let chars = 0;
+            let split = 0;
+            let splitChars = splits[0];
+            let screenColumn = 0;
 
-            for (var i = 0; i < tokens.length; i++) {
-                var token = tokens[i];
-                var value = token.value;
+            for (let i = 0; i < tokens.length; i++) {
+                const token = tokens[i];
+                let value = token.value;
                 if (i == 0 && this.displayIndentGuides) {
                     chars = value.length;
                     value = this.renderIndentGuide(stringBuilder, value, splitChars);
@@ -14897,14 +14714,14 @@ ace.define("ace/layer/text", ["require", "exports", "module", "ace/lib/oop", "ac
         };
 
         this.$renderSimpleLine = function(stringBuilder, tokens) {
-            var screenColumn = 0;
-            var token = tokens[0];
-            var value = token.value;
+            let screenColumn = 0;
+            let token = tokens[0];
+            let value = token.value;
             if (this.displayIndentGuides)
                 value = this.renderIndentGuide(stringBuilder, value);
             if (value)
                 screenColumn = this.$renderToken(stringBuilder, screenColumn, token, value);
-            for (var i = 1; i < tokens.length; i++) {
+            for (let i = 1; i < tokens.length; i++) {
                 token = tokens[i];
                 value = token.value;
                 screenColumn = this.$renderToken(stringBuilder, screenColumn, token, value);
@@ -14930,7 +14747,7 @@ ace.define("ace/layer/text", ["require", "exports", "module", "ace/lib/oop", "ac
             }
 
             if (tokens.length) {
-                var splits = this.session.getRowSplitData(row);
+                const splits = this.session.getRowSplitData(row);
                 if (splits && splits.length)
                     this.$renderWrappedLine(stringBuilder, tokens, splits, onlyContents);
                 else
@@ -14952,12 +14769,12 @@ ace.define("ace/layer/text", ["require", "exports", "module", "ace/lib/oop", "ac
         };
 
         this.$getFoldLineTokens = function(row, foldLine) {
-            var session = this.session;
-            var renderTokens = [];
+            const session = this.session;
+            const renderTokens = [];
 
             function addTokens(tokens, from, to) {
-                var idx = 0,
-                    col = 0;
+                let idx = 0;
+                let col = 0;
                 while ((col + tokens[idx].value.length) < from) {
                     col += tokens[idx].value.length;
                     idx++;
@@ -14972,7 +14789,7 @@ ace.define("ace/layer/text", ["require", "exports", "module", "ace/lib/oop", "ac
 
                     renderTokens.push({
                         type: tokens[idx].type,
-                        value: value
+                        value
                     });
 
                     col = from + value.length;
@@ -14993,8 +14810,8 @@ ace.define("ace/layer/text", ["require", "exports", "module", "ace/lib/oop", "ac
                 }
             }
 
-            var tokens = session.getTokens(row);
-            foldLine.walk(function(placeholder, row, column, lastColumn, isNewRow) {
+            let tokens = session.getTokens(row);
+            foldLine.walk((placeholder, row, column, lastColumn, isNewRow) => {
                 if (placeholder != null) {
                     renderTokens.push({
                         type: "fold",
@@ -15026,16 +14843,13 @@ ace.define("ace/layer/text", ["require", "exports", "module", "ace/lib/oop", "ac
     }).call(Text.prototype);
 
     exports.Text = Text;
-
 });
 
-ace.define("ace/layer/cursor", ["require", "exports", "module", "ace/lib/dom"], function(require, exports, module) {
-    "use strict";
+ace.define("ace/layer/cursor", ["require", "exports", "module", "ace/lib/dom"], (require, exports, module) => {
+    const dom = require("../lib/dom");
+    let isIE8;
 
-    var dom = require("../lib/dom");
-    var isIE8;
-
-    var Cursor = function(parentEl) {
+    const Cursor = function(parentEl) {
         this.element = dom.createElement("div");
         this.element.className = "ace_layer ace_cursor-layer";
         parentEl.appendChild(this.element);
@@ -15057,13 +14871,13 @@ ace.define("ace/layer/cursor", ["require", "exports", "module", "ace/lib/dom"], 
     (function() {
 
         this.$updateVisibility = function(val) {
-            var cursors = this.cursors;
-            for (var i = cursors.length; i--;)
+            const cursors = this.cursors;
+            for (let i = cursors.length; i--;)
                 cursors[i].style.visibility = val ? "" : "hidden";
         };
         this.$updateOpacity = function(val) {
-            var cursors = this.cursors;
-            for (var i = cursors.length; i--;)
+            const cursors = this.cursors;
+            for (let i = cursors.length; i--;)
                 cursors[i].style.opacity = val ? "" : "0";
         };
 
@@ -15102,7 +14916,7 @@ ace.define("ace/layer/cursor", ["require", "exports", "module", "ace/lib/dom"], 
         };
 
         this.addCursor = function() {
-            var el = dom.createElement("div");
+            const el = dom.createElement("div");
             el.className = "ace_cursor";
             this.element.appendChild(el);
             this.cursors.push(el);
@@ -15111,7 +14925,7 @@ ace.define("ace/layer/cursor", ["require", "exports", "module", "ace/lib/dom"], 
 
         this.removeCursor = function() {
             if (this.cursors.length > 1) {
-                var el = this.cursors.pop();
+                const el = this.cursors.pop();
                 el.parentNode.removeChild(el);
                 return el;
             }
@@ -15130,7 +14944,7 @@ ace.define("ace/layer/cursor", ["require", "exports", "module", "ace/lib/dom"], 
         };
 
         this.restartTimer = function() {
-            var update = this.$updateCursors;
+            const update = this.$updateCursors;
             clearInterval(this.intervalId);
             clearTimeout(this.timeoutId);
             if (this.smoothBlinking) {
@@ -15143,18 +14957,18 @@ ace.define("ace/layer/cursor", ["require", "exports", "module", "ace/lib/dom"], 
                 return;
 
             if (this.smoothBlinking) {
-                setTimeout(function() {
+                setTimeout(() => {
                     dom.addCssClass(this.element, "ace_smooth-blinking");
-                }.bind(this));
+                });
             }
 
-            var blink = function() {
-                this.timeoutId = setTimeout(function() {
+            const blink = () => {
+                this.timeoutId = setTimeout(() => {
                     update(false);
                 }, 0.6 * this.blinkInterval);
-            }.bind(this);
+            };
 
-            this.intervalId = setInterval(function() {
+            this.intervalId = setInterval(() => {
                 update(true);
                 blink();
             }, this.blinkInterval);
@@ -15171,9 +14985,9 @@ ace.define("ace/layer/cursor", ["require", "exports", "module", "ace/lib/dom"], 
 
             if (!position)
                 position = this.session.selection.getCursor();
-            var pos = this.session.documentToScreenPosition(position);
-            var cursorLeft = this.$padding + pos.column * this.config.characterWidth;
-            var cursorTop = (pos.row - (onScreen ? this.config.firstRowScreen : 0)) *
+            const pos = this.session.documentToScreenPosition(position);
+            const cursorLeft = this.$padding + pos.column * this.config.characterWidth;
+            const cursorTop = (pos.row - (onScreen ? this.config.firstRowScreen : 0)) *
                 this.config.lineHeight;
 
             return {
@@ -15185,9 +14999,9 @@ ace.define("ace/layer/cursor", ["require", "exports", "module", "ace/lib/dom"], 
         this.update = function(config) {
             this.config = config;
 
-            var selections = this.session.$selectionMarkers;
-            var i = 0,
-                cursorIndex = 0;
+            let selections = this.session.$selectionMarkers;
+            var i = 0;
+            let cursorIndex = 0;
 
             if (selections === undefined || selections.length === 0) {
                 selections = [{
@@ -15195,20 +15009,20 @@ ace.define("ace/layer/cursor", ["require", "exports", "module", "ace/lib/dom"], 
                 }];
             }
 
-            for (var i = 0, n = selections.length; i < n; i++) {
+            for (const i = 0, n = selections.length; i < n; i++) {
                 var pixelPos = this.getPixelPosition(selections[i].cursor, true);
                 if ((pixelPos.top > config.height + config.offset ||
                         pixelPos.top < 0) && i > 1) {
                     continue;
                 }
 
-                var style = (this.cursors[cursorIndex++] || this.addCursor()).style;
+                const style = (this.cursors[cursorIndex++] || this.addCursor()).style;
 
                 if (!this.drawCursor) {
-                    style.left = pixelPos.left + "px";
-                    style.top = pixelPos.top + "px";
-                    style.width = config.characterWidth + "px";
-                    style.height = config.lineHeight + "px";
+                    style.left = `${pixelPos.left}px`;
+                    style.top = `${pixelPos.top}px`;
+                    style.width = `${config.characterWidth}px`;
+                    style.height = `${config.lineHeight}px`;
                 } else {
                     this.drawCursor(style, pixelPos, config, selections[i], this.session);
                 }
@@ -15216,7 +15030,7 @@ ace.define("ace/layer/cursor", ["require", "exports", "module", "ace/lib/dom"], 
             while (this.cursors.length > cursorIndex)
                 this.removeCursor();
 
-            var overwrite = this.session.getOverwrite();
+            const overwrite = this.session.getOverwrite();
             this.$setOverwrite(overwrite);
             this.$pixelPos = pixelPos;
             this.restartTimer();
@@ -15242,20 +15056,17 @@ ace.define("ace/layer/cursor", ["require", "exports", "module", "ace/lib/dom"], 
     }).call(Cursor.prototype);
 
     exports.Cursor = Cursor;
-
 });
 
-ace.define("ace/scrollbar", ["require", "exports", "module", "ace/lib/oop", "ace/lib/dom", "ace/lib/event", "ace/lib/event_emitter"], function(require, exports, module) {
-    "use strict";
-
-    var oop = require("./lib/oop");
-    var dom = require("./lib/dom");
-    var event = require("./lib/event");
-    var EventEmitter = require("./lib/event_emitter").EventEmitter;
-    var MAX_SCROLL_H = 0x8000;
-    var ScrollBar = function(parent) {
+ace.define("ace/scrollbar", ["require", "exports", "module", "ace/lib/oop", "ace/lib/dom", "ace/lib/event", "ace/lib/event_emitter"], (require, exports, module) => {
+    const oop = require("./lib/oop");
+    const dom = require("./lib/dom");
+    const event = require("./lib/event");
+    const EventEmitter = require("./lib/event_emitter").EventEmitter;
+    const MAX_SCROLL_H = 0x8000;
+    const ScrollBar = function(parent) {
         this.element = dom.createElement("div");
-        this.element.className = "ace_scrollbar ace_scrollbar" + this.classSuffix;
+        this.element.className = `ace_scrollbar ace_scrollbar${this.classSuffix}`;
 
         this.inner = dom.createElement("div");
         this.inner.className = "ace_scrollbar-inner";
@@ -15279,14 +15090,14 @@ ace.define("ace/scrollbar", ["require", "exports", "module", "ace/lib/oop", "ace
             this.coeff = 1;
         };
     }).call(ScrollBar.prototype);
-    var VScrollBar = function(parent, renderer) {
+    const VScrollBar = function(parent, renderer) {
         ScrollBar.call(this, parent);
         this.scrollTop = 0;
         this.scrollHeight = 0;
         renderer.$scrollbarWidth =
             this.width = dom.scrollbarWidth(parent.ownerDocument);
         this.inner.style.width =
-            this.element.style.width = (this.width || 15) + 5 + "px";
+            this.element.style.width = `${(this.width || 15) + 5}px`;
     };
 
     oop.inherits(VScrollBar, ScrollBar);
@@ -15298,7 +15109,7 @@ ace.define("ace/scrollbar", ["require", "exports", "module", "ace/lib/oop", "ace
             if (!this.skipEvent) {
                 this.scrollTop = this.element.scrollTop;
                 if (this.coeff != 1) {
-                    var h = this.element.clientHeight / this.scrollHeight;
+                    const h = this.element.clientHeight / this.scrollHeight;
                     this.scrollTop = this.scrollTop * (1 - h) / (this.coeff - h);
                 }
                 this._emit("scroll", {
@@ -15311,7 +15122,7 @@ ace.define("ace/scrollbar", ["require", "exports", "module", "ace/lib/oop", "ace
             return this.isVisible ? this.width : 0;
         };
         this.setHeight = function(height) {
-            this.element.style.height = height + "px";
+            this.element.style.height = `${height}px`;
         };
         this.setInnerHeight =
             this.setScrollHeight = function(height) {
@@ -15322,7 +15133,7 @@ ace.define("ace/scrollbar", ["require", "exports", "module", "ace/lib/oop", "ace
                 } else if (this.coeff != 1) {
                     this.coeff = 1
                 }
-                this.inner.style.height = height + "px";
+                this.inner.style.height = `${height}px`;
             };
         this.setScrollTop = function(scrollTop) {
             if (this.scrollTop != scrollTop) {
@@ -15333,12 +15144,12 @@ ace.define("ace/scrollbar", ["require", "exports", "module", "ace/lib/oop", "ace
         };
 
     }).call(VScrollBar.prototype);
-    var HScrollBar = function(parent, renderer) {
+    const HScrollBar = function(parent, renderer) {
         ScrollBar.call(this, parent);
         this.scrollLeft = 0;
         this.height = renderer.$scrollbarWidth;
         this.inner.style.height =
-            this.element.style.height = (this.height || 15) + 5 + "px";
+            this.element.style.height = `${(this.height || 15) + 5}px`;
     };
 
     oop.inherits(HScrollBar, ScrollBar);
@@ -15359,13 +15170,13 @@ ace.define("ace/scrollbar", ["require", "exports", "module", "ace/lib/oop", "ace
             return this.isVisible ? this.height : 0;
         };
         this.setWidth = function(width) {
-            this.element.style.width = width + "px";
+            this.element.style.width = `${width}px`;
         };
         this.setInnerWidth = function(width) {
-            this.inner.style.width = width + "px";
+            this.inner.style.width = `${width}px`;
         };
         this.setScrollWidth = function(width) {
-            this.inner.style.width = width + "px";
+            this.inner.style.width = `${width}px`;
         };
         this.setScrollLeft = function(scrollLeft) {
             if (this.scrollLeft != scrollLeft) {
@@ -15385,13 +15196,11 @@ ace.define("ace/scrollbar", ["require", "exports", "module", "ace/lib/oop", "ace
     exports.HScrollBar = HScrollBar;
 });
 
-ace.define("ace/renderloop", ["require", "exports", "module", "ace/lib/event"], function(require, exports, module) {
-    "use strict";
-
-    var event = require("./lib/event");
+ace.define("ace/renderloop", ["require", "exports", "module", "ace/lib/event"], (require, exports, module) => {
+    const event = require("./lib/event");
 
 
-    var RenderLoop = function(onRender, win) {
+    const RenderLoop = function(onRender, win) {
         this.onRender = onRender;
         this.pending = false;
         this.changes = 0;
@@ -15405,10 +15214,10 @@ ace.define("ace/renderloop", ["require", "exports", "module", "ace/lib/event"], 
             this.changes = this.changes | change;
             if (!this.pending && this.changes) {
                 this.pending = true;
-                var _self = this;
-                event.nextFrame(function() {
+                const _self = this;
+                event.nextFrame(() => {
                     _self.pending = false;
-                    var changes;
+                    let changes;
                     while (changes = _self.changes) {
                         _self.changes = 0;
                         _self.onRender(changes);
@@ -15422,17 +15231,17 @@ ace.define("ace/renderloop", ["require", "exports", "module", "ace/lib/event"], 
     exports.RenderLoop = RenderLoop;
 });
 
-ace.define("ace/layer/font_metrics", ["require", "exports", "module", "ace/lib/oop", "ace/lib/dom", "ace/lib/lang", "ace/lib/useragent", "ace/lib/event_emitter"], function(require, exports, module) {
+ace.define("ace/layer/font_metrics", ["require", "exports", "module", "ace/lib/oop", "ace/lib/dom", "ace/lib/lang", "ace/lib/useragent", "ace/lib/event_emitter"], (require, exports, module) => {
 
-    var oop = require("../lib/oop");
-    var dom = require("../lib/dom");
-    var lang = require("../lib/lang");
-    var useragent = require("../lib/useragent");
-    var EventEmitter = require("../lib/event_emitter").EventEmitter;
+    const oop = require("../lib/oop");
+    const dom = require("../lib/dom");
+    const lang = require("../lib/lang");
+    const useragent = require("../lib/useragent");
+    const EventEmitter = require("../lib/event_emitter").EventEmitter;
 
-    var CHAR_COUNT = 0;
+    let CHAR_COUNT = 0;
 
-    var FontMetrics = exports.FontMetrics = function(parentEl) {
+    const FontMetrics = exports.FontMetrics = function(parentEl) {
         this.el = dom.createElement("div");
         this.$setMeasureNodeStyles(this.el.style, true);
 
@@ -15468,11 +15277,11 @@ ace.define("ace/layer/font_metrics", ["require", "exports", "module", "ace/lib/o
         };
 
         this.$testFractionalRect = function() {
-            var el = dom.createElement("div");
+            const el = dom.createElement("div");
             this.$setMeasureNodeStyles(el.style);
             el.style.width = "0.2px";
             document.documentElement.appendChild(el);
-            var w = el.getBoundingClientRect().width;
+            const w = el.getBoundingClientRect().width;
             if (w > 0 && w < 1)
                 CHAR_COUNT = 50;
             else
@@ -15480,7 +15289,7 @@ ace.define("ace/layer/font_metrics", ["require", "exports", "module", "ace/lib/o
             el.parentNode.removeChild(el);
         };
 
-        this.$setMeasureNodeStyles = function(style, isRoot) {
+        this.$setMeasureNodeStyles = (style, isRoot) => {
             style.width = style.height = "auto";
             style.left = style.top = "0px";
             style.visibility = "hidden";
@@ -15496,10 +15305,10 @@ ace.define("ace/layer/font_metrics", ["require", "exports", "module", "ace/lib/o
         };
 
         this.checkForSizeChanges = function() {
-            var size = this.$measureSizes();
+            const size = this.$measureSizes();
             if (size && (this.$characterSize.width !== size.width || this.$characterSize.height !== size.height)) {
                 this.$measureNode.style.fontWeight = "bold";
-                var boldSize = this.$measureSizes();
+                const boldSize = this.$measureSizes();
                 this.$measureNode.style.fontWeight = "";
                 this.$characterSize = size;
                 this.charSizes = Object.create(null);
@@ -15513,8 +15322,8 @@ ace.define("ace/layer/font_metrics", ["require", "exports", "module", "ace/lib/o
         this.$pollSizeChanges = function() {
             if (this.$pollSizeChangesTimer)
                 return this.$pollSizeChangesTimer;
-            var self = this;
-            return this.$pollSizeChangesTimer = setInterval(function() {
+            const self = this;
+            return this.$pollSizeChangesTimer = setInterval(() => {
                 self.checkForSizeChanges();
             }, 500);
         };
@@ -15530,7 +15339,7 @@ ace.define("ace/layer/font_metrics", ["require", "exports", "module", "ace/lib/o
 
         this.$measureSizes = function() {
             if (CHAR_COUNT === 50) {
-                var rect = null;
+                let rect = null;
                 try {
                     rect = this.$measureNode.getBoundingClientRect();
                 } catch (e) {
@@ -15556,12 +15365,12 @@ ace.define("ace/layer/font_metrics", ["require", "exports", "module", "ace/lib/o
 
         this.$measureCharWidth = function(ch) {
             this.$main.innerHTML = lang.stringRepeat(ch, CHAR_COUNT);
-            var rect = this.$main.getBoundingClientRect();
+            const rect = this.$main.getBoundingClientRect();
             return rect.width / CHAR_COUNT;
         };
 
         this.getCharacterWidth = function(ch) {
-            var w = this.charSizes[ch];
+            let w = this.charSizes[ch];
             if (w === undefined) {
                 w = this.charSizes[ch] = this.$measureCharWidth(ch) / this.$characterSize.width;
             }
@@ -15578,28 +15387,26 @@ ace.define("ace/layer/font_metrics", ["require", "exports", "module", "ace/lib/o
 
 });
 
-ace.define("ace/virtual_renderer", ["require", "exports", "module", "ace/lib/oop", "ace/lib/dom", "ace/config", "ace/lib/useragent", "ace/layer/gutter", "ace/layer/marker", "ace/layer/text", "ace/layer/cursor", "ace/scrollbar", "ace/scrollbar", "ace/renderloop", "ace/layer/font_metrics", "ace/lib/event_emitter"], function(require, exports, module) {
-    "use strict";
-
-    var oop = require("./lib/oop");
-    var dom = require("./lib/dom");
-    var config = require("./config");
-    var useragent = require("./lib/useragent");
-    var GutterLayer = require("./layer/gutter").Gutter;
-    var MarkerLayer = require("./layer/marker").Marker;
-    var TextLayer = require("./layer/text").Text;
-    var CursorLayer = require("./layer/cursor").Cursor;
-    var HScrollBar = require("./scrollbar").HScrollBar;
-    var VScrollBar = require("./scrollbar").VScrollBar;
-    var RenderLoop = require("./renderloop").RenderLoop;
-    var FontMetrics = require("./layer/font_metrics").FontMetrics;
-    var EventEmitter = require("./lib/event_emitter").EventEmitter;
-    var editorCss = fs.readFileSync(__dirname + "/assets/stylesheet/editor.css", 'utf8')
+ace.define("ace/virtual_renderer", ["require", "exports", "module", "ace/lib/oop", "ace/lib/dom", "ace/config", "ace/lib/useragent", "ace/layer/gutter", "ace/layer/marker", "ace/layer/text", "ace/layer/cursor", "ace/scrollbar", "ace/scrollbar", "ace/renderloop", "ace/layer/font_metrics", "ace/lib/event_emitter"], (require, exports, module) => {
+    const oop = require("./lib/oop");
+    const dom = require("./lib/dom");
+    const config = require("./config");
+    const useragent = require("./lib/useragent");
+    const GutterLayer = require("./layer/gutter").Gutter;
+    const MarkerLayer = require("./layer/marker").Marker;
+    const TextLayer = require("./layer/text").Text;
+    const CursorLayer = require("./layer/cursor").Cursor;
+    const HScrollBar = require("./scrollbar").HScrollBar;
+    const VScrollBar = require("./scrollbar").VScrollBar;
+    const RenderLoop = require("./renderloop").RenderLoop;
+    const FontMetrics = require("./layer/font_metrics").FontMetrics;
+    const EventEmitter = require("./lib/event_emitter").EventEmitter;
+    const editorCss = fs.readFileSync(`${__dirname}/assets/stylesheet/editor.css`, 'utf8');
 
     dom.importCssString(editorCss, "ace_editor.css");
 
-    var VirtualRenderer = function(container, theme) {
-        var _self = this;
+    const VirtualRenderer = function(container, theme) {
+        const _self = this;
 
         this.container = container || dom.createElement("div");
         this.$keepTextAreaAtCursor = !useragent.isOldIE;
@@ -15625,7 +15432,7 @@ ace.define("ace/virtual_renderer", ["require", "exports", "module", "ace/lib/oop
 
         this.$markerBack = new MarkerLayer(this.content);
 
-        var textLayer = this.$textLayer = new TextLayer(this.content);
+        const textLayer = this.$textLayer = new TextLayer(this.content);
         this.canvas = textLayer.element;
 
         this.$markerFront = new MarkerLayer(this.content);
@@ -15637,11 +15444,11 @@ ace.define("ace/virtual_renderer", ["require", "exports", "module", "ace/lib/oop
         this.scrollBar =
             this.scrollBarV = new VScrollBar(this.container, this);
         this.scrollBarH = new HScrollBar(this.container, this);
-        this.scrollBarV.addEventListener("scroll", function(e) {
+        this.scrollBarV.addEventListener("scroll", e => {
             if (!_self.$scrollAnimation)
                 _self.session.setScrollTop(e.data - _self.scrollMargin.top);
         });
-        this.scrollBarH.addEventListener("scroll", function(e) {
+        this.scrollBarH.addEventListener("scroll", e => {
             if (!_self.$scrollAnimation)
                 _self.session.setScrollLeft(e.data - _self.scrollMargin.left);
         });
@@ -15656,7 +15463,7 @@ ace.define("ace/virtual_renderer", ["require", "exports", "module", "ace/lib/oop
 
         this.$fontMetrics = new FontMetrics(this.container);
         this.$textLayer.$setFontMetrics(this.$fontMetrics);
-        this.$textLayer.addEventListener("changeCharacterSize", function(e) {
+        this.$textLayer.addEventListener("changeCharacterSize", e => {
             _self.updateCharacterSize();
             _self.onResize(true, _self.gutterWidth, _self.$size.width, _self.$size.height);
             _self._signal("changeCharacterSize", e);
@@ -15764,8 +15571,8 @@ ace.define("ace/virtual_renderer", ["require", "exports", "module", "ace/lib/oop
 
             if (!this.$changedLines) {
                 this.$changedLines = {
-                    firstRow: firstRow,
-                    lastRow: lastRow
+                    firstRow,
+                    lastRow
                 };
             } else {
                 if (this.$changedLines.firstRow > firstRow)
@@ -15821,12 +15628,12 @@ ace.define("ace/virtual_renderer", ["require", "exports", "module", "ace/lib/oop
                 this.resizing++;
             else
                 this.resizing = force ? 1 : 0;
-            var el = this.container;
+            const el = this.container;
             if (!height)
                 height = el.clientHeight || el.scrollHeight;
             if (!width)
                 width = el.clientWidth || el.scrollWidth;
-            var changes = this.$updateCachedSize(force, gutterWidth, width, height);
+            const changes = this.$updateCachedSize(force, gutterWidth, width, height);
 
 
             if (!this.$size.scrollerHeight || (!width && !height))
@@ -15847,9 +15654,9 @@ ace.define("ace/virtual_renderer", ["require", "exports", "module", "ace/lib/oop
 
         this.$updateCachedSize = function(force, gutterWidth, width, height) {
             height -= (this.$extraHeight || 0);
-            var changes = 0;
-            var size = this.$size;
-            var oldSize = {
+            let changes = 0;
+            const size = this.$size;
+            const oldSize = {
                 width: size.width,
                 height: size.height,
                 scrollerHeight: size.scrollerHeight,
@@ -15862,7 +15669,7 @@ ace.define("ace/virtual_renderer", ["require", "exports", "module", "ace/lib/oop
                 size.scrollerHeight = size.height;
                 if (this.$horizScroll)
                     size.scrollerHeight -= this.scrollBarH.getHeight();
-                this.scrollBarV.element.style.bottom = this.scrollBarH.getHeight() + "px";
+                this.scrollBarV.element.style.bottom = `${this.scrollBarH.getHeight()}px`;
 
                 changes = changes | this.CHANGE_SCROLL;
             }
@@ -15877,12 +15684,12 @@ ace.define("ace/virtual_renderer", ["require", "exports", "module", "ace/lib/oop
                 this.gutterWidth = gutterWidth;
 
                 this.scrollBarH.element.style.left =
-                    this.scroller.style.left = gutterWidth + "px";
+                    this.scroller.style.left = `${gutterWidth}px`;
                 size.scrollerWidth = Math.max(0, width - gutterWidth - this.scrollBarV.getWidth());
 
                 this.scrollBarH.element.style.right =
-                    this.scroller.style.right = this.scrollBarV.getWidth() + "px";
-                this.scroller.style.bottom = this.scrollBarH.getHeight() + "px";
+                    this.scroller.style.right = `${this.scrollBarV.getWidth()}px`;
+                this.scroller.style.bottom = `${this.scrollBarH.getHeight()}px`;
 
                 if (this.session && this.session.getUseWrapMode() && this.adjustWrapLimit() || force)
                     changes |= this.CHANGE_FULL;
@@ -15897,7 +15704,7 @@ ace.define("ace/virtual_renderer", ["require", "exports", "module", "ace/lib/oop
         };
 
         this.onGutterResize = function() {
-            var gutterWidth = this.$showGutter ? this.$gutter.offsetWidth : 0;
+            const gutterWidth = this.$showGutter ? this.$gutter.offsetWidth : 0;
             if (gutterWidth != this.gutterWidth)
                 this.$changes |= this.$updateCachedSize(true, gutterWidth, this.$size.width, this.$size.height);
 
@@ -15911,8 +15718,8 @@ ace.define("ace/virtual_renderer", ["require", "exports", "module", "ace/lib/oop
             }
         };
         this.adjustWrapLimit = function() {
-            var availableWidth = this.$size.scrollerWidth - this.$padding * 2;
-            var limit = Math.floor(availableWidth / this.characterWidth);
+            const availableWidth = this.$size.scrollerWidth - this.$padding * 2;
+            const limit = Math.floor(availableWidth / this.characterWidth);
             return this.session.adjustWrapLimit(limit, this.$showPrintMargin && this.$printMarginColumn);
         };
         this.setAnimatedScroll = function(shouldAnimate) {
@@ -15970,16 +15777,16 @@ ace.define("ace/virtual_renderer", ["require", "exports", "module", "ace/lib/oop
         };
 
         this.$updateGutterLineHighlight = function() {
-            var pos = this.$cursorLayer.$pixelPos;
-            var height = this.layerConfig.lineHeight;
+            let pos = this.$cursorLayer.$pixelPos;
+            let height = this.layerConfig.lineHeight;
             if (this.session.getUseWrapMode()) {
-                var cursor = this.session.selection.getCursor();
+                const cursor = this.session.selection.getCursor();
                 cursor.column = 0;
                 pos = this.$cursorLayer.getPixelPosition(cursor, true);
                 height *= this.session.getRowLength(cursor.row);
             }
-            this.$gutterLineHighlight.style.top = pos.top - this.layerConfig.offset + "px";
-            this.$gutterLineHighlight.style.height = height + "px";
+            this.$gutterLineHighlight.style.top = `${pos.top - this.layerConfig.offset}px`;
+            this.$gutterLineHighlight.style.height = `${height}px`;
         };
 
         this.$updatePrintMargin = function() {
@@ -15987,7 +15794,7 @@ ace.define("ace/virtual_renderer", ["require", "exports", "module", "ace/lib/oop
                 return;
 
             if (!this.$printMarginEl) {
-                var containerEl = dom.createElement("div");
+                const containerEl = dom.createElement("div");
                 containerEl.className = "ace_layer ace_print-margin-layer";
                 this.$printMarginEl = dom.createElement("div");
                 this.$printMarginEl.className = "ace_print-margin";
@@ -15995,8 +15802,8 @@ ace.define("ace/virtual_renderer", ["require", "exports", "module", "ace/lib/oop
                 this.content.insertBefore(containerEl, this.content.firstChild);
             }
 
-            var style = this.$printMarginEl.style;
-            style.left = ((this.characterWidth * this.$printMarginColumn) + this.$padding) + "px";
+            const style = this.$printMarginEl.style;
+            style.left = `${(this.characterWidth * this.$printMarginColumn) + this.$padding}px`;
             style.visibility = this.$showPrintMargin ? "visible" : "hidden";
 
             if (this.session && this.session.$wrap == -1)
@@ -16014,21 +15821,21 @@ ace.define("ace/virtual_renderer", ["require", "exports", "module", "ace/lib/oop
         this.$moveTextAreaToCursor = function() {
             if (!this.$keepTextAreaAtCursor)
                 return;
-            var config = this.layerConfig;
-            var posTop = this.$cursorLayer.$pixelPos.top;
-            var posLeft = this.$cursorLayer.$pixelPos.left;
+            const config = this.layerConfig;
+            let posTop = this.$cursorLayer.$pixelPos.top;
+            let posLeft = this.$cursorLayer.$pixelPos.left;
             posTop -= config.offset;
 
-            var style = this.textarea.style;
-            var h = this.lineHeight;
+            const style = this.textarea.style;
+            let h = this.lineHeight;
             if (posTop < 0 || posTop > config.height - h) {
                 style.top = style.left = "0";
                 return;
             }
 
-            var w = this.characterWidth;
+            let w = this.characterWidth;
             if (this.$composition) {
-                var val = this.textarea.value.replace(/^\x01+/, "");
+                const val = this.textarea.value.replace(/^\x01+/, "");
                 w *= (this.session.$getStringScreenWidth(val)[0] + 2);
                 h += 2;
             }
@@ -16037,10 +15844,10 @@ ace.define("ace/virtual_renderer", ["require", "exports", "module", "ace/lib/oop
                 posLeft = this.$size.scrollerWidth - w;
 
             posLeft += this.gutterWidth;
-            style.height = h + "px";
-            style.width = w + "px";
-            style.left = Math.min(posLeft, this.$size.scrollerWidth - w) + "px";
-            style.top = Math.min(posTop, this.$size.height - h) + "px";
+            style.height = `${h}px`;
+            style.width = `${w}px`;
+            style.left = `${Math.min(posLeft, this.$size.scrollerWidth - w)}px`;
+            style.top = `${Math.min(posTop, this.$size.height - h)}px`;
         };
         this.getFirstVisibleRow = function() {
             return this.layerConfig.firstRow;
@@ -16049,9 +15856,9 @@ ace.define("ace/virtual_renderer", ["require", "exports", "module", "ace/lib/oop
             return this.layerConfig.firstRow + (this.layerConfig.offset === 0 ? 0 : 1);
         };
         this.getLastFullyVisibleRow = function() {
-            var config = this.layerConfig;
-            var lastRow = config.lastRow
-            var top = this.session.documentToScreenRow(lastRow, 0) * config.lineHeight;
+            const config = this.layerConfig;
+            const lastRow = config.lastRow;
+            const top = this.session.documentToScreenRow(lastRow, 0) * config.lineHeight;
             if (top - this.session.getScrollTop() > config.height - config.lineHeight)
                 return lastRow - 1;
             return lastRow;
@@ -16072,7 +15879,7 @@ ace.define("ace/virtual_renderer", ["require", "exports", "module", "ace/lib/oop
         };
 
         this.setScrollMargin = function(top, bottom, left, right) {
-            var sm = this.scrollMargin;
+            const sm = this.scrollMargin;
             sm.top = top | 0;
             sm.bottom = bottom | 0;
             sm.right = right | 0;
@@ -16097,8 +15904,8 @@ ace.define("ace/virtual_renderer", ["require", "exports", "module", "ace/lib/oop
         };
 
         this.$updateScrollBarV = function() {
-            var scrollHeight = this.layerConfig.maxHeight;
-            var scrollerHeight = this.$size.scrollerHeight;
+            let scrollHeight = this.layerConfig.maxHeight;
+            const scrollerHeight = this.$size.scrollerHeight;
             if (!this.$maxLines && this.$scrollPastEnd) {
                 scrollHeight -= (scrollerHeight - this.lineHeight) * this.$scrollPastEnd;
                 if (this.scrollTop > scrollHeight - scrollerHeight) {
@@ -16141,7 +15948,7 @@ ace.define("ace/virtual_renderer", ["require", "exports", "module", "ace/lib/oop
             }
 
             this._signal("beforeRender");
-            var config = this.layerConfig;
+            let config = this.layerConfig;
             if (changes & this.CHANGE_FULL ||
                 changes & this.CHANGE_SIZE ||
                 changes & this.CHANGE_TEXT ||
@@ -16151,7 +15958,7 @@ ace.define("ace/virtual_renderer", ["require", "exports", "module", "ace/lib/oop
             ) {
                 changes |= this.$computeLayerConfig();
                 if (config.firstRow != this.layerConfig.firstRow && config.firstRowScreen == this.layerConfig.firstRowScreen) {
-                    var st = this.scrollTop + (config.firstRow - this.layerConfig.firstRow) * this.lineHeight;
+                    const st = this.scrollTop + (config.firstRow - this.layerConfig.firstRow) * this.lineHeight;
                     if (st > 0) {
                         this.scrollTop = st;
                         changes = changes | this.CHANGE_SCROLL;
@@ -16162,13 +15969,13 @@ ace.define("ace/virtual_renderer", ["require", "exports", "module", "ace/lib/oop
                 this.$updateScrollBarV();
                 if (changes & this.CHANGE_H_SCROLL)
                     this.$updateScrollBarH();
-                this.$gutterLayer.element.style.marginTop = (-config.offset) + "px";
-                this.content.style.marginTop = (-config.offset) + "px";
-                this.content.style.width = config.width + 2 * this.$padding + "px";
-                this.content.style.height = config.minHeight + "px";
+                this.$gutterLayer.element.style.marginTop = `${-config.offset}px`;
+                this.content.style.marginTop = `${-config.offset}px`;
+                this.content.style.width = `${config.width + 2 * this.$padding}px`;
+                this.content.style.height = `${config.minHeight}px`;
             }
             if (changes & this.CHANGE_H_SCROLL) {
-                this.content.style.marginLeft = -this.scrollLeft + "px";
+                this.content.style.marginLeft = `${-this.scrollLeft}px`;
                 this.scroller.className = this.scrollLeft <= 0 ? "ace_scroller" : "ace_scroller ace_scroll-left";
             }
             if (changes & this.CHANGE_FULL) {
@@ -16231,16 +16038,16 @@ ace.define("ace/virtual_renderer", ["require", "exports", "module", "ace/lib/oop
 
 
         this.$autosize = function() {
-            var height = this.session.getScreenLength() * this.lineHeight;
-            var maxHeight = this.$maxLines * this.lineHeight;
-            var desiredHeight = Math.min(maxHeight,
+            const height = this.session.getScreenLength() * this.lineHeight;
+            const maxHeight = this.$maxLines * this.lineHeight;
+            let desiredHeight = Math.min(maxHeight,
                 Math.max((this.$minLines || 1) * this.lineHeight, height)
             ) + this.scrollMargin.v + (this.$extraHeight || 0);
             if (this.$horizScroll)
                 desiredHeight += this.scrollBarH.getHeight();
             if (this.$maxPixelHeight && desiredHeight > this.$maxPixelHeight)
                 desiredHeight = this.$maxPixelHeight;
-            var vScroll = height > maxHeight;
+            const vScroll = height > maxHeight;
 
             if (desiredHeight != this.desiredHeight ||
                 this.$size.height != this.desiredHeight || vScroll != this.$vScroll) {
@@ -16249,8 +16056,8 @@ ace.define("ace/virtual_renderer", ["require", "exports", "module", "ace/lib/oop
                     this.scrollBarV.setVisible(vScroll);
                 }
 
-                var w = this.container.clientWidth;
-                this.container.style.height = desiredHeight + "px";
+                const w = this.container.clientWidth;
+                this.container.style.height = `${desiredHeight}px`;
                 this.$updateCachedSize(true, this.$gutterWidth, w, desiredHeight);
                 this.desiredHeight = desiredHeight;
 
@@ -16259,55 +16066,56 @@ ace.define("ace/virtual_renderer", ["require", "exports", "module", "ace/lib/oop
         };
 
         this.$computeLayerConfig = function() {
-            var session = this.session;
-            var size = this.$size;
+            const session = this.session;
+            const size = this.$size;
 
-            var hideScrollbars = size.height <= 2 * this.lineHeight;
-            var screenLines = this.session.getScreenLength();
-            var maxHeight = screenLines * this.lineHeight;
+            const hideScrollbars = size.height <= 2 * this.lineHeight;
+            const screenLines = this.session.getScreenLength();
+            let maxHeight = screenLines * this.lineHeight;
 
-            var longestLine = this.$getLongestLine();
+            let longestLine = this.$getLongestLine();
 
-            var horizScroll = !hideScrollbars && (this.$hScrollBarAlwaysVisible ||
+            const horizScroll = !hideScrollbars && (this.$hScrollBarAlwaysVisible ||
                 size.scrollerWidth - longestLine - 2 * this.$padding < 0);
 
-            var hScrollChanged = this.$horizScroll !== horizScroll;
+            const hScrollChanged = this.$horizScroll !== horizScroll;
             if (hScrollChanged) {
                 this.$horizScroll = horizScroll;
                 this.scrollBarH.setVisible(horizScroll);
             }
-            var vScrollBefore = this.$vScroll; // autosize can change vscroll value in which case we need to update longestLine
+            const vScrollBefore = this.$vScroll; // autosize can change vscroll value in which case we need to update longestLine
             if (this.$maxLines && this.lineHeight > 1)
                 this.$autosize();
 
-            var offset = this.scrollTop % this.lineHeight;
-            var minHeight = size.scrollerHeight + this.lineHeight;
+            let offset = this.scrollTop % this.lineHeight;
+            let minHeight = size.scrollerHeight + this.lineHeight;
 
-            var scrollPastEnd = !this.$maxLines && this.$scrollPastEnd ? (size.scrollerHeight - this.lineHeight) * this.$scrollPastEnd : 0;
+            const scrollPastEnd = !this.$maxLines && this.$scrollPastEnd ? (size.scrollerHeight - this.lineHeight) * this.$scrollPastEnd : 0;
             maxHeight += scrollPastEnd;
 
-            var sm = this.scrollMargin;
+            const sm = this.scrollMargin;
             this.session.setScrollTop(Math.max(-sm.top,
                 Math.min(this.scrollTop, maxHeight - size.scrollerHeight + sm.bottom)));
 
             this.session.setScrollLeft(Math.max(-sm.left, Math.min(this.scrollLeft,
                 longestLine + 2 * this.$padding - size.scrollerWidth + sm.right)));
 
-            var vScroll = !hideScrollbars && (this.$vScrollBarAlwaysVisible ||
+            const vScroll = !hideScrollbars && (this.$vScrollBarAlwaysVisible ||
                 size.scrollerHeight - maxHeight + scrollPastEnd < 0 || this.scrollTop > sm.top);
-            var vScrollChanged = vScrollBefore !== vScroll;
+            const vScrollChanged = vScrollBefore !== vScroll;
             if (vScrollChanged) {
                 this.$vScroll = vScroll;
                 this.scrollBarV.setVisible(vScroll);
             }
 
-            var lineCount = Math.ceil(minHeight / this.lineHeight) - 1;
-            var firstRow = Math.max(0, Math.round((this.scrollTop - offset) / this.lineHeight));
-            var lastRow = firstRow + lineCount;
-            var firstRowScreen, firstRowHeight;
-            var lineHeight = this.lineHeight;
+            const lineCount = Math.ceil(minHeight / this.lineHeight) - 1;
+            let firstRow = Math.max(0, Math.round((this.scrollTop - offset) / this.lineHeight));
+            let lastRow = firstRow + lineCount;
+            let firstRowScreen;
+            let firstRowHeight;
+            const lineHeight = this.lineHeight;
             firstRow = session.screenToDocumentRow(firstRow, 0);
-            var foldLine = session.getFoldLine(firstRow);
+            const foldLine = session.getFoldLine(firstRow);
             if (foldLine) {
                 firstRow = foldLine.start.row;
             }
@@ -16321,7 +16129,7 @@ ace.define("ace/virtual_renderer", ["require", "exports", "module", "ace/lib/oop
 
             offset = this.scrollTop - firstRowScreen * lineHeight;
 
-            var changes = 0;
+            let changes = 0;
             if (this.layerConfig.width != longestLine)
                 changes = this.CHANGE_H_SCROLL;
             if (hScrollChanged || vScrollChanged) {
@@ -16334,14 +16142,14 @@ ace.define("ace/virtual_renderer", ["require", "exports", "module", "ace/lib/oop
             this.layerConfig = {
                 width: longestLine,
                 padding: this.$padding,
-                firstRow: firstRow,
-                firstRowScreen: firstRowScreen,
-                lastRow: lastRow,
-                lineHeight: lineHeight,
+                firstRow,
+                firstRowScreen,
+                lastRow,
+                lineHeight,
                 characterWidth: this.characterWidth,
-                minHeight: minHeight,
-                maxHeight: maxHeight,
-                offset: offset,
+                minHeight,
+                maxHeight,
+                offset,
                 gutterOffset: lineHeight ? Math.max(0, Math.ceil((offset + size.height - size.scrollerHeight) / lineHeight)) : 0,
                 height: this.$size.scrollerHeight
             };
@@ -16350,11 +16158,11 @@ ace.define("ace/virtual_renderer", ["require", "exports", "module", "ace/lib/oop
         };
 
         this.$updateLines = function() {
-            var firstRow = this.$changedLines.firstRow;
-            var lastRow = this.$changedLines.lastRow;
+            const firstRow = this.$changedLines.firstRow;
+            const lastRow = this.$changedLines.lastRow;
             this.$changedLines = null;
 
-            var layerConfig = this.layerConfig;
+            const layerConfig = this.layerConfig;
 
             if (firstRow > layerConfig.lastRow + 1) {
                 return;
@@ -16373,7 +16181,7 @@ ace.define("ace/virtual_renderer", ["require", "exports", "module", "ace/lib/oop
         };
 
         this.$getLongestLine = function() {
-            var charCount = this.session.getScreenWidth();
+            let charCount = this.session.getScreenWidth();
             if (this.showInvisibles && !this.session.$useWrapMode)
                 charCount += 1;
 
@@ -16418,15 +16226,15 @@ ace.define("ace/virtual_renderer", ["require", "exports", "module", "ace/lib/oop
             if (this.$size.scrollerHeight === 0)
                 return;
 
-            var pos = this.$cursorLayer.getPixelPosition(cursor);
+            const pos = this.$cursorLayer.getPixelPosition(cursor);
 
-            var left = pos.left;
-            var top = pos.top;
+            let left = pos.left;
+            let top = pos.top;
 
-            var topMargin = $viewMargin && $viewMargin.top || 0;
-            var bottomMargin = $viewMargin && $viewMargin.bottom || 0;
+            const topMargin = $viewMargin && $viewMargin.top || 0;
+            const bottomMargin = $viewMargin && $viewMargin.bottom || 0;
 
-            var scrollTop = this.$scrollAnimation ? this.session.getScrollTop() : this.scrollTop;
+            const scrollTop = this.$scrollAnimation ? this.session.getScrollTop() : this.scrollTop;
 
             if (scrollTop + topMargin > top) {
                 if (offset && scrollTop + topMargin > top + this.lineHeight)
@@ -16440,7 +16248,7 @@ ace.define("ace/virtual_renderer", ["require", "exports", "module", "ace/lib/oop
                 this.session.setScrollTop(top + this.lineHeight - this.$size.scrollerHeight);
             }
 
-            var scrollLeft = this.scrollLeft;
+            const scrollLeft = this.scrollLeft;
 
             if (scrollLeft > left) {
                 if (left < this.$padding + 2 * this.layerConfig.characterWidth)
@@ -16475,9 +16283,9 @@ ace.define("ace/virtual_renderer", ["require", "exports", "module", "ace/lib/oop
                     column: 0
                 };
 
-            var pos = this.$cursorLayer.getPixelPosition(cursor);
-            var h = this.$size.scrollerHeight - this.lineHeight;
-            var offset = pos.top - h * (alignment || 0);
+            const pos = this.$cursorLayer.getPixelPosition(cursor);
+            const h = this.$size.scrollerHeight - this.lineHeight;
+            const offset = pos.top - h * (alignment || 0);
 
             this.session.setScrollTop(offset);
             return offset;
@@ -16485,13 +16293,11 @@ ace.define("ace/virtual_renderer", ["require", "exports", "module", "ace/lib/oop
 
         this.STEPS = 8;
         this.$calcSteps = function(fromValue, toValue) {
-            var i = 0;
-            var l = this.STEPS;
-            var steps = [];
+            let i = 0;
+            const l = this.STEPS;
+            const steps = [];
 
-            var func = function(t, x_min, dx) {
-                return dx * (Math.pow(t - 1, 3) + 1) + x_min;
-            };
+            const func = (t, x_min, dx) => dx * ((t - 1) ** 3 + 1) + x_min;
 
             for (i = 0; i < l; ++i)
                 steps.push(func(i / this.STEPS, fromValue, toValue - fromValue));
@@ -16499,31 +16305,31 @@ ace.define("ace/virtual_renderer", ["require", "exports", "module", "ace/lib/oop
             return steps;
         };
         this.scrollToLine = function(line, center, animate, callback) {
-            var pos = this.$cursorLayer.getPixelPosition({
+            const pos = this.$cursorLayer.getPixelPosition({
                 row: line,
                 column: 0
             });
-            var offset = pos.top;
+            let offset = pos.top;
             if (center)
                 offset -= this.$size.scrollerHeight / 2;
 
-            var initialScroll = this.scrollTop;
+            const initialScroll = this.scrollTop;
             this.session.setScrollTop(offset);
             if (animate !== false)
                 this.animateScrolling(initialScroll, callback);
         };
 
         this.animateScrolling = function(fromValue, callback) {
-            var toValue = this.scrollTop;
+            let toValue = this.scrollTop;
             if (!this.$animatedScroll)
                 return;
-            var _self = this;
+            const _self = this;
 
             if (fromValue == toValue)
                 return;
 
             if (this.$scrollAnimation) {
-                var oldSteps = this.$scrollAnimation.steps;
+                const oldSteps = this.$scrollAnimation.steps;
                 if (oldSteps.length) {
                     fromValue = oldSteps[0];
                     if (fromValue == toValue)
@@ -16531,18 +16337,18 @@ ace.define("ace/virtual_renderer", ["require", "exports", "module", "ace/lib/oop
                 }
             }
 
-            var steps = _self.$calcSteps(fromValue, toValue);
+            const steps = _self.$calcSteps(fromValue, toValue);
             this.$scrollAnimation = {
                 from: fromValue,
                 to: toValue,
-                steps: steps
+                steps
             };
 
             clearInterval(this.$timer);
 
             _self.session.setScrollTop(steps.shift());
             _self.session.$scrollTop = toValue;
-            this.$timer = setInterval(function() {
+            this.$timer = setInterval(() => {
                 if (steps.length) {
                     _self.session.setScrollTop(steps.shift());
                     _self.session.$scrollTop = toValue;
@@ -16588,36 +16394,36 @@ ace.define("ace/virtual_renderer", ["require", "exports", "module", "ace/lib/oop
         };
 
         this.pixelToScreenCoordinates = function(x, y) {
-            var canvasPos = this.scroller.getBoundingClientRect();
+            const canvasPos = this.scroller.getBoundingClientRect();
 
-            var offset = (x + this.scrollLeft - canvasPos.left - this.$padding) / this.characterWidth;
-            var row = Math.floor((y + this.scrollTop - canvasPos.top) / this.lineHeight);
-            var col = Math.round(offset);
+            const offset = (x + this.scrollLeft - canvasPos.left - this.$padding) / this.characterWidth;
+            const row = Math.floor((y + this.scrollTop - canvasPos.top) / this.lineHeight);
+            const col = Math.round(offset);
 
             return {
-                row: row,
+                row,
                 column: col,
                 side: offset - col > 0 ? 1 : -1
             };
         };
 
         this.screenToTextCoordinates = function(x, y) {
-            var canvasPos = this.scroller.getBoundingClientRect();
+            const canvasPos = this.scroller.getBoundingClientRect();
 
-            var col = Math.round(
+            const col = Math.round(
                 (x + this.scrollLeft - canvasPos.left - this.$padding) / this.characterWidth
             );
 
-            var row = (y + this.scrollTop - canvasPos.top) / this.lineHeight;
+            const row = (y + this.scrollTop - canvasPos.top) / this.lineHeight;
 
             return this.session.screenToDocumentPosition(row, Math.max(col, 0));
         };
         this.textToScreenCoordinates = function(row, column) {
-            var canvasPos = this.scroller.getBoundingClientRect();
-            var pos = this.session.documentToScreenPosition(row, column);
+            const canvasPos = this.scroller.getBoundingClientRect();
+            const pos = this.session.documentToScreenPosition(row, column);
 
-            var x = this.$padding + Math.round(pos.column * this.characterWidth);
-            var y = pos.row * this.lineHeight;
+            const x = this.$padding + Math.round(pos.column * this.characterWidth);
+            const y = pos.row * this.lineHeight;
 
             return {
                 pageX: canvasPos.left + x - this.scrollLeft,
@@ -16655,14 +16461,14 @@ ace.define("ace/virtual_renderer", ["require", "exports", "module", "ace/lib/oop
             this.$composition = null;
         };
         this.setTheme = function(theme, cb) {
-            var _self = this;
+            const _self = this;
             this.$themeId = theme;
             _self._dispatchEvent('themeChange', {
-                theme: theme
+                theme
             });
 
             if (!theme || typeof theme == "string") {
-                var moduleName = theme || this.$options.theme.initialValue;
+                const moduleName = theme || this.$options.theme.initialValue;
                 config.loadModule(["theme", moduleName], afterLoad);
             } else {
                 afterLoad(theme);
@@ -16672,7 +16478,7 @@ ace.define("ace/virtual_renderer", ["require", "exports", "module", "ace/lib/oop
                 if (_self.$themeId != theme)
                     return cb && cb();
                 if (!module || !module.cssClass)
-                    throw new Error("couldn't load module " + theme + " or it didn't call define");
+                    throw new Error(`couldn't load module ${theme} or it didn't call define`);
                 dom.importCssString(
                     module.cssText,
                     module.cssClass,
@@ -16682,7 +16488,7 @@ ace.define("ace/virtual_renderer", ["require", "exports", "module", "ace/lib/oop
                 if (_self.theme)
                     dom.removeCssClass(_self.container, _self.theme.cssClass);
 
-                var padding = "padding" in module ? module.padding : "padding" in (_self.theme || {}) ? 4 : _self.$padding;
+                const padding = "padding" in module ? module.padding : "padding" in (_self.theme || {}) ? 4 : _self.$padding;
                 if (_self.$padding && padding != _self.$padding)
                     _self.setPadding(padding);
                 _self.$theme = module.cssClass;
@@ -16731,37 +16537,37 @@ ace.define("ace/virtual_renderer", ["require", "exports", "module", "ace/lib/oop
             initialValue: false
         },
         showInvisibles: {
-            set: function(value) {
+            set(value) {
                 if (this.$textLayer.setShowInvisibles(value))
                     this.$loop.schedule(this.CHANGE_TEXT);
             },
             initialValue: false
         },
         showPrintMargin: {
-            set: function() {
+            set() {
                 this.$updatePrintMargin();
             },
             initialValue: true
         },
         printMarginColumn: {
-            set: function() {
+            set() {
                 this.$updatePrintMargin();
             },
             initialValue: 80
         },
         printMargin: {
-            set: function(val) {
+            set(val) {
                 if (typeof val == "number")
                     this.$printMarginColumn = val;
                 this.$showPrintMargin = !!val;
                 this.$updatePrintMargin();
             },
-            get: function() {
+            get() {
                 return this.$showPrintMargin && this.$printMarginColumn;
             }
         },
         showGutter: {
-            set: function(show) {
+            set(show) {
                 this.$gutter.style.display = show ? "block" : "none";
                 this.$loop.schedule(this.CHANGE_FULL);
                 this.onGutterResize();
@@ -16769,33 +16575,33 @@ ace.define("ace/virtual_renderer", ["require", "exports", "module", "ace/lib/oop
             initialValue: true
         },
         fadeFoldWidgets: {
-            set: function(show) {
+            set(show) {
                 dom.setCssClass(this.$gutter, "ace_fade-fold-widgets", show);
             },
             initialValue: false
         },
         showFoldWidgets: {
-            set: function(show) {
+            set(show) {
                 this.$gutterLayer.setShowFoldWidgets(show)
             },
             initialValue: true
         },
         showLineNumbers: {
-            set: function(show) {
+            set(show) {
                 this.$gutterLayer.setShowLineNumbers(show);
                 this.$loop.schedule(this.CHANGE_GUTTER);
             },
             initialValue: true
         },
         displayIndentGuides: {
-            set: function(show) {
+            set(show) {
                 if (this.$textLayer.setDisplayIndentGuides(show))
                     this.$loop.schedule(this.CHANGE_TEXT);
             },
             initialValue: true
         },
         highlightGutterLine: {
-            set: function(shouldHighlight) {
+            set(shouldHighlight) {
                 if (!this.$gutterLineHighlight) {
                     this.$gutterLineHighlight = dom.createElement("div");
                     this.$gutterLineHighlight.className = "ace_gutter-active-line";
@@ -16811,52 +16617,52 @@ ace.define("ace/virtual_renderer", ["require", "exports", "module", "ace/lib/oop
             value: true
         },
         hScrollBarAlwaysVisible: {
-            set: function(val) {
+            set(val) {
                 if (!this.$hScrollBarAlwaysVisible || !this.$horizScroll)
                     this.$loop.schedule(this.CHANGE_SCROLL);
             },
             initialValue: false
         },
         vScrollBarAlwaysVisible: {
-            set: function(val) {
+            set(val) {
                 if (!this.$vScrollBarAlwaysVisible || !this.$vScroll)
                     this.$loop.schedule(this.CHANGE_SCROLL);
             },
             initialValue: false
         },
         fontSize: {
-            set: function(size) {
+            set(size) {
                 if (typeof size == "number")
-                    size = size + "px";
+                    size = `${size}px`;
                 this.container.style.fontSize = size;
                 this.updateFontSize();
             },
             initialValue: 12
         },
         fontFamily: {
-            set: function(name) {
+            set(name) {
                 this.container.style.fontFamily = name;
                 this.updateFontSize();
             }
         },
         maxLines: {
-            set: function(val) {
+            set(val) {
                 this.updateFull();
             }
         },
         minLines: {
-            set: function(val) {
+            set(val) {
                 this.updateFull();
             }
         },
         maxPixelHeight: {
-            set: function(val) {
+            set(val) {
                 this.updateFull();
             },
             initialValue: 0
         },
         scrollPastEnd: {
-            set: function(val) {
+            set(val) {
                 val = +val || 0;
                 if (this.$scrollPastEnd == val)
                     return;
@@ -16867,16 +16673,16 @@ ace.define("ace/virtual_renderer", ["require", "exports", "module", "ace/lib/oop
             handlesSet: true
         },
         fixedWidthGutter: {
-            set: function(val) {
+            set(val) {
                 this.$gutterLayer.$fixedWidth = !!val;
                 this.$loop.schedule(this.CHANGE_GUTTER);
             }
         },
         theme: {
-            set: function(val) {
+            set(val) {
                 this.setTheme(val)
             },
-            get: function() {
+            get() {
                 return this.$themeId || this.theme;
             },
             initialValue: "./theme/monokai",
@@ -16887,15 +16693,13 @@ ace.define("ace/virtual_renderer", ["require", "exports", "module", "ace/lib/oop
     exports.VirtualRenderer = VirtualRenderer;
 });
 
-ace.define("ace/worker/worker_client", ["require", "exports", "module", "ace/lib/oop", "ace/lib/net", "ace/lib/event_emitter", "ace/config"], function(require, exports, module) {
-    "use strict";
+ace.define("ace/worker/worker_client", ["require", "exports", "module", "ace/lib/oop", "ace/lib/net", "ace/lib/event_emitter", "ace/config"], (require, exports, module) => {
+    const oop = require("../lib/oop");
+    const net = require("../lib/net");
+    const EventEmitter = require("../lib/event_emitter").EventEmitter;
+    const config = require("../config");
 
-    var oop = require("../lib/oop");
-    var net = require("../lib/net");
-    var EventEmitter = require("../lib/event_emitter").EventEmitter;
-    var config = require("../config");
-
-    var WorkerClient = function(topLevelNamespaces, mod, classname, workerUrl) {
+    const WorkerClient = function(topLevelNamespaces, mod, classname, workerUrl) {
         this.$sendDeltaQueue = this.$sendDeltaQueue.bind(this);
         this.changeListener = this.changeListener.bind(this);
         this.onMessage = this.onMessage.bind(this);
@@ -16905,11 +16709,11 @@ ace.define("ace/worker/worker_client", ["require", "exports", "module", "ace/lib
         if (config.get("packaged") || !require.toUrl) {
             workerUrl = workerUrl || config.moduleUrl(mod, "worker");
         } else {
-            var normalizePath = this.$normalizePath;
+            const normalizePath = this.$normalizePath;
             workerUrl = workerUrl || normalizePath(require.toUrl("ace/worker/worker.js", null, "_"));
 
             var tlns = {};
-            topLevelNamespaces.forEach(function(ns) {
+            topLevelNamespaces.forEach(ns => {
                 tlns[ns] = normalizePath(require.toUrl(ns, null, "_").replace(/(\.js)?(\?.*)?$/, ""));
             });
         }
@@ -16918,9 +16722,9 @@ ace.define("ace/worker/worker_client", ["require", "exports", "module", "ace/lib
             this.$worker = new Worker(workerUrl);
         } catch (e) {
             if (e instanceof window.DOMException) {
-                var blob = this.$workerBlob(workerUrl);
-                var URL = window.URL || window.webkitURL;
-                var blobURL = URL.createObjectURL(blob);
+                const blob = this.$workerBlob(workerUrl);
+                const URL = window.URL || window.webkitURL;
+                const blobURL = URL.createObjectURL(blob);
 
                 this.$worker = new Worker(blobURL);
                 URL.revokeObjectURL(blobURL);
@@ -16930,9 +16734,9 @@ ace.define("ace/worker/worker_client", ["require", "exports", "module", "ace/lib
         }
         this.$worker.postMessage({
             init: true,
-            tlns: tlns,
+            tlns,
             module: mod,
-            classname: classname
+            classname
         });
 
         this.callbackId = 1;
@@ -16946,7 +16750,7 @@ ace.define("ace/worker/worker_client", ["require", "exports", "module", "ace/lib
         oop.implement(this, EventEmitter);
 
         this.onMessage = function(e) {
-            var msg = e.data;
+            const msg = e.data;
             switch (msg.type) {
                 case "event":
                     this._signal(msg.name, {
@@ -16954,7 +16758,7 @@ ace.define("ace/worker/worker_client", ["require", "exports", "module", "ace/lib
                     });
                     break;
                 case "call":
-                    var callback = this.callbacks[msg.id];
+                    const callback = this.callbacks[msg.id];
                     if (callback) {
                         callback(msg.data);
                         delete this.callbacks[msg.id];
@@ -16964,18 +16768,16 @@ ace.define("ace/worker/worker_client", ["require", "exports", "module", "ace/lib
                     this.reportError(msg.data);
                     break;
                 case "log":
-                    window.console && console.log && console.log.apply(console, msg.data);
+                    window.console && console.log && console.log(...msg.data);
                     break;
             }
         };
 
-        this.reportError = function(err) {
+        this.reportError = err => {
             window.console && console.error && console.error(err);
         };
 
-        this.$normalizePath = function(path) {
-            return net.qualifyURL(path);
-        };
+        this.$normalizePath = path => net.qualifyURL(path);
 
         this.terminate = function() {
             this._signal("terminate", {});
@@ -16990,13 +16792,13 @@ ace.define("ace/worker/worker_client", ["require", "exports", "module", "ace/lib
         this.send = function(cmd, args) {
             this.$worker.postMessage({
                 command: cmd,
-                args: args
+                args
             });
         };
 
         this.call = function(cmd, args, callback) {
             if (callback) {
-                var id = this.callbackId++;
+                const id = this.callbackId++;
                 this.callbacks[id] = callback;
                 args.push(id);
             }
@@ -17006,7 +16808,7 @@ ace.define("ace/worker/worker_client", ["require", "exports", "module", "ace/lib
         this.emit = function(event, data) {
             try {
                 this.$worker.postMessage({
-                    event: event,
+                    event,
                     data: {
                         data: data.data
                     }
@@ -17037,7 +16839,7 @@ ace.define("ace/worker/worker_client", ["require", "exports", "module", "ace/lib
         };
 
         this.$sendDeltaQueue = function() {
-            var q = this.deltaQueue;
+            const q = this.deltaQueue;
             if (!q) return;
             this.deltaQueue = null;
             if (q.length > 50 && q.length > this.$doc.getLength() >> 1) {
@@ -17048,15 +16850,15 @@ ace.define("ace/worker/worker_client", ["require", "exports", "module", "ace/lib
                 });
         };
 
-        this.$workerBlob = function(workerUrl) {
-            var script = "importScripts('" + net.qualifyURL(workerUrl) + "');";
+        this.$workerBlob = workerUrl => {
+            const script = `importScripts('${net.qualifyURL(workerUrl)}');`;
             try {
                 return new Blob([script], {
                     "type": "application/javascript"
                 });
             } catch (e) { // Backwards-compatibility
-                var BlobBuilder = window.BlobBuilder || window.WebKitBlobBuilder || window.MozBlobBuilder;
-                var blobBuilder = new BlobBuilder();
+                const BlobBuilder = window.BlobBuilder || window.WebKitBlobBuilder || window.MozBlobBuilder;
+                const blobBuilder = new BlobBuilder();
                 blobBuilder.append(script);
                 return blobBuilder.getBlob("application/javascript");
             }
@@ -17065,21 +16867,21 @@ ace.define("ace/worker/worker_client", ["require", "exports", "module", "ace/lib
     }).call(WorkerClient.prototype);
 
 
-    var UIWorkerClient = function(topLevelNamespaces, mod, classname) {
+    const UIWorkerClient = function(topLevelNamespaces, mod, classname) {
         this.$sendDeltaQueue = this.$sendDeltaQueue.bind(this);
         this.changeListener = this.changeListener.bind(this);
         this.callbackId = 1;
         this.callbacks = {};
         this.messageBuffer = [];
 
-        var main = null;
-        var emitSync = false;
-        var sender = Object.create(EventEmitter);
-        var _self = this;
+        let main = null;
+        let emitSync = false;
+        const sender = Object.create(EventEmitter);
+        const _self = this;
 
         this.$worker = {};
-        this.$worker.terminate = function() {};
-        this.$worker.postMessage = function(e) {
+        this.$worker.terminate = () => {};
+        this.$worker.postMessage = e => {
             _self.messageBuffer.push(e);
             if (main) {
                 if (emitSync)
@@ -17088,19 +16890,19 @@ ace.define("ace/worker/worker_client", ["require", "exports", "module", "ace/lib
                     processNext();
             }
         };
-        this.setEmitSync = function(val) {
+        this.setEmitSync = val => {
             emitSync = val
         };
 
-        var processNext = function() {
-            var msg = _self.messageBuffer.shift();
+        var processNext = () => {
+            const msg = _self.messageBuffer.shift();
             if (msg.command)
-                main[msg.command].apply(main, msg.args);
+                main[msg.command](...msg.args);
             else if (msg.event)
                 sender._signal(msg.event, msg.data);
         };
 
-        sender.postMessage = function(msg) {
+        sender.postMessage = msg => {
             _self.onMessage({
                 data: msg
             });
@@ -17109,18 +16911,18 @@ ace.define("ace/worker/worker_client", ["require", "exports", "module", "ace/lib
             this.postMessage({
                 type: "call",
                 id: callbackId,
-                data: data
+                data
             });
         };
         sender.emit = function(name, data) {
             this.postMessage({
                 type: "event",
-                name: name,
-                data: data
+                name,
+                data
             });
         };
 
-        config.loadModule(["worker", mod], function(Main) {
+        config.loadModule(["worker", mod], Main => {
             main = new Main[classname](sender);
             while (_self.messageBuffer.length)
                 processNext();
@@ -17131,18 +16933,15 @@ ace.define("ace/worker/worker_client", ["require", "exports", "module", "ace/lib
 
     exports.UIWorkerClient = UIWorkerClient;
     exports.WorkerClient = WorkerClient;
-
 });
 
-ace.define("ace/placeholder", ["require", "exports", "module", "ace/range", "ace/lib/event_emitter", "ace/lib/oop"], function(require, exports, module) {
-    "use strict";
+ace.define("ace/placeholder", ["require", "exports", "module", "ace/range", "ace/lib/event_emitter", "ace/lib/oop"], (require, exports, module) => {
+    const Range = require("./range").Range;
+    const EventEmitter = require("./lib/event_emitter").EventEmitter;
+    const oop = require("./lib/oop");
 
-    var Range = require("./range").Range;
-    var EventEmitter = require("./lib/event_emitter").EventEmitter;
-    var oop = require("./lib/oop");
-
-    var PlaceHolder = function(session, length, pos, others, mainClass, othersClass) {
-        var _self = this;
+    const PlaceHolder = function(session, length, pos, others, mainClass, othersClass) {
+        const _self = this;
         this.length = length;
         this.session = session;
         this.doc = session.getDocument();
@@ -17152,14 +16951,14 @@ ace.define("ace/placeholder", ["require", "exports", "module", "ace/range", "ace
         this.doc.on("change", this.$onUpdate);
         this.$others = others;
 
-        this.$onCursorChange = function() {
-            setTimeout(function() {
+        this.$onCursorChange = () => {
+            setTimeout(() => {
                 _self.onCursorChange();
             });
         };
 
         this.$pos = pos;
-        var undoStack = session.getUndoManager().$undoStack || session.getUndoManager().$undostack || {
+        const undoStack = session.getUndoManager().$undoStack || session.getUndoManager().$undostack || {
             length: -1
         };
         this.$undoStackDepth = undoStack.length;
@@ -17172,22 +16971,22 @@ ace.define("ace/placeholder", ["require", "exports", "module", "ace/range", "ace
 
         oop.implement(this, EventEmitter);
         this.setup = function() {
-            var _self = this;
-            var doc = this.doc;
-            var session = this.session;
+            const _self = this;
+            const doc = this.doc;
+            const session = this.session;
 
             this.selectionBefore = session.selection.toJSON();
             if (session.selection.inMultiSelectMode)
                 session.selection.toSingleRange();
 
             this.pos = doc.createAnchor(this.$pos.row, this.$pos.column);
-            var pos = this.pos;
+            const pos = this.pos;
             pos.$insertRight = true;
             pos.detach();
             pos.markerId = session.addMarker(new Range(pos.row, pos.column, pos.row, pos.column + this.length), this.mainClass, null, false);
             this.others = [];
-            this.$others.forEach(function(other) {
-                var anchor = doc.createAnchor(other.row, other.column);
+            this.$others.forEach(other => {
+                const anchor = doc.createAnchor(other.row, other.column);
                 anchor.$insertRight = true;
                 anchor.detach();
                 _self.others.push(anchor);
@@ -17196,17 +16995,17 @@ ace.define("ace/placeholder", ["require", "exports", "module", "ace/range", "ace
         };
         this.showOtherMarkers = function() {
             if (this.othersActive) return;
-            var session = this.session;
-            var _self = this;
+            const session = this.session;
+            const _self = this;
             this.othersActive = true;
-            this.others.forEach(function(anchor) {
+            this.others.forEach(anchor => {
                 anchor.markerId = session.addMarker(new Range(anchor.row, anchor.column, anchor.row, anchor.column + _self.length), _self.othersClass, null, false);
             });
         };
         this.hideOtherMarkers = function() {
             if (!this.othersActive) return;
             this.othersActive = false;
-            for (var i = 0; i < this.others.length; i++) {
+            for (let i = 0; i < this.others.length; i++) {
                 this.session.removeMarker(this.others[i].markerId);
             }
         };
@@ -17214,13 +17013,13 @@ ace.define("ace/placeholder", ["require", "exports", "module", "ace/range", "ace
             if (this.$updating)
                 return this.updateAnchors(delta);
 
-            var range = delta;
+            const range = delta;
             if (range.start.row !== range.end.row) return;
             if (range.start.row !== this.pos.row) return;
             this.$updating = true;
-            var lengthDiff = delta.action === "insert" ? range.end.column - range.start.column : range.start.column - range.end.column;
-            var inMainRange = range.start.column >= this.pos.column && range.start.column <= this.pos.column + this.length + 1;
-            var distanceFromStart = range.start.column - this.pos.column;
+            const lengthDiff = delta.action === "insert" ? range.end.column - range.start.column : range.start.column - range.end.column;
+            const inMainRange = range.start.column >= this.pos.column && range.start.column <= this.pos.column + this.length + 1;
+            const distanceFromStart = range.start.column - this.pos.column;
 
             this.updateAnchors(delta);
 
@@ -17255,7 +17054,7 @@ ace.define("ace/placeholder", ["require", "exports", "module", "ace/range", "ace
 
         this.updateAnchors = function(delta) {
             this.pos.onChange(delta);
-            for (var i = this.others.length; i--;)
+            for (let i = this.others.length; i--;)
                 this.others[i].onChange(delta);
             this.updateMarkers();
         };
@@ -17263,20 +17062,20 @@ ace.define("ace/placeholder", ["require", "exports", "module", "ace/range", "ace
         this.updateMarkers = function() {
             if (this.$updating)
                 return;
-            var _self = this;
-            var session = this.session;
-            var updateMarker = function(pos, className) {
+            const _self = this;
+            const session = this.session;
+            const updateMarker = (pos, className) => {
                 session.removeMarker(pos.markerId);
                 pos.markerId = session.addMarker(new Range(pos.row, pos.column, pos.row, pos.column + _self.length), className, null, false);
             };
             updateMarker(this.pos, this.mainClass);
-            for (var i = this.others.length; i--;)
+            for (let i = this.others.length; i--;)
                 updateMarker(this.others[i], this.othersClass);
         };
 
         this.onCursorChange = function(event) {
             if (this.$updating || !this.session) return;
-            var pos = this.session.selection.getCursor();
+            const pos = this.session.selection.getCursor();
             if (pos.row === this.pos.row && pos.column >= this.pos.column && pos.column <= this.pos.column + this.length) {
                 this.showOtherMarkers();
                 this._emit("cursorEnter", event);
@@ -17296,9 +17095,9 @@ ace.define("ace/placeholder", ["require", "exports", "module", "ace/range", "ace
         this.cancel = function() {
             if (this.$undoStackDepth === -1)
                 return;
-            var undoManager = this.session.getUndoManager();
-            var undosRequired = (undoManager.$undoStack || undoManager.$undostack).length - this.$undoStackDepth;
-            for (var i = 0; i < undosRequired; i++) {
+            const undoManager = this.session.getUndoManager();
+            const undosRequired = (undoManager.$undoStack || undoManager.$undostack).length - this.$undoStackDepth;
+            for (let i = 0; i < undosRequired; i++) {
                 undoManager.undo(true);
             }
             if (this.selectionBefore)
@@ -17310,22 +17109,22 @@ ace.define("ace/placeholder", ["require", "exports", "module", "ace/range", "ace
     exports.PlaceHolder = PlaceHolder;
 });
 
-ace.define("ace/mouse/multi_select_handler", ["require", "exports", "module", "ace/lib/event", "ace/lib/useragent"], function(require, exports, module) {
+ace.define("ace/mouse/multi_select_handler", ["require", "exports", "module", "ace/lib/event", "ace/lib/useragent"], (require, exports, module) => {
 
-    var event = require("../lib/event");
-    var useragent = require("../lib/useragent");
+    const event = require("../lib/event");
+    const useragent = require("../lib/useragent");
 
     function isSamePoint(p1, p2) {
         return p1.row == p2.row && p1.column == p2.column;
     }
 
     function onMouseDown(e) {
-        var ev = e.domEvent;
-        var alt = ev.altKey;
-        var shift = ev.shiftKey;
-        var ctrl = ev.ctrlKey;
-        var accel = e.getAccelKey();
-        var button = e.getButton();
+        const ev = e.domEvent;
+        const alt = ev.altKey;
+        const shift = ev.shiftKey;
+        const ctrl = ev.ctrlKey;
+        const accel = e.getAccelKey();
+        let button = e.getButton();
 
         if (ctrl && useragent.isMac)
             button = ev.button;
@@ -17344,25 +17143,25 @@ ace.define("ace/mouse/multi_select_handler", ["require", "exports", "module", "a
         if (button !== 0)
             return;
 
-        var editor = e.editor;
-        var selection = editor.selection;
-        var isMultiSelect = editor.inMultiSelectMode;
-        var pos = e.getDocumentPosition();
-        var cursor = selection.getCursor();
-        var inSelection = e.inSelection() || (selection.isEmpty() && isSamePoint(pos, cursor));
+        const editor = e.editor;
+        const selection = editor.selection;
+        const isMultiSelect = editor.inMultiSelectMode;
+        const pos = e.getDocumentPosition();
+        const cursor = selection.getCursor();
+        const inSelection = e.inSelection() || (selection.isEmpty() && isSamePoint(pos, cursor));
 
-        var mouseX = e.x,
-            mouseY = e.y;
-        var onMouseSelection = function(e) {
+        let mouseX = e.x;
+        let mouseY = e.y;
+        const onMouseSelection = e => {
             mouseX = e.clientX;
             mouseY = e.clientY;
         };
 
-        var session = editor.session;
-        var screenAnchor = editor.renderer.pixelToScreenCoordinates(mouseX, mouseY);
-        var screenCursor = screenAnchor;
+        const session = editor.session;
+        let screenAnchor = editor.renderer.pixelToScreenCoordinates(mouseX, mouseY);
+        let screenCursor = screenAnchor;
 
-        var selectionMode;
+        let selectionMode;
         if (editor.$mouseHandler.$enableJumpToDef) {
             if (ctrl && alt || accel && alt)
                 selectionMode = shift ? "block" : "add";
@@ -17391,7 +17190,7 @@ ace.define("ace/mouse/multi_select_handler", ["require", "exports", "module", "a
                 editor.addSelectionMarker(range);
             }
 
-            var oldRange = selection.rangeList.rangeAtPoint(pos);
+            let oldRange = selection.rangeList.rangeAtPoint(pos);
 
 
             editor.$blockScrolling++;
@@ -17402,8 +17201,8 @@ ace.define("ace/mouse/multi_select_handler", ["require", "exports", "module", "a
                 range = selection.ranges[0] || range;
                 editor.removeSelectionMarker(range);
             }
-            editor.once("mouseup", function() {
-                var tmpSel = selection.toOrientedRange();
+            editor.once("mouseup", () => {
+                const tmpSel = selection.toOrientedRange();
 
                 if (oldRange && tmpSel.isEmpty() && isSamePoint(oldRange.cursor, tmpSel.cursor))
                     selection.substractPoint(tmpSel.cursor);
@@ -17423,11 +17222,11 @@ ace.define("ace/mouse/multi_select_handler", ["require", "exports", "module", "a
         } else if (selectionMode == "block") {
             e.stop();
             editor.inVirtualSelectionMode = true;
-            var initialRange;
-            var rectSel = [];
-            var blockSelect = function() {
-                var newCursor = editor.renderer.pixelToScreenCoordinates(mouseX, mouseY);
-                var cursor = session.screenToDocumentPosition(newCursor.row, newCursor.column);
+            let initialRange;
+            let rectSel = [];
+            const blockSelect = () => {
+                const newCursor = editor.renderer.pixelToScreenCoordinates(mouseX, mouseY);
+                const cursor = session.screenToDocumentPosition(newCursor.row, newCursor.column);
 
                 if (isSamePoint(screenCursor, newCursor) && isSamePoint(cursor, selection.lead))
                     return;
@@ -17464,7 +17263,7 @@ ace.define("ace/mouse/multi_select_handler", ["require", "exports", "module", "a
                 column: -1
             };
 
-            var onMouseSelectionEnd = function(e) {
+            const onMouseSelectionEnd = e => {
                 clearInterval(timerId);
                 editor.removeSelectionMarkers(rectSel);
                 if (!rectSel.length)
@@ -17474,17 +17273,17 @@ ace.define("ace/mouse/multi_select_handler", ["require", "exports", "module", "a
                     editor.removeSelectionMarker(initialRange);
                     selection.toSingleRange(initialRange);
                 }
-                for (var i = 0; i < rectSel.length; i++)
+                for (let i = 0; i < rectSel.length; i++)
                     selection.addRange(rectSel[i]);
                 editor.inVirtualSelectionMode = false;
                 editor.$mouseHandler.$clickSelection = null;
                 editor.$blockScrolling--;
             };
 
-            var onSelectionInterval = blockSelect;
+            const onSelectionInterval = blockSelect;
 
             event.capture(editor.container, onMouseSelection, onMouseSelectionEnd);
-            var timerId = setInterval(function() {
+            var timerId = setInterval(() => {
                 onSelectionInterval();
             }, 20);
 
@@ -17497,10 +17296,10 @@ ace.define("ace/mouse/multi_select_handler", ["require", "exports", "module", "a
 
 });
 
-ace.define("ace/commands/multi_select_commands", ["require", "exports", "module", "ace/keyboard/hash_handler"], function(require, exports, module) {
+ace.define("ace/commands/multi_select_commands", ["require", "exports", "module", "ace/keyboard/hash_handler"], (require, exports, module) => {
     exports.defaultCommands = [{
         name: "addCursorAbove",
-        exec: function(editor) {
+        exec(editor) {
             editor.selectMoreLines(-1);
         },
         bindKey: {
@@ -17511,7 +17310,7 @@ ace.define("ace/commands/multi_select_commands", ["require", "exports", "module"
         readOnly: true
     }, {
         name: "addCursorBelow",
-        exec: function(editor) {
+        exec(editor) {
             editor.selectMoreLines(1);
         },
         bindKey: {
@@ -17522,7 +17321,7 @@ ace.define("ace/commands/multi_select_commands", ["require", "exports", "module"
         readOnly: true
     }, {
         name: "addCursorAboveSkipCurrent",
-        exec: function(editor) {
+        exec(editor) {
             editor.selectMoreLines(-1, true);
         },
         bindKey: {
@@ -17533,7 +17332,7 @@ ace.define("ace/commands/multi_select_commands", ["require", "exports", "module"
         readOnly: true
     }, {
         name: "addCursorBelowSkipCurrent",
-        exec: function(editor) {
+        exec(editor) {
             editor.selectMoreLines(1, true);
         },
         bindKey: {
@@ -17544,7 +17343,7 @@ ace.define("ace/commands/multi_select_commands", ["require", "exports", "module"
         readOnly: true
     }, {
         name: "selectMoreBefore",
-        exec: function(editor) {
+        exec(editor) {
             editor.selectMore(-1);
         },
         bindKey: {
@@ -17555,7 +17354,7 @@ ace.define("ace/commands/multi_select_commands", ["require", "exports", "module"
         readOnly: true
     }, {
         name: "selectMoreAfter",
-        exec: function(editor) {
+        exec(editor) {
             editor.selectMore(1);
         },
         bindKey: {
@@ -17566,7 +17365,7 @@ ace.define("ace/commands/multi_select_commands", ["require", "exports", "module"
         readOnly: true
     }, {
         name: "selectNextBefore",
-        exec: function(editor) {
+        exec(editor) {
             editor.selectMore(-1, true);
         },
         bindKey: {
@@ -17577,7 +17376,7 @@ ace.define("ace/commands/multi_select_commands", ["require", "exports", "module"
         readOnly: true
     }, {
         name: "selectNextAfter",
-        exec: function(editor) {
+        exec(editor) {
             editor.selectMore(1, true);
         },
         bindKey: {
@@ -17588,7 +17387,7 @@ ace.define("ace/commands/multi_select_commands", ["require", "exports", "module"
         readOnly: true
     }, {
         name: "splitIntoLines",
-        exec: function(editor) {
+        exec(editor) {
             editor.multiSelect.splitIntoLines();
         },
         bindKey: {
@@ -17598,7 +17397,7 @@ ace.define("ace/commands/multi_select_commands", ["require", "exports", "module"
         readOnly: true
     }, {
         name: "alignCursors",
-        exec: function(editor) {
+        exec(editor) {
             editor.alignCursors();
         },
         bindKey: {
@@ -17608,7 +17407,7 @@ ace.define("ace/commands/multi_select_commands", ["require", "exports", "module"
         scrollIntoView: "cursor"
     }, {
         name: "findAll",
-        exec: function(editor) {
+        exec(editor) {
             editor.findAll();
         },
         bindKey: {
@@ -17621,33 +17420,33 @@ ace.define("ace/commands/multi_select_commands", ["require", "exports", "module"
     exports.multiSelectCommands = [{
         name: "singleSelection",
         bindKey: "esc",
-        exec: function(editor) {
+        exec(editor) {
             editor.exitMultiSelectMode();
         },
         scrollIntoView: "cursor",
         readOnly: true,
-        isAvailable: function(editor) {
+        isAvailable(editor) {
             return editor && editor.inMultiSelectMode
         }
     }];
 
-    var HashHandler = require("../keyboard/hash_handler").HashHandler;
+    const HashHandler = require("../keyboard/hash_handler").HashHandler;
     exports.keyboardHandler = new HashHandler(exports.multiSelectCommands);
 
 });
 
-ace.define("ace/multi_select", ["require", "exports", "module", "ace/range_list", "ace/range", "ace/selection", "ace/mouse/multi_select_handler", "ace/lib/event", "ace/lib/lang", "ace/commands/multi_select_commands", "ace/search", "ace/edit_session", "ace/editor", "ace/config"], function(require, exports, module) {
+ace.define("ace/multi_select", ["require", "exports", "module", "ace/range_list", "ace/range", "ace/selection", "ace/mouse/multi_select_handler", "ace/lib/event", "ace/lib/lang", "ace/commands/multi_select_commands", "ace/search", "ace/edit_session", "ace/editor", "ace/config"], (require, exports, module) => {
 
-    var RangeList = require("./range_list").RangeList;
-    var Range = require("./range").Range;
-    var Selection = require("./selection").Selection;
-    var onMouseDown = require("./mouse/multi_select_handler").onMouseDown;
-    var event = require("./lib/event");
-    var lang = require("./lib/lang");
-    var commands = require("./commands/multi_select_commands");
+    const RangeList = require("./range_list").RangeList;
+    const Range = require("./range").Range;
+    const Selection = require("./selection").Selection;
+    const onMouseDown = require("./mouse/multi_select_handler").onMouseDown;
+    const event = require("./lib/event");
+    const lang = require("./lib/lang");
+    const commands = require("./commands/multi_select_commands");
     exports.commands = commands.defaultCommands.concat(commands.multiSelectCommands);
-    var Search = require("./search").Search;
-    var search = new Search();
+    const Search = require("./search").Search;
+    const search = new Search();
 
     function find(session, needle, dir) {
         search.$options.wrap = true;
@@ -17655,7 +17454,7 @@ ace.define("ace/multi_select", ["require", "exports", "module", "ace/range_list"
         search.$options.backwards = dir == -1;
         return search.find(session);
     }
-    var EditSession = require("./edit_session").EditSession;
+    const EditSession = require("./edit_session").EditSession;
     (function() {
         this.getSelectionMarkers = function() {
             return this.$selectionMarkers;
@@ -17669,7 +17468,7 @@ ace.define("ace/multi_select", ["require", "exports", "module", "ace/range_list"
                 return;
 
             if (!this.inMultiSelectMode && this.rangeCount === 0) {
-                var oldRange = this.toOrientedRange();
+                const oldRange = this.toOrientedRange();
                 this.rangeList.add(oldRange);
                 this.rangeList.add(range);
                 if (this.rangeList.ranges.length != 2) {
@@ -17684,7 +17483,7 @@ ace.define("ace/multi_select", ["require", "exports", "module", "ace/range_list"
             if (!range.cursor)
                 range.cursor = range.end;
 
-            var removed = this.rangeList.add(range);
+            const removed = this.rangeList.add(range);
 
             this.$onAddRange(range);
 
@@ -17701,23 +17500,22 @@ ace.define("ace/multi_select", ["require", "exports", "module", "ace/range_list"
             return $blockChangeEvents || this.fromOrientedRange(range);
         };
 
-        this.toSingleRange = function(range) {
-            range = range || this.ranges[0];
-            var removed = this.rangeList.removeAll();
+        this.toSingleRange = function(range=this.ranges[0]) {
+            const removed = this.rangeList.removeAll();
             if (removed.length)
                 this.$onRemoveRange(removed);
 
             range && this.fromOrientedRange(range);
         };
         this.substractPoint = function(pos) {
-            var removed = this.rangeList.substractPoint(pos);
+            const removed = this.rangeList.substractPoint(pos);
             if (removed) {
                 this.$onRemoveRange(removed);
                 return removed[0];
             }
         };
         this.mergeOverlappingRanges = function() {
-            var removed = this.rangeList.merge();
+            const removed = this.rangeList.merge();
             if (removed.length)
                 this.$onRemoveRange(removed);
             else if (this.ranges[0])
@@ -17728,7 +17526,7 @@ ace.define("ace/multi_select", ["require", "exports", "module", "ace/range_list"
             this.rangeCount = this.rangeList.ranges.length;
             this.ranges.unshift(range);
             this._signal("addRange", {
-                range: range
+                range
             });
         };
 
@@ -17740,8 +17538,8 @@ ace.define("ace/multi_select", ["require", "exports", "module", "ace/range_list"
                 this.rangeCount = 0;
             }
 
-            for (var i = removed.length; i--;) {
-                var index = this.ranges.indexOf(removed[i]);
+            for (let i = removed.length; i--;) {
+                const index = this.ranges.indexOf(removed[i]);
                 this.ranges.splice(index, 1);
             }
 
@@ -17774,17 +17572,17 @@ ace.define("ace/multi_select", ["require", "exports", "module", "ace/range_list"
 
         this.splitIntoLines = function() {
             if (this.rangeCount > 1) {
-                var ranges = this.rangeList.ranges;
-                var lastRange = ranges[ranges.length - 1];
+                const ranges = this.rangeList.ranges;
+                const lastRange = ranges[ranges.length - 1];
                 var range = Range.fromPoints(ranges[0].start, lastRange.end);
 
                 this.toSingleRange();
                 this.setSelectionRange(range, lastRange.cursor == lastRange.start);
             } else {
                 var range = this.getRange();
-                var isBackwards = this.isBackwards();
-                var startRow = range.start.row;
-                var endRow = range.end.row;
+                const isBackwards = this.isBackwards();
+                const startRow = range.start.row;
+                const endRow = range.end.row;
                 if (startRow == endRow) {
                     if (isBackwards)
                         var start = range.end,
@@ -17798,12 +17596,12 @@ ace.define("ace/multi_select", ["require", "exports", "module", "ace/range_list"
                     return;
                 }
 
-                var rectSel = [];
-                var r = this.getLineRange(startRow, true);
+                const rectSel = [];
+                let r = this.getLineRange(startRow, true);
                 r.start.column = range.start.column;
                 rectSel.push(r);
 
-                for (var i = startRow + 1; i < endRow; i++)
+                for (let i = startRow + 1; i < endRow; i++)
                     rectSel.push(this.getLineRange(i, true));
 
                 r = this.getLineRange(endRow, true);
@@ -17815,24 +17613,24 @@ ace.define("ace/multi_select", ["require", "exports", "module", "ace/range_list"
         };
         this.toggleBlockSelection = function() {
             if (this.rangeCount > 1) {
-                var ranges = this.rangeList.ranges;
-                var lastRange = ranges[ranges.length - 1];
-                var range = Range.fromPoints(ranges[0].start, lastRange.end);
+                const ranges = this.rangeList.ranges;
+                const lastRange = ranges[ranges.length - 1];
+                const range = Range.fromPoints(ranges[0].start, lastRange.end);
 
                 this.toSingleRange();
                 this.setSelectionRange(range, lastRange.cursor == lastRange.start);
             } else {
-                var cursor = this.session.documentToScreenPosition(this.selectionLead);
-                var anchor = this.session.documentToScreenPosition(this.selectionAnchor);
+                const cursor = this.session.documentToScreenPosition(this.selectionLead);
+                const anchor = this.session.documentToScreenPosition(this.selectionAnchor);
 
-                var rectSel = this.rectangularRangeBlock(cursor, anchor);
+                const rectSel = this.rectangularRangeBlock(cursor, anchor);
                 rectSel.forEach(this.addRange, this);
             }
         };
         this.rectangularRangeBlock = function(screenCursor, screenAnchor, includeEmptyLines) {
-            var rectSel = [];
+            const rectSel = [];
 
-            var xBackwards = screenCursor.column < screenAnchor.column;
+            const xBackwards = screenCursor.column < screenAnchor.column;
             if (xBackwards) {
                 var startColumn = screenCursor.column;
                 var endColumn = screenAnchor.column;
@@ -17841,7 +17639,7 @@ ace.define("ace/multi_select", ["require", "exports", "module", "ace/range_list"
                 var endColumn = screenCursor.column;
             }
 
-            var yBackwards = screenCursor.row < screenAnchor.row;
+            const yBackwards = screenCursor.row < screenAnchor.row;
             if (yBackwards) {
                 var startRow = screenCursor.row;
                 var endRow = screenAnchor.row;
@@ -17858,8 +17656,8 @@ ace.define("ace/multi_select", ["require", "exports", "module", "ace/range_list"
             if (startRow == endRow)
                 includeEmptyLines = true;
 
-            for (var row = startRow; row <= endRow; row++) {
-                var range = Range.fromPoints(
+            for (let row = startRow; row <= endRow; row++) {
+                const range = Range.fromPoints(
                     this.session.screenToDocumentPosition(row, startColumn),
                     this.session.screenToDocumentPosition(row, endColumn)
                 );
@@ -17876,7 +17674,7 @@ ace.define("ace/multi_select", ["require", "exports", "module", "ace/range_list"
                 rectSel.reverse();
 
             if (!includeEmptyLines) {
-                var end = rectSel.length - 1;
+                let end = rectSel.length - 1;
                 while (rectSel[end].isEmpty() && end > 0)
                     end--;
                 if (end > 0) {
@@ -17884,7 +17682,7 @@ ace.define("ace/multi_select", ["require", "exports", "module", "ace/range_list"
                     while (rectSel[start].isEmpty())
                         start++;
                 }
-                for (var i = end; i >= start; i--) {
+                for (let i = end; i >= start; i--) {
                     if (rectSel[i].isEmpty())
                         rectSel.splice(i, 1);
                 }
@@ -17893,7 +17691,7 @@ ace.define("ace/multi_select", ["require", "exports", "module", "ace/range_list"
             return rectSel;
         };
     }).call(Selection.prototype);
-    var Editor = require("./editor").Editor;
+    const Editor = require("./editor").Editor;
     (function() {
         this.updateSelectionMarkers = function() {
             this.renderer.updateCursor();
@@ -17903,7 +17701,7 @@ ace.define("ace/multi_select", ["require", "exports", "module", "ace/range_list"
             if (!orientedRange.cursor)
                 orientedRange.cursor = orientedRange.end;
 
-            var style = this.getSelectionStyle();
+            const style = this.getSelectionStyle();
             orientedRange.marker = this.session.addMarker(orientedRange, "ace_selection", style);
 
             this.session.$selectionMarkers.push(orientedRange);
@@ -17914,20 +17712,20 @@ ace.define("ace/multi_select", ["require", "exports", "module", "ace/range_list"
             if (!range.marker)
                 return;
             this.session.removeMarker(range.marker);
-            var index = this.session.$selectionMarkers.indexOf(range);
+            const index = this.session.$selectionMarkers.indexOf(range);
             if (index != -1)
                 this.session.$selectionMarkers.splice(index, 1);
             this.session.selectionMarkerCount = this.session.$selectionMarkers.length;
         };
 
         this.removeSelectionMarkers = function(ranges) {
-            var markerList = this.session.$selectionMarkers;
-            for (var i = ranges.length; i--;) {
-                var range = ranges[i];
+            const markerList = this.session.$selectionMarkers;
+            for (let i = ranges.length; i--;) {
+                const range = ranges[i];
                 if (!range.marker)
                     continue;
                 this.session.removeMarker(range.marker);
-                var index = markerList.indexOf(range);
+                const index = markerList.indexOf(range);
                 if (index != -1)
                     markerList.splice(index, 1);
             }
@@ -17973,9 +17771,9 @@ ace.define("ace/multi_select", ["require", "exports", "module", "ace/range_list"
             this._emit("changeSelection");
         };
 
-        this.$onMultiSelectExec = function(e) {
-            var command = e.command;
-            var editor = e.editor;
+        this.$onMultiSelectExec = e => {
+            const command = e.command;
+            const editor = e.editor;
             if (!editor.multiSelect)
                 return;
             if (!command.multiSelectAction) {
@@ -17997,23 +17795,23 @@ ace.define("ace/multi_select", ["require", "exports", "module", "ace/range_list"
         this.forEachSelection = function(cmd, args, options) {
             if (this.inVirtualSelectionMode)
                 return;
-            var keepOrder = options && options.keepOrder;
-            var $byLines = options == true || options && options.$byLines
-            var session = this.session;
-            var selection = this.selection;
-            var rangeList = selection.rangeList;
-            var ranges = (keepOrder ? selection : rangeList).ranges;
-            var result;
+            const keepOrder = options && options.keepOrder;
+            const $byLines = options == true || options && options.$byLines;
+            const session = this.session;
+            const selection = this.selection;
+            const rangeList = selection.rangeList;
+            const ranges = (keepOrder ? selection : rangeList).ranges;
+            let result;
 
             if (!ranges.length)
                 return cmd.exec ? cmd.exec(this, args || {}) : cmd(this, args || {});
 
-            var reg = selection._eventRegistry;
+            const reg = selection._eventRegistry;
             selection._eventRegistry = {};
 
-            var tmpSel = new Selection(session);
+            const tmpSel = new Selection(session);
             this.inVirtualSelectionMode = true;
-            for (var i = ranges.length; i--;) {
+            for (let i = ranges.length; i--;) {
                 if ($byLines) {
                     while (i > 0 && ranges[i].start.row == ranges[i - 1].end.row)
                         i--;
@@ -18021,7 +17819,7 @@ ace.define("ace/multi_select", ["require", "exports", "module", "ace/range_list"
                 tmpSel.fromOrientedRange(ranges[i]);
                 tmpSel.index = i;
                 this.selection = session.selection = tmpSel;
-                var cmdResult = cmd.exec ? cmd.exec(this, args || {}) : cmd(this, args || {});
+                const cmdResult = cmd.exec ? cmd.exec(this, args || {}) : cmd(this, args || {});
                 if (!result && cmdResult !== undefined)
                     result = cmdResult;
                 tmpSel.toOrientedRange(ranges[i]);
@@ -18033,7 +17831,7 @@ ace.define("ace/multi_select", ["require", "exports", "module", "ace/range_list"
             selection._eventRegistry = reg;
             selection.mergeOverlappingRanges();
 
-            var anim = this.renderer.$scrollAnimation;
+            const anim = this.renderer.$scrollAnimation;
             this.onCursorChange();
             this.onSelectionChange();
             if (anim && anim.from == anim.to)
@@ -18048,14 +17846,14 @@ ace.define("ace/multi_select", ["require", "exports", "module", "ace/range_list"
         };
 
         this.getSelectedText = function() {
-            var text = "";
+            let text = "";
             if (this.inMultiSelectMode && !this.inVirtualSelectionMode) {
-                var ranges = this.multiSelect.rangeList.ranges;
-                var buf = [];
-                for (var i = 0; i < ranges.length; i++) {
+                const ranges = this.multiSelect.rangeList.ranges;
+                const buf = [];
+                for (let i = 0; i < ranges.length; i++) {
                     buf.push(this.session.getTextRange(ranges[i]));
                 }
-                var nl = this.session.getDocument().getNewLineCharacter();
+                const nl = this.session.getDocument().getNewLineCharacter();
                 text = buf.join(nl);
                 if (text.length == (buf.length - 1) * nl.length)
                     text = "";
@@ -18067,16 +17865,15 @@ ace.define("ace/multi_select", ["require", "exports", "module", "ace/range_list"
 
         this.$checkMultiselectChange = function(e, anchor) {
             if (this.inMultiSelectMode && !this.inVirtualSelectionMode) {
-                var range = this.multiSelect.ranges[0];
+                const range = this.multiSelect.ranges[0];
                 if (this.multiSelect.isEmpty() && anchor == this.multiSelect.anchor)
                     return;
-                var pos = anchor == this.multiSelect.anchor ? range.cursor == range.start ? range.end : range.start : range.cursor;
+                const pos = anchor == this.multiSelect.anchor ? range.cursor == range.start ? range.end : range.start : range.cursor;
                 if (pos.row != anchor.row || this.session.$clipPositionToDocument(pos.row, pos.column).column != anchor.column)
                     this.multiSelect.toSingleRange(this.multiSelect.toOrientedRange());
             }
         };
-        this.findAll = function(needle, options, additive) {
-            options = options || {};
+        this.findAll = function(needle, options={}, additive) {
             options.needle = needle || options.needle;
             if (options.needle == undefined) {
                 var range = this.selection.isEmpty() ? this.selection.getWordRange() : this.selection.getRange();
@@ -18084,17 +17881,17 @@ ace.define("ace/multi_select", ["require", "exports", "module", "ace/range_list"
             }
             this.$search.set(options);
 
-            var ranges = this.$search.findAll(this.session);
+            const ranges = this.$search.findAll(this.session);
             if (!ranges.length)
                 return 0;
 
             this.$blockScrolling += 1;
-            var selection = this.multiSelect;
+            const selection = this.multiSelect;
 
             if (!additive)
                 selection.toSingleRange(ranges[0]);
 
-            for (var i = ranges.length; i--;)
+            for (let i = ranges.length; i--;)
                 selection.addRange(ranges[i], true);
             if (range && selection.rangeList.rangeAtPoint(range.start))
                 selection.addRange(range, true);
@@ -18104,17 +17901,17 @@ ace.define("ace/multi_select", ["require", "exports", "module", "ace/range_list"
             return ranges.length;
         };
         this.selectMoreLines = function(dir, skip) {
-            var range = this.selection.toOrientedRange();
-            var isBackwards = range.cursor == range.end;
+            const range = this.selection.toOrientedRange();
+            const isBackwards = range.cursor == range.end;
 
-            var screenLead = this.session.documentToScreenPosition(range.cursor);
+            const screenLead = this.session.documentToScreenPosition(range.cursor);
             if (this.selection.$desiredColumn)
                 screenLead.column = this.selection.$desiredColumn;
 
-            var lead = this.session.screenToDocumentPosition(screenLead.row + dir, screenLead.column);
+            const lead = this.session.screenToDocumentPosition(screenLead.row + dir, screenLead.column);
 
             if (!range.isEmpty()) {
-                var screenAnchor = this.session.documentToScreenPosition(isBackwards ? range.end : range.start);
+                const screenAnchor = this.session.documentToScreenPosition(isBackwards ? range.end : range.start);
                 var anchor = this.session.screenToDocumentPosition(screenAnchor.row + dir, screenAnchor.column);
             } else {
                 var anchor = lead;
@@ -18141,9 +17938,9 @@ ace.define("ace/multi_select", ["require", "exports", "module", "ace/range_list"
                 this.selection.substractPoint(toRemove);
         };
         this.transposeSelections = function(dir) {
-            var session = this.session;
-            var sel = session.multiSelect;
-            var all = sel.ranges;
+            const session = this.session;
+            const sel = session.multiSelect;
+            const all = sel.ranges;
 
             for (var i = all.length; i--;) {
                 var range = all[i];
@@ -18157,7 +17954,7 @@ ace.define("ace/multi_select", ["require", "exports", "module", "ace/range_list"
             }
             sel.mergeOverlappingRanges();
 
-            var words = [];
+            const words = [];
             for (var i = all.length; i--;) {
                 var range = all[i];
                 words.unshift(session.getTextRange(range));
@@ -18177,10 +17974,10 @@ ace.define("ace/multi_select", ["require", "exports", "module", "ace/range_list"
             }
         };
         this.selectMore = function(dir, skip, stopAtFirst) {
-            var session = this.session;
-            var sel = session.multiSelect;
+            const session = this.session;
+            const sel = session.multiSelect;
 
-            var range = sel.toOrientedRange();
+            let range = sel.toOrientedRange();
             if (range.isEmpty()) {
                 range = session.getWordRange(range.start.row, range.start.column);
                 range.cursor = dir == -1 ? range.start : range.end;
@@ -18188,9 +17985,9 @@ ace.define("ace/multi_select", ["require", "exports", "module", "ace/range_list"
                 if (stopAtFirst)
                     return;
             }
-            var needle = session.getTextRange(range);
+            const needle = session.getTextRange(range);
 
-            var newRange = find(session, needle, dir);
+            const newRange = find(session, needle, dir);
             if (newRange) {
                 newRange.cursor = dir == -1 ? newRange.start : newRange.end;
                 this.$blockScrolling += 1;
@@ -18203,24 +18000,24 @@ ace.define("ace/multi_select", ["require", "exports", "module", "ace/range_list"
                 this.multiSelect.substractPoint(range.cursor);
         };
         this.alignCursors = function() {
-            var session = this.session;
-            var sel = session.multiSelect;
-            var ranges = sel.ranges;
-            var row = -1;
-            var sameRowRanges = ranges.filter(function(r) {
+            const session = this.session;
+            const sel = session.multiSelect;
+            const ranges = sel.ranges;
+            let row = -1;
+            const sameRowRanges = ranges.filter(r => {
                 if (r.cursor.row == row)
                     return true;
                 row = r.cursor.row;
             });
 
             if (!ranges.length || sameRowRanges.length == ranges.length - 1) {
-                var range = this.selection.getRange();
-                var fr = range.start.row,
-                    lr = range.end.row;
-                var guessRange = fr == lr;
+                const range = this.selection.getRange();
+                let fr = range.start.row;
+                let lr = range.end.row;
+                const guessRange = fr == lr;
                 if (guessRange) {
-                    var max = this.session.getLength();
-                    var line;
+                    const max = this.session.getLength();
+                    let line;
                     do {
                         line = this.session.getLine(lr);
                     } while (/[=:]/.test(line) && ++lr < max);
@@ -18231,28 +18028,28 @@ ace.define("ace/multi_select", ["require", "exports", "module", "ace/range_list"
                     if (fr < 0) fr = 0;
                     if (lr >= max) lr = max - 1;
                 }
-                var lines = this.session.removeFullLines(fr, lr);
+                let lines = this.session.removeFullLines(fr, lr);
                 lines = this.$reAlignText(lines, guessRange);
                 this.session.insert({
                     row: fr,
                     column: 0
-                }, lines.join("\n") + "\n");
+                }, `${lines.join("\n")}\n`);
                 if (!guessRange) {
                     range.start.column = 0;
                     range.end.column = lines[lines.length - 1].length;
                 }
                 this.selection.setRange(range);
             } else {
-                sameRowRanges.forEach(function(r) {
+                sameRowRanges.forEach(r => {
                     sel.substractPoint(r.cursor);
                 });
 
-                var maxCol = 0;
-                var minSpace = Infinity;
-                var spaceOffsets = ranges.map(function(r) {
-                    var p = r.cursor;
-                    var line = session.getLine(p.row);
-                    var spaceOffset = line.substr(p.column).search(/\S/g);
+                let maxCol = 0;
+                let minSpace = Infinity;
+                const spaceOffsets = ranges.map(r => {
+                    const p = r.cursor;
+                    const line = session.getLine(p.row);
+                    let spaceOffset = line.substr(p.column).search(/\S/g);
                     if (spaceOffset == -1)
                         spaceOffset = 0;
 
@@ -18262,10 +18059,10 @@ ace.define("ace/multi_select", ["require", "exports", "module", "ace/range_list"
                         minSpace = spaceOffset;
                     return spaceOffset;
                 });
-                ranges.forEach(function(r, i) {
-                    var p = r.cursor;
-                    var l = maxCol - p.column;
-                    var d = spaceOffsets[i] - minSpace;
+                ranges.forEach((r, i) => {
+                    const p = r.cursor;
+                    const l = maxCol - p.column;
+                    const d = spaceOffsets[i] - minSpace;
                     if (l > d)
                         session.insert(p, lang.stringRepeat(" ", l - d));
                     else
@@ -18281,13 +18078,15 @@ ace.define("ace/multi_select", ["require", "exports", "module", "ace/range_list"
             }
         };
 
-        this.$reAlignText = function(lines, forceLeft) {
-            var isLeftAligned = true,
-                isRightAligned = true;
-            var startW, textW, endW;
+        this.$reAlignText = (lines, forceLeft) => {
+            let isLeftAligned = true;
+            let isRightAligned = true;
+            let startW;
+            let textW;
+            let endW;
 
-            return lines.map(function(line) {
-                var m = line.match(/(\s*)(.*?)(\s*)([=:].*)/);
+            return lines.map(line => {
+                const m = line.match(/(\s*)(.*?)(\s*)([=:].*)/);
                 if (!m)
                     return [line];
 
@@ -18337,7 +18136,7 @@ ace.define("ace/multi_select", ["require", "exports", "module", "ace/range_list"
         return p1.row == p2.row && p1.column == p2.column;
     }
     exports.onSessionChange = function(e) {
-        var session = e.session;
+        const session = e.session;
         if (session && !session.multiSelect) {
             session.$selectionMarkers = [];
             session.selection.$initRangeList();
@@ -18345,7 +18144,7 @@ ace.define("ace/multi_select", ["require", "exports", "module", "ace/range_list"
         }
         this.multiSelect = session && session.multiSelect;
 
-        var oldSession = e.oldSession;
+        const oldSession = e.oldSession;
         if (oldSession) {
             oldSession.multiSelect.off("addRange", this.$onAddRange);
             oldSession.multiSelect.off("removeRange", this.$onRemoveRange);
@@ -18392,10 +18191,10 @@ ace.define("ace/multi_select", ["require", "exports", "module", "ace/range_list"
     }
 
     function addAltCursorListeners(editor) {
-        var el = editor.textInput.getElement();
-        var altCursor = false;
-        event.addListener(el, "keydown", function(e) {
-            var altDown = e.keyCode == 18 && !(e.ctrlKey || e.shiftKey || e.metaKey);
+        const el = editor.textInput.getElement();
+        let altCursor = false;
+        event.addListener(el, "keydown", e => {
+            const altDown = e.keyCode == 18 && !(e.ctrlKey || e.shiftKey || e.metaKey);
             if (editor.$blockSelectEnabled && altDown) {
                 if (!altCursor) {
                     editor.renderer.setMouseCursor("crosshair");
@@ -18422,7 +18221,7 @@ ace.define("ace/multi_select", ["require", "exports", "module", "ace/range_list"
 
     require("./config").defineOptions(Editor.prototype, "editor", {
         enableMultiselect: {
-            set: function(val) {
+            set(val) {
                 MultiSelect(this);
                 if (val) {
                     this.on("changeSession", this.$multiselectOnSessionChange);
@@ -18435,7 +18234,7 @@ ace.define("ace/multi_select", ["require", "exports", "module", "ace/range_list"
             value: true
         },
         enableBlockSelect: {
-            set: function(val) {
+            set(val) {
                 this.$blockSelectEnabled = val;
             },
             value: true
@@ -18446,19 +18245,17 @@ ace.define("ace/multi_select", ["require", "exports", "module", "ace/range_list"
 
 });
 
-ace.define("ace/mode/folding/fold_mode", ["require", "exports", "module", "ace/range"], function(require, exports, module) {
-    "use strict";
+ace.define("ace/mode/folding/fold_mode", ["require", "exports", "module", "ace/range"], (require, exports, module) => {
+    const Range = require("../../range").Range;
 
-    var Range = require("../../range").Range;
-
-    var FoldMode = exports.FoldMode = function() {};
+    const FoldMode = exports.FoldMode = () => {};
 
     (function() {
 
         this.foldingStartMarker = null;
         this.foldingStopMarker = null;
         this.getFoldWidget = function(session, foldStyle, row) {
-            var line = session.getLine(row);
+            const line = session.getLine(row);
             if (this.foldingStartMarker.test(line))
                 return "start";
             if (foldStyle == "markbeginend" && this.foldingStopMarker && this.foldingStopMarker.test(line))
@@ -18466,24 +18263,22 @@ ace.define("ace/mode/folding/fold_mode", ["require", "exports", "module", "ace/r
             return "";
         };
 
-        this.getFoldWidgetRange = function(session, foldStyle, row) {
-            return null;
-        };
+        this.getFoldWidgetRange = (session, foldStyle, row) => null;
 
-        this.indentationBlock = function(session, row, column) {
-            var re = /\S/;
-            var line = session.getLine(row);
-            var startLevel = line.search(re);
+        this.indentationBlock = (session, row, column) => {
+            const re = /\S/;
+            const line = session.getLine(row);
+            const startLevel = line.search(re);
             if (startLevel == -1)
                 return;
 
-            var startColumn = column || line.length;
-            var maxRow = session.getLength();
-            var startRow = row;
-            var endRow = row;
+            const startColumn = column || line.length;
+            const maxRow = session.getLength();
+            const startRow = row;
+            let endRow = row;
 
             while (++row < maxRow) {
-                var level = session.getLine(row).search(re);
+                const level = session.getLine(row).search(re);
 
                 if (level == -1)
                     continue;
@@ -18495,21 +18290,21 @@ ace.define("ace/mode/folding/fold_mode", ["require", "exports", "module", "ace/r
             }
 
             if (endRow > startRow) {
-                var endColumn = session.getLine(endRow).length;
+                const endColumn = session.getLine(endRow).length;
                 return new Range(startRow, startColumn, endRow, endColumn);
             }
         };
 
-        this.openingBracketBlock = function(session, bracket, row, column, typeRe) {
-            var start = {
-                row: row,
+        this.openingBracketBlock = (session, bracket, row, column, typeRe) => {
+            const start = {
+                row,
                 column: column + 1
             };
-            var end = session.$findClosingBracket(bracket, start, typeRe);
+            const end = session.$findClosingBracket(bracket, start, typeRe);
             if (!end)
                 return;
 
-            var fw = session.foldWidgets[end.row];
+            let fw = session.foldWidgets[end.row];
             if (fw == null)
                 fw = session.getFoldWidget(end.row);
 
@@ -18520,12 +18315,12 @@ ace.define("ace/mode/folding/fold_mode", ["require", "exports", "module", "ace/r
             return Range.fromPoints(start, end);
         };
 
-        this.closingBracketBlock = function(session, bracket, row, column, typeRe) {
-            var end = {
-                row: row,
-                column: column
+        this.closingBracketBlock = (session, bracket, row, column, typeRe) => {
+            const end = {
+                row,
+                column
             };
-            var start = session.$findOpeningBracket(bracket, end);
+            const start = session.$findOpeningBracket(bracket, end);
 
             if (!start)
                 return;
@@ -18536,15 +18331,12 @@ ace.define("ace/mode/folding/fold_mode", ["require", "exports", "module", "ace/r
             return Range.fromPoints(start, end);
         };
     }).call(FoldMode.prototype);
-
 });
 
-ace.define("ace/line_widgets", ["require", "exports", "module", "ace/lib/oop", "ace/lib/dom", "ace/range"], function(require, exports, module) {
-    "use strict";
-
-    var oop = require("./lib/oop");
-    var dom = require("./lib/dom");
-    var Range = require("./range").Range;
+ace.define("ace/line_widgets", ["require", "exports", "module", "ace/lib/oop", "ace/lib/dom", "ace/range"], (require, exports, module) => {
+    const oop = require("./lib/oop");
+    const dom = require("./lib/dom");
+    const Range = require("./range").Range;
 
 
     function LineWidgets(session) {
@@ -18565,7 +18357,7 @@ ace.define("ace/line_widgets", ["require", "exports", "module", "ace/lib/oop", "
 
     (function() {
         this.getRowLength = function(row) {
-            var h;
+            let h;
             if (this.lineWidgets)
                 h = this.lineWidgets[row] && this.lineWidgets[row].rowCount || 0;
             else
@@ -18578,8 +18370,8 @@ ace.define("ace/line_widgets", ["require", "exports", "module", "ace/lib/oop", "
         };
 
         this.$getWidgetScreenLength = function() {
-            var screenRows = 0;
-            this.lineWidgets.forEach(function(w) {
+            let screenRows = 0;
+            this.lineWidgets.forEach(w => {
                 if (w && w.rowCount && !w.hidden)
                     screenRows += w.rowCount;
             });
@@ -18607,7 +18399,7 @@ ace.define("ace/line_widgets", ["require", "exports", "module", "ace/lib/oop", "
             }
         };
         this.detach = function(e) {
-            var editor = this.editor;
+            const editor = this.editor;
             if (!editor)
                 return;
 
@@ -18616,8 +18408,8 @@ ace.define("ace/line_widgets", ["require", "exports", "module", "ace/lib/oop", "
 
             editor.renderer.off("beforeRender", this.measureWidgets);
             editor.renderer.off("afterRender", this.renderWidgets);
-            var lineWidgets = this.session.lineWidgets;
-            lineWidgets && lineWidgets.forEach(function(w) {
+            const lineWidgets = this.session.lineWidgets;
+            lineWidgets && lineWidgets.forEach(w => {
                 if (w && w.el && w.el.parentNode) {
                     w._inDocument = false;
                     w.el.parentNode.removeChild(w.el);
@@ -18625,15 +18417,15 @@ ace.define("ace/line_widgets", ["require", "exports", "module", "ace/lib/oop", "
             });
         };
 
-        this.updateOnFold = function(e, session) {
-            var lineWidgets = session.lineWidgets;
+        this.updateOnFold = (e, session) => {
+            const lineWidgets = session.lineWidgets;
             if (!lineWidgets || !e.action)
                 return;
-            var fold = e.data;
-            var start = fold.start.row;
-            var end = fold.end.row;
-            var hide = e.action == "add";
-            for (var i = start + 1; i < end; i++) {
+            const fold = e.data;
+            const start = fold.start.row;
+            const end = fold.end.row;
+            const hide = e.action == "add";
+            for (let i = start + 1; i < end; i++) {
                 if (lineWidgets[i])
                     lineWidgets[i].hidden = hide;
             }
@@ -18652,31 +18444,31 @@ ace.define("ace/line_widgets", ["require", "exports", "module", "ace/lib/oop", "
         };
 
         this.updateOnChange = function(delta) {
-            var lineWidgets = this.session.lineWidgets;
+            const lineWidgets = this.session.lineWidgets;
             if (!lineWidgets) return;
 
-            var startRow = delta.start.row;
-            var len = delta.end.row - startRow;
+            const startRow = delta.start.row;
+            const len = delta.end.row - startRow;
 
             if (len === 0) {} else if (delta.action == 'remove') {
-                var removed = lineWidgets.splice(startRow + 1, len);
+                const removed = lineWidgets.splice(startRow + 1, len);
                 removed.forEach(function(w) {
                     w && this.removeLineWidget(w);
                 }, this);
                 this.$updateRows();
             } else {
-                var args = new Array(len);
+                const args = new Array(len);
                 args.unshift(startRow, 0);
-                lineWidgets.splice.apply(lineWidgets, args);
+                lineWidgets.splice(...args);
                 this.$updateRows();
             }
         };
 
         this.$updateRows = function() {
-            var lineWidgets = this.session.lineWidgets;
+            const lineWidgets = this.session.lineWidgets;
             if (!lineWidgets) return;
-            var noWidgets = true;
-            lineWidgets.forEach(function(w, i) {
+            let noWidgets = true;
+            lineWidgets.forEach((w, i) => {
                 if (w) {
                     noWidgets = false;
                     w.row = i;
@@ -18694,7 +18486,7 @@ ace.define("ace/line_widgets", ["require", "exports", "module", "ace/lib/oop", "
             if (!this.session.lineWidgets)
                 this.session.lineWidgets = new Array(this.session.getLength());
 
-            var old = this.session.lineWidgets[w.row];
+            const old = this.session.lineWidgets[w.row];
             if (old) {
                 w.$oldWidget = old;
                 if (old.el && old.el.parentNode) {
@@ -18707,7 +18499,7 @@ ace.define("ace/line_widgets", ["require", "exports", "module", "ace/lib/oop", "
 
             w.session = this.session;
 
-            var renderer = this.editor.renderer;
+            const renderer = this.editor.renderer;
             if (w.html && !w.el) {
                 w.el = dom.createElement("div");
                 w.el.innerHTML = w.html;
@@ -18730,10 +18522,10 @@ ace.define("ace/line_widgets", ["require", "exports", "module", "ace/lib/oop", "
                 w.rowCount = w.pixelHeight / renderer.layerConfig.lineHeight;
             }
 
-            var fold = this.session.getFoldAt(w.row, 0);
+            const fold = this.session.getFoldAt(w.row, 0);
             w.$fold = fold;
             if (fold) {
-                var lineWidgets = this.session.lineWidgets;
+                const lineWidgets = this.session.lineWidgets;
                 if (w.row == fold.end.row && !lineWidgets[fold.start.row])
                     lineWidgets[fold.start.row] = w;
                 else
@@ -18763,7 +18555,7 @@ ace.define("ace/line_widgets", ["require", "exports", "module", "ace/lib/oop", "
                 w.editor.destroy();
             } catch (e) {}
             if (this.session.lineWidgets) {
-                var w1 = this.session.lineWidgets[w.row]
+                let w1 = this.session.lineWidgets[w.row];
                 if (w1 == w) {
                     this.session.lineWidgets[w.row] = w.$oldWidget;
                     if (w.$oldWidget)
@@ -18789,9 +18581,9 @@ ace.define("ace/line_widgets", ["require", "exports", "module", "ace/lib/oop", "
         };
 
         this.getWidgetsAtRow = function(row) {
-            var lineWidgets = this.session.lineWidgets;
-            var w = lineWidgets && lineWidgets[row];
-            var list = [];
+            const lineWidgets = this.session.lineWidgets;
+            let w = lineWidgets && lineWidgets[row];
+            const list = [];
             while (w) {
                 list.push(w);
                 w = w.$oldWidget;
@@ -18805,13 +18597,13 @@ ace.define("ace/line_widgets", ["require", "exports", "module", "ace/lib/oop", "
         };
 
         this.measureWidgets = function(e, renderer) {
-            var changedWidgets = this.session._changedWidgets;
-            var config = renderer.layerConfig;
+            const changedWidgets = this.session._changedWidgets;
+            const config = renderer.layerConfig;
 
             if (!changedWidgets || !changedWidgets.length) return;
-            var min = Infinity;
-            for (var i = 0; i < changedWidgets.length; i++) {
-                var w = changedWidgets[i];
+            let min = Infinity;
+
+            for (const w of changedWidgets) {
                 if (!w || !w.el) continue;
                 if (w.session != this.session) continue;
                 if (!w._inDocument) {
@@ -18828,7 +18620,7 @@ ace.define("ace/line_widgets", ["require", "exports", "module", "ace/lib/oop", "
                     w.screenWidth = Math.ceil(w.w / config.characterWidth);
                 }
 
-                var rowCount = w.h / config.lineHeight;
+                let rowCount = w.h / config.lineHeight;
                 if (w.coverLine) {
                     rowCount -= this.session.getRowLineCount(w.row);
                     if (rowCount < 0)
@@ -18840,6 +18632,7 @@ ace.define("ace/line_widgets", ["require", "exports", "module", "ace/lib/oop", "
                         min = w.row;
                 }
             }
+
             if (min != Infinity) {
                 this.session._emit("changeFold", {
                     data: {
@@ -18854,12 +18647,12 @@ ace.define("ace/line_widgets", ["require", "exports", "module", "ace/lib/oop", "
         };
 
         this.renderWidgets = function(e, renderer) {
-            var config = renderer.layerConfig;
-            var lineWidgets = this.session.lineWidgets;
+            const config = renderer.layerConfig;
+            const lineWidgets = this.session.lineWidgets;
             if (!lineWidgets)
                 return;
-            var first = Math.min(this.firstRow, config.firstRow);
-            var last = Math.max(this.lastRow, config.lastRow, lineWidgets.length);
+            let first = Math.min(this.firstRow, config.firstRow);
+            const last = Math.max(this.lastRow, config.lastRow, lineWidgets.length);
 
             while (first > 0 && !lineWidgets[first])
                 first--;
@@ -18868,36 +18661,36 @@ ace.define("ace/line_widgets", ["require", "exports", "module", "ace/lib/oop", "
             this.lastRow = config.lastRow;
 
             renderer.$cursorLayer.config = config;
-            for (var i = first; i <= last; i++) {
-                var w = lineWidgets[i];
+            for (let i = first; i <= last; i++) {
+                const w = lineWidgets[i];
                 if (!w || !w.el) continue;
                 if (w.hidden) {
-                    w.el.style.top = -100 - (w.pixelHeight || 0) + "px";
+                    w.el.style.top = `${-100 - (w.pixelHeight || 0)}px`;
                     continue;
                 }
                 if (!w._inDocument) {
                     w._inDocument = true;
                     renderer.container.appendChild(w.el);
                 }
-                var top = renderer.$cursorLayer.getPixelPosition({
+                let top = renderer.$cursorLayer.getPixelPosition({
                     row: i,
                     column: 0
                 }, true).top;
                 if (!w.coverLine)
                     top += config.lineHeight * this.session.getRowLineCount(w.row);
-                w.el.style.top = top - config.offset + "px";
+                w.el.style.top = `${top - config.offset}px`;
 
-                var left = w.coverGutter ? 0 : renderer.gutterWidth;
+                let left = w.coverGutter ? 0 : renderer.gutterWidth;
                 if (!w.fixedWidth)
                     left -= renderer.scrollLeft;
-                w.el.style.left = left + "px";
+                w.el.style.left = `${left}px`;
 
                 if (w.fullWidth && w.screenWidth) {
-                    w.el.style.minWidth = config.width + 2 * config.padding + "px";
+                    w.el.style.minWidth = `${config.width + 2 * config.padding}px`;
                 }
 
                 if (w.fixedWidth) {
-                    w.el.style.right = renderer.scrollBar.getWidth() + "px";
+                    w.el.style.right = `${renderer.scrollBar.getWidth()}px`;
                 } else {
                     w.el.style.right = "";
                 }
@@ -18908,22 +18701,20 @@ ace.define("ace/line_widgets", ["require", "exports", "module", "ace/lib/oop", "
 
 
     exports.LineWidgets = LineWidgets;
-
 });
 
-ace.define("ace/ext/error_marker", ["require", "exports", "module", "ace/line_widgets", "ace/lib/dom", "ace/range"], function(require, exports, module) {
-    "use strict";
-    var LineWidgets = require("../line_widgets").LineWidgets;
-    var dom = require("../lib/dom");
-    var Range = require("../range").Range;
+ace.define("ace/ext/error_marker", ["require", "exports", "module", "ace/line_widgets", "ace/lib/dom", "ace/range"], (require, exports, module) => {
+    const LineWidgets = require("../line_widgets").LineWidgets;
+    const dom = require("../lib/dom");
+    const Range = require("../range").Range;
 
     function binarySearch(array, needle, comparator) {
-        var first = 0;
-        var last = array.length - 1;
+        let first = 0;
+        let last = array.length - 1;
 
         while (first <= last) {
-            var mid = (first + last) >> 1;
-            var c = comparator(needle, array[mid]);
+            const mid = (first + last) >> 1;
+            const c = comparator(needle, array[mid]);
             if (c > 0)
                 first = mid + 1;
             else if (c < 0)
@@ -18935,12 +18726,12 @@ ace.define("ace/ext/error_marker", ["require", "exports", "module", "ace/line_wi
     }
 
     function findAnnotations(session, row, dir) {
-        var annotations = session.getAnnotations().sort(Range.comparePoints);
+        const annotations = session.getAnnotations().sort(Range.comparePoints);
         if (!annotations.length)
             return;
 
-        var i = binarySearch(annotations, {
-            row: row,
+        let i = binarySearch(annotations, {
+            row,
             column: -1
         }, Range.comparePoints);
         if (i < 0)
@@ -18951,7 +18742,7 @@ ace.define("ace/ext/error_marker", ["require", "exports", "module", "ace/line_wi
         else if (i === 0 && dir < 0)
             i = annotations.length - 1;
 
-        var annotation = annotations[i];
+        let annotation = annotations[i];
         if (!annotation || !dir)
             return;
 
@@ -18964,7 +18755,7 @@ ace.define("ace/ext/error_marker", ["require", "exports", "module", "ace/line_wi
         }
 
 
-        var matched = [];
+        const matched = [];
         row = annotation.row;
         do {
             matched[dir < 0 ? "unshift" : "push"](annotation);
@@ -18973,27 +18764,25 @@ ace.define("ace/ext/error_marker", ["require", "exports", "module", "ace/line_wi
         return matched.length && matched;
     }
 
-    exports.showErrorMarker = function(editor, dir) {
-        var session = editor.session;
+    exports.showErrorMarker = (editor, dir) => {
+        const session = editor.session;
         if (!session.widgetManager) {
             session.widgetManager = new LineWidgets(session);
             session.widgetManager.attach(editor);
         }
 
-        var pos = editor.getCursorPosition();
-        var row = pos.row;
-        var oldWidget = session.widgetManager.getWidgetsAtRow(row).filter(function(w) {
-            return w.type == "errorMarker";
-        })[0];
+        const pos = editor.getCursorPosition();
+        let row = pos.row;
+        const oldWidget = session.widgetManager.getWidgetsAtRow(row).filter(w => w.type == "errorMarker")[0];
         if (oldWidget) {
             oldWidget.destroy();
         } else {
             row -= dir;
         }
-        var annotations = findAnnotations(session, row, dir);
-        var gutterAnno;
+        const annotations = findAnnotations(session, row, dir);
+        let gutterAnno;
         if (annotations) {
-            var annotation = annotations[0];
+            const annotation = annotations[0];
             pos.column = (annotation.pos && typeof annotation.column != "number" ? annotation.pos.sc : annotation.column) || 0;
             pos.row = annotation.row;
             gutterAnno = editor.renderer.$gutterLayer.$annotations[pos.row];
@@ -19008,28 +18797,28 @@ ace.define("ace/ext/error_marker", ["require", "exports", "module", "ace/line_wi
         editor.session.unfold(pos.row);
         editor.selection.moveToPosition(pos);
 
-        var w = {
+        const w = {
             row: pos.row,
             fixedWidth: true,
             coverGutter: true,
             el: dom.createElement("div"),
             type: "errorMarker"
         };
-        var el = w.el.appendChild(dom.createElement("div"));
-        var arrow = w.el.appendChild(dom.createElement("div"));
-        arrow.className = "error_widget_arrow " + gutterAnno.className;
+        const el = w.el.appendChild(dom.createElement("div"));
+        const arrow = w.el.appendChild(dom.createElement("div"));
+        arrow.className = `error_widget_arrow ${gutterAnno.className}`;
 
-        var left = editor.renderer.$cursorLayer
+        const left = editor.renderer.$cursorLayer
             .getPixelPosition(pos).left;
-        arrow.style.left = left + editor.renderer.gutterWidth - 5 + "px";
+        arrow.style.left = `${left + editor.renderer.gutterWidth - 5}px`;
 
         w.el.className = "error_widget_wrapper";
-        el.className = "error_widget " + gutterAnno.className;
+        el.className = `error_widget ${gutterAnno.className}`;
         el.innerHTML = gutterAnno.text.join("<br>");
 
         el.appendChild(dom.createElement("div"));
 
-        var kb = function(_, hashId, keyString) {
+        const kb = (_, hashId, keyString) => {
             if (hashId === 0 && (keyString === "esc" || keyString === "return")) {
                 w.destroy();
                 return {
@@ -19038,7 +18827,7 @@ ace.define("ace/ext/error_marker", ["require", "exports", "module", "ace/line_wi
             }
         };
 
-        w.destroy = function() {
+        w.destroy = () => {
             if (editor.$mouseHandler.isMousePressed)
                 return;
             editor.keyBinding.removeKeyboardHandler(kb);
@@ -19099,21 +18888,18 @@ ace.define("ace/ext/error_marker", ["require", "exports", "module", "ace/line_wi
         top: -5px;\
     }\
 ", "");
-
 });
 
-ace.define("ace/ace", ["require", "exports", "module", "ace/lib/fixoldbrowsers", "ace/lib/dom", "ace/lib/event", "ace/editor", "ace/edit_session", "ace/undomanager", "ace/virtual_renderer", "ace/worker/worker_client", "ace/keyboard/hash_handler", "ace/placeholder", "ace/multi_select", "ace/mode/folding/fold_mode", "ace/theme/textmate", "ace/ext/error_marker", "ace/config"], function(require, exports, module) {
-    "use strict";
-
+ace.define("ace/ace", ["require", "exports", "module", "ace/lib/fixoldbrowsers", "ace/lib/dom", "ace/lib/event", "ace/editor", "ace/edit_session", "ace/undomanager", "ace/virtual_renderer", "ace/worker/worker_client", "ace/keyboard/hash_handler", "ace/placeholder", "ace/multi_select", "ace/mode/folding/fold_mode", "ace/theme/textmate", "ace/ext/error_marker", "ace/config"], (require, exports, module) => {
     require("./lib/fixoldbrowsers");
 
-    var dom = require("./lib/dom");
-    var event = require("./lib/event");
+    const dom = require("./lib/dom");
+    const event = require("./lib/event");
 
-    var Editor = require("./editor").Editor;
-    var EditSession = require("./edit_session").EditSession;
-    var UndoManager = require("./undomanager").UndoManager;
-    var Renderer = require("./virtual_renderer").VirtualRenderer;
+    const Editor = require("./editor").Editor;
+    const EditSession = require("./edit_session").EditSession;
+    const UndoManager = require("./undomanager").UndoManager;
+    const Renderer = require("./virtual_renderer").VirtualRenderer;
     require("./worker/worker_client");
     require("./keyboard/hash_handler");
     require("./placeholder");
@@ -19127,18 +18913,18 @@ ace.define("ace/ace", ["require", "exports", "module", "ace/lib/fixoldbrowsers",
 
     if (typeof define === "function")
         exports.define = define;
-    exports.edit = function(el) {
+    exports.edit = el => {
         if (typeof el == "string") {
-            var _id = el;
+            const _id = el;
             el = document.getElementById(_id);
             if (!el)
-                throw new Error("ace.edit can't find div #" + _id);
+                throw new Error(`ace.edit can't find div #${_id}`);
         }
 
         if (el && el.env && el.env.editor instanceof Editor)
             return el.env.editor;
 
-        var value = "";
+        let value = "";
         if (el && /input|textarea/i.test(el.tagName)) {
             var oldNode = el;
             value = oldNode.value;
@@ -19149,27 +18935,27 @@ ace.define("ace/ace", ["require", "exports", "module", "ace/lib/fixoldbrowsers",
             el.innerHTML = "";
         }
 
-        var doc = exports.createEditSession(value);
+        const doc = exports.createEditSession(value);
 
-        var editor = new Editor(new Renderer(el));
+        const editor = new Editor(new Renderer(el));
         editor.setSession(doc);
 
-        var env = {
+        const env = {
             document: doc,
-            editor: editor,
+            editor,
             onResize: editor.resize.bind(editor, null)
         };
         if (oldNode) env.textarea = oldNode;
         event.addListener(window, "resize", env.onResize);
-        editor.on("destroy", function() {
+        editor.on("destroy", () => {
             event.removeListener(window, "resize", env.onResize);
             env.editor.container.env = null; // prevent memory leak on old ie
         });
         editor.container.env = editor.env = env;
         return editor;
     };
-    exports.createEditSession = function(text, mode) {
-        var doc = new EditSession(text, mode);
+    exports.createEditSession = (text, mode) => {
+        const doc = new EditSession(text, mode);
         doc.setUndoManager(new UndoManager());
         return doc;
     }
@@ -19177,16 +18963,16 @@ ace.define("ace/ace", ["require", "exports", "module", "ace/lib/fixoldbrowsers",
     exports.UndoManager = UndoManager;
     exports.version = "1.2.5";
 });
-(function() {
-    ace.require(["ace/ace"], function(a) {
+((() => {
+    ace.require(["ace/ace"], a => {
         if (a) {
             a.config.init(true);
             a.define = ace.define;
         }
         if (!window.ace)
             window.ace = a;
-        for (var key in a)
+        for (const key in a)
             if (a.hasOwnProperty(key))
                 window.ace[key] = a[key];
     });
-})();
+}))();

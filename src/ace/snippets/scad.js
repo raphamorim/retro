@@ -1,7 +1,4 @@
-ace.define("ace/snippets/scad",["require","exports","module"], function(require, exports, module) {
-"use strict";
-
-exports.snippetText =undefined;
-exports.scope = "scad";
-
+ace.define("ace/snippets/sass",["require","exports","module"], (require, exports, module) => {
+  exports.snippetText =undefined;
+  exports.scope = "sass";
 });
