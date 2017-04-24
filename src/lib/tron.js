@@ -1,214 +1,164 @@
-/* global ace */
+function Tron(encoding) {
+  const fs = require('fs')
+  const path = require('path')
+  let queue = []
+  this.encoding = encoding || 'utf8'
 
-import {
-  openFiles,
-  unfocusTabs,
-  toggleModal,
-  toggleTabs
-} from './lib/screen'
-
-import loader from './lib/loader'
-import tron from './lib/tron'
-import data from './data'
-
-import config from './config'
-import syntaxes from './config/syntax'
-
-import {
-  tabs
-} from './config/selectors'
-
-import {
-  js_beautify,
-  css,
-  html
-} from 'js-beautify'
-
-function Retro() {
-  const editor = document.getElementById('editor'),
-    editorFile = document.getElementById('editor-file'),
-    editorMode = document.getElementById('editor-mode'),
-    editorSyntax = document.getElementById('editor-syntax')
-
-  ace.require('ace/ext/language_tools')
-  ace.require('ace/ext/emmet')
-  const code = ace.edit('editor')
-
-  code.setKeyboardHandler('ace/keyboard/vim')
-    // code.setShowInvisibles(true)
-  code.setTheme('ace/theme/retro')
-  code.setOptions({
-    showPrintMargin: false,
-    enableBasicAutocompletion: true,
-    enableLiveAutocompletion: true
-  })
-  code.$blockScrolling = Infinity
-  code.getSession().setMode('ace/mode/text')
-  code.getSession().setUseWorker(false)
-  code.getSession().setUseWrapMode(true)
-
-  function saveFile() {
-    tron.writeStream(config.currentFile, code.getValue())
+  function writeSync(filepath, data) {
+    return fs.writeFileSync(filepath, data, this.encoding)
   }
 
-  function formatCode() {
-    const currentLine = code.getSelectionRange().start.row
-    const mode = code.getSession().getMode().$id.split('/').pop()
-    let val = code.session.getValue()
+  function upsert(filepath, data) {
+    if (!fs.existsSync(filepath)) {
+      writeSync(filepath, data)
 
-    if (mode === 'javascript') {
-      code.session.setValue(js_beautify(val, data.format))
-      code.gotoLine(currentLine + 1, Infinity)
-    } else if (mode === 'html') {
-      code.session.setValue(html(val, data.format))
-      code.gotoLine(currentLine + 1, Infinity)
-    } else if (mode === 'css') {
-      code.session.setValue(css(val, data.format))
-      code.gotoLine(currentLine + 1, Infinity)
+      return data
     }
+
+    return fs.readFileSync(filepath, this.encoding)
   }
 
-  code.commands.addCommand({
-    name: 'open file',
-    exec: openFiles,
-    bindKey: {
-      mac: 'cmd-o',
-      win: 'ctrl-o'
-    }
-  })
+  function writeStream(filepath, data) {
+    const encode = this.encoding
 
-  code.commands.addCommand({
-    name: 'toggle tabs',
-    exec: toggleTabs,
-    bindKey: {
-      mac: 'cmd-e',
-      win: 'ctrl-e'
-    }
-  })
-
-  code.commands.addCommand({
-    name: 'toggle modal',
-    exec: toggleModal,
-    bindKey: {
-      mac: 'cmd-p',
-      win: 'ctrl-p'
-    }
-  })
-
-  code.commands.addCommand({
-    name: 'save file',
-    exec: saveFile,
-    bindKey: {
-      mac: 'cmd-s',
-      win: 'ctrl-s'
-    }
-  })
-
-  code.commands.addCommand({
-    name: 'format code',
-    exec: formatCode,
-    bindKey: {
-      mac: 'cmd-shift-f',
-      win: 'ctrl-shift-f'
-    }
-  })
-
-  code.on('changeStatus', function() {
-    var mode = code.keyBinding.getStatusText(code)
-    unfocusTabs()
-
-    if (!mode || mode.length < 2) {
-      mode = 'NORMAL'
-      editorMode.textContent = mode
-      toggleTabs()
-    }
-
-    if (mode) {
-      editorMode.className = ''
-      editorMode.classList.add(mode.toLowerCase())
-      editorMode.textContent = mode
-    }
-  })
-
-  this.setTabs = function(file, asActive) {
-    var tab = document.createElement('div')
-    tab.classList.add('tabs-item')
-    if (asActive) {
-      tab.classList.add('active')
-    }
-
-    tab.textContent = file
-    tabs.innerHTML = ''
-    tabs.appendChild(tab)
-  }
-
-  this.updateFile = function(file, forcedUpdate = false) {
-    tron.readStream(file).then(function(tronData) {
-      if (tronData === code.getValue())
-        return
-
-      if (!forcedUpdate)
-        forcedUpdate = confirm('This file was update, do you want to update it?')
-
-      if (forcedUpdate)
-        code.getSession().setValue(tronData)
+    return new Promise(function(resolve, reject) {
+      const stream = fs.createWriteStream(filepath)
+      stream.write(data, function() {
+        stream.close()
+        resolve()
+      })
     })
   }
 
-  this.openFile = function(file, tab) {
-    loader.on()
+  function read(filepath) {
+    const encode = this.encoding
 
-    function inputSyntax(filepath) {
-      config.currentFile = filepath
-      filepath = filepath.split('/').pop()
-      filepath = filepath.split('.')
-      if (filepath.length <= 1) {
-        editorFile.textContent = ''
-        editorSyntax.textContent = ''
+    return new Promise(function(resolve, reject) {
+      fs.readFile(filepath, encode, function(err, data) {
+        if (err)
+          reject(err)
+        else
+          resolve(data)
+      })
+    })
+  }
 
-        return
-      }
+  function readStream(filepath) {
+    const encode = this.encoding
 
-      const syntax = filepath.pop()
-      editorSyntax.textContent = syntax
-      var current = syntaxes[syntax]
-      if (!current)
-        current = {
-          mode: 'text'
+    return new Promise(function(resolve, reject) {
+      const stream = fs.createReadStream(filepath)
+      let file = ''
+      stream.setEncoding(encode)
+      stream.on('data', (chunk) => {
+        file += chunk
+      })
+
+      stream.on('end', function() {
+        stream.close()
+        resolve(file)
+      })
+    })
+  }
+
+  function isDirectory(filepath) {
+    return new Promise(function(resolve, reject) {
+      fs.stat(filepath, function(err, stat) {
+        if (err) {
+          reject(err)
         }
 
-      code.getSession().setMode('ace/mode/' + current.mode)
-      if (current.mode === 'html') {
-        code.setOption('enableEmmet', true)
-      }
-    }
-
-    function setCurrentFile(filepath) {
-      filepath = filepath.split('/').pop()
-      filepath = filepath.split('.').shift()
-      editorFile.textContent = filepath
-      this.setTabs(filepath, true)
-    }
-
-    setCurrentFile = setCurrentFile.bind(this)
-
-    tron.readStream(file).then(function(tronData) {
-      code.getSession().setValue(tronData)
-      inputSyntax(file)
-      setCurrentFile(file)
-      const files = tron.listFiles(tron.folderPath(file))
-      if (files.length) {
-        config.cachedFiles = config.cachedFiles.concat(files)
-      }
-    }).then(() => {
-      setTimeout(() => {
-        loader.off()
-      }, 500)
+        resolve(stat.isDirectory())
+      })
     })
   }
 
-  document.body.addEventListener('save-file', saveFile.bind(this), false)
+  // TODO: Doens't do fs.stat synchrounous
+  function listFiles(dir, filelist) {
+    var files = fs.readdirSync(dir)
+    filelist = filelist || []
+
+    files.forEach(function(file) {
+      if (fs.statSync(path.join(dir, file)).isDirectory()) {
+        filelist = listFiles(path.join(dir, file), filelist)
+      } else {
+        filelist.push({ 'path': path.join(dir, file) })
+      }
+    })
+
+    return filelist.filter(function(file) {
+      if (file.path.indexOf('.git') > -1)
+        return false
+      else if (file.path.indexOf('node_modules') > -1)
+        return false
+      else if (file.path.indexOf('.DS_Store') > -1)
+        return false
+      else if (file.path.indexOf('.png') > -1)
+        return false
+      else if (file.path.indexOf('.ico') > -1)
+        return false
+      else if (file.path.indexOf('.jpg') > -1)
+        return false
+      else if (file.path.indexOf('.jpeg') > -1)
+        return false
+      else if (file.path.indexOf('.gif') > -1)
+        return false
+
+      return file
+    })
+  }
+
+  function listFilesAsync(dir, filelist) {
+    return new Promise(function(resolve, reject) {
+      var files = fs.readdir(dir, function(err, files) {
+        if (err)
+          reject(err)
+
+        filelist = filelist || []
+        var promises = []
+
+        for (var i = files.length - 1; i >= 0; i--) {
+          const file = files[i]
+          if (fs.statSync(path.join(dir, file)).isDirectory()) {
+            promises.push(listFiles(path.join(dir, file), filelist))
+          } else {
+            filelist.push({
+              'path': path.join(dir, file)
+            })
+          }
+        }
+
+        filelist = filelist.filter(function(file) {
+          if (file.path.indexOf('.git') > -1)
+            return false
+          else if (file.path.indexOf('node_modules') > -1)
+            return false
+
+          return file
+        })
+
+        return Promise.all(promises).then(function(results) {
+          for (var i = results.length - 1; i >= 0; i--) {
+            filelist = filelist.concat(results[i])
+          }
+          resolve(filelist)
+        })
+      })
+    })
+  }
+
+  function folderPath(file) {
+    return path.dirname(file)
+  }
+
+  this.read = read
+  this.readStream = readStream
+  this.writeSync = writeSync
+  this.listFiles = listFiles
+  this.writeStream = writeStream
+  this.folderPath = folderPath
+  this.upsert = upsert
 }
 
-const retro = new Retro()
-export default retro
+const tron = new Tron()
+export default tron

@@ -27,9 +27,9 @@ function enterModalItems() {
 }
 
 function indexInParent(node) {
-  const children = node.parentNode.childNodes;
-  let num = 0;
-  for (let i = 0; i < children.length; i++) {
+  var children = node.parentNode.childNodes
+  var num = 0
+  for (var i = 0; i < children.length; i++) {
     if (children[i] === node) return num
     if (children[i].nodeType === 1) num++
   }
@@ -56,7 +56,7 @@ function updateModalItems(key) {
 }
 
 // TODO: Change to ESLint?
-modalSearch.addEventListener('keydown', ev => {
+modalSearch.addEventListener('keydown', function(ev) {
   // enter
   if (ev.keyCode === 13) {
     enterModalItems()
@@ -77,25 +77,25 @@ modalSearch.addEventListener('keydown', ev => {
     modal.classList.remove('visible')
 })
 
-modalSearch.addEventListener('input', ev => {
+modalSearch.addEventListener('input', function(ev) {
   const fuse = new Fuse(config.cachedFiles, fuzeOptions)
   const search = (fuse.search(ev.target.value)).slice(0, 10)
   modalItems.innerHTML = ''
-  for (let i = 0; i < search.length; i++) {
-    const div = document.createElement('div');
+  for (var i = 0; i < search.length; i++) {
+    var div = document.createElement('div')
     div.classList.add('modal-item')
     if (i === 0) {
       div.classList.add('active')
     }
     div.setAttribute('data-path', search[i].path)
-    div.textContent = `...${search[i].path.slice(-40)}`
+    div.textContent = '...' + search[i].path.slice(-40)
     modalItems.appendChild(div)
   }
 })
 
 // Init
 document.body.ondrop = (ev) => {
-  const filepath = ev.dataTransfer.files[0].path;
+  var filepath = ev.dataTransfer.files[0].path
   retro.openFile(filepath)
   ev.preventDefault()
 }
