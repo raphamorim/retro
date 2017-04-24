@@ -21,9 +21,9 @@ function Tron(encoding) {
   function writeStream(filepath, data) {
     const encode = this.encoding
 
-    return new Promise((resolve, reject) => {
+    return new Promise(function(resolve, reject) {
       const stream = fs.createWriteStream(filepath)
-      stream.write(data, () => {
+      stream.write(data, function() {
         stream.close()
         resolve()
       })
@@ -33,8 +33,8 @@ function Tron(encoding) {
   function read(filepath) {
     const encode = this.encoding
 
-    return new Promise((resolve, reject) => {
-      fs.readFile(filepath, encode, (err, data) => {
+    return new Promise(function(resolve, reject) {
+      fs.readFile(filepath, encode, function(err, data) {
         if (err)
           reject(err)
         else
@@ -46,7 +46,7 @@ function Tron(encoding) {
   function readStream(filepath) {
     const encode = this.encoding
 
-    return new Promise((resolve, reject) => {
+    return new Promise(function(resolve, reject) {
       const stream = fs.createReadStream(filepath)
       let file = ''
       stream.setEncoding(encode)
@@ -54,7 +54,7 @@ function Tron(encoding) {
         file += chunk
       })
 
-      stream.on('end', () => {
+      stream.on('end', function() {
         stream.close()
         resolve(file)
       })
@@ -62,8 +62,8 @@ function Tron(encoding) {
   }
 
   function isDirectory(filepath) {
-    return new Promise((resolve, reject) => {
-      fs.stat(filepath, (err, stat) => {
+    return new Promise(function(resolve, reject) {
+      fs.stat(filepath, function(err, stat) {
         if (err) {
           reject(err)
         }
@@ -75,10 +75,10 @@ function Tron(encoding) {
 
   // TODO: Doens't do fs.stat synchrounous
   function listFiles(dir, filelist) {
-    const files = fs.readdirSync(dir);
+    var files = fs.readdirSync(dir)
     filelist = filelist || []
 
-    files.forEach(file => {
+    files.forEach(function(file) {
       if (fs.statSync(path.join(dir, file)).isDirectory()) {
         filelist = listFiles(path.join(dir, file), filelist)
       } else {
@@ -86,22 +86,22 @@ function Tron(encoding) {
       }
     })
 
-    return filelist.filter(file => {
-      if (file.path.includes('.git'))
+    return filelist.filter(function(file) {
+      if (file.path.indexOf('.git') > -1)
         return false
-      else if (file.path.includes('node_modules'))
+      else if (file.path.indexOf('node_modules') > -1)
         return false
-      else if (file.path.includes('.DS_Store'))
+      else if (file.path.indexOf('.DS_Store') > -1)
         return false
-      else if (file.path.includes('.png'))
+      else if (file.path.indexOf('.png') > -1)
         return false
-      else if (file.path.includes('.ico'))
+      else if (file.path.indexOf('.ico') > -1)
         return false
-      else if (file.path.includes('.jpg'))
+      else if (file.path.indexOf('.jpg') > -1)
         return false
-      else if (file.path.includes('.jpeg'))
+      else if (file.path.indexOf('.jpeg') > -1)
         return false
-      else if (file.path.includes('.gif'))
+      else if (file.path.indexOf('.gif') > -1)
         return false
 
       return file
@@ -109,15 +109,15 @@ function Tron(encoding) {
   }
 
   function listFilesAsync(dir, filelist) {
-    return new Promise((resolve, reject) => {
-      const files = fs.readdir(dir, (err, files) => {
+    return new Promise(function(resolve, reject) {
+      var files = fs.readdir(dir, function(err, files) {
         if (err)
           reject(err)
 
         filelist = filelist || []
-        const promises = [];
+        var promises = []
 
-        for (let i = files.length - 1; i >= 0; i--) {
+        for (var i = files.length - 1; i >= 0; i--) {
           const file = files[i]
           if (fs.statSync(path.join(dir, file)).isDirectory()) {
             promises.push(listFiles(path.join(dir, file), filelist))
@@ -128,22 +128,22 @@ function Tron(encoding) {
           }
         }
 
-        filelist = filelist.filter(file => {
-          if (file.path.includes('.git'))
+        filelist = filelist.filter(function(file) {
+          if (file.path.indexOf('.git') > -1)
             return false
-          else if (file.path.includes('node_modules'))
+          else if (file.path.indexOf('node_modules') > -1)
             return false
 
           return file
         })
 
-        return Promise.all(promises).then(results => {
-          for (let i = results.length - 1; i >= 0; i--) {
+        return Promise.all(promises).then(function(results) {
+          for (var i = results.length - 1; i >= 0; i--) {
             filelist = filelist.concat(results[i])
           }
           resolve(filelist)
         })
-      });
+      })
     })
   }
 
