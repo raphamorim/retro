@@ -1,11 +1,10 @@
-const electron = require('electron')
-
-const resolve = require('path').resolve
+import electron from 'electron';
+import {resolve} from 'path';
 const app = electron.app
 const BrowserWindow = electron.BrowserWindow
 
-const path = require('path')
-const url = require('url')
+import path from 'path';
+import url from 'url';
 
 let mainWindow
 
@@ -30,7 +29,7 @@ function createWindow() {
     vibrancy: "ultra-dark",
     acceptFirstMouse: true,
     show: false,
-    icon: resolve(__dirname + '/assets/images/logo-128.icns')
+    icon: resolve(`${__dirname}/assets/images/logo-128.icns`)
   })
 
   mainWindow.loadURL(url.format({
@@ -42,7 +41,7 @@ function createWindow() {
   // Open the DevTools.
   // mainWindow.webContents.openDevTools()
 
-  mainWindow.on('closed', function() {
+  mainWindow.on('closed', () => {
     mainWindow = null
   })
 
@@ -54,13 +53,13 @@ function createWindow() {
 if (app) {
   app.on('ready', createWindow)
 
-  app.on('window-all-closed', function() {
+  app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') {
       app.quit()
     }
   })
 
-  app.on('activate', function() {
+  app.on('activate', () => {
     if (mainWindow === null) {
       createWindow()
     }
