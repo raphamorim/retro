@@ -1,4 +1,4 @@
-module.exports = (app) => (
+export default (app) => (
 `<!DOCTYPE html>
 <html>
     <head>
@@ -24,4 +24,4 @@ module.exports = (app) => (
         <div id="root">${app}</div>
         <script async src="dist/retro.js"></script>
     </body>
-</html>`)
+</html>`);
