@@ -1,10 +1,10 @@
-ace.define("ace/ext/linking",["require","exports","module","ace/editor","ace/config"], function(require, exports, module) {
+ace.define("ace/ext/linking",["require","exports","module","ace/editor","ace/config"], (require, exports, module) => {
 
-var Editor = require("ace/editor").Editor;
+const Editor = require("ace/editor").Editor;
 
 require("../config").defineOptions(Editor.prototype, "editor", {
     enableLinking: {
-        set: function(val) {
+        set(val) {
             if (val) {
                 this.on("click", onClick);
                 this.on("mousemove", onMouseMove);
@@ -19,34 +19,34 @@ require("../config").defineOptions(Editor.prototype, "editor", {
 
 function onMouseMove(e) {
     var editor = e.editor;
-    var ctrl = e.getAccelKey();
+    const ctrl = e.getAccelKey();
 
     if (ctrl) {
         var editor = e.editor;
-        var docPos = e.getDocumentPosition();
-        var session = editor.session;
-        var token = session.getTokenAt(docPos.row, docPos.column);
+        const docPos = e.getDocumentPosition();
+        const session = editor.session;
+        const token = session.getTokenAt(docPos.row, docPos.column);
 
-        editor._emit("linkHover", {position: docPos, token: token});
+        editor._emit("linkHover", {position: docPos, token});
     }
 }
 
 function onClick(e) {
-    var ctrl = e.getAccelKey();
-    var button = e.getButton();
+    const ctrl = e.getAccelKey();
+    const button = e.getButton();
 
     if (button == 0 && ctrl) {
-        var editor = e.editor;
-        var docPos = e.getDocumentPosition();
-        var session = editor.session;
-        var token = session.getTokenAt(docPos.row, docPos.column);
+        const editor = e.editor;
+        const docPos = e.getDocumentPosition();
+        const session = editor.session;
+        const token = session.getTokenAt(docPos.row, docPos.column);
 
-        editor._emit("linkClick", {position: docPos, token: token});
+        editor._emit("linkClick", {position: docPos, token});
     }
 }
 
 });
-                (function() {
-                    ace.require(["ace/ext/linking"], function() {});
-                })();
+                ((() => {
+                    ace.require(["ace/ext/linking"], () => {});
+                }))();
             

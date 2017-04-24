@@ -1,423 +1,417 @@
-ace.define("ace/mode/lua_highlight_rules",["require","exports","module","ace/lib/oop","ace/mode/text_highlight_rules"], function(require, exports, module) {
-"use strict";
+ace.define("ace/mode/lua_highlight_rules",["require","exports","module","ace/lib/oop","ace/mode/text_highlight_rules"], (require, exports, module) => {
+    const oop = require("../lib/oop");
+    const TextHighlightRules = require("./text_highlight_rules").TextHighlightRules;
 
-var oop = require("../lib/oop");
-var TextHighlightRules = require("./text_highlight_rules").TextHighlightRules;
+    const LuaHighlightRules = function() {
 
-var LuaHighlightRules = function() {
+        const keywords = (
+            "break|do|else|elseif|end|for|function|if|in|local|repeat|"+
+             "return|then|until|while|or|and|not"
+        );
 
-    var keywords = (
-        "break|do|else|elseif|end|for|function|if|in|local|repeat|"+
-         "return|then|until|while|or|and|not"
-    );
+        const builtinConstants = ("true|false|nil|_G|_VERSION");
 
-    var builtinConstants = ("true|false|nil|_G|_VERSION");
+        const functions = (
+            "string|xpcall|package|tostring|print|os|unpack|require|"+
+            "getfenv|setmetatable|next|assert|tonumber|io|rawequal|"+
+            "collectgarbage|getmetatable|module|rawset|math|debug|"+
+            "pcall|table|newproxy|type|coroutine|_G|select|gcinfo|"+
+            "pairs|rawget|loadstring|ipairs|_VERSION|dofile|setfenv|"+
+            "load|error|loadfile|"+
 
-    var functions = (
-        "string|xpcall|package|tostring|print|os|unpack|require|"+
-        "getfenv|setmetatable|next|assert|tonumber|io|rawequal|"+
-        "collectgarbage|getmetatable|module|rawset|math|debug|"+
-        "pcall|table|newproxy|type|coroutine|_G|select|gcinfo|"+
-        "pairs|rawget|loadstring|ipairs|_VERSION|dofile|setfenv|"+
-        "load|error|loadfile|"+
+            "sub|upper|len|gfind|rep|find|match|char|dump|gmatch|"+
+            "reverse|byte|format|gsub|lower|preload|loadlib|loaded|"+
+            "loaders|cpath|config|path|seeall|exit|setlocale|date|"+
+            "getenv|difftime|remove|time|clock|tmpname|rename|execute|"+
+            "lines|write|close|flush|open|output|type|read|stderr|"+
+            "stdin|input|stdout|popen|tmpfile|log|max|acos|huge|"+
+            "ldexp|pi|cos|tanh|pow|deg|tan|cosh|sinh|random|randomseed|"+
+            "frexp|ceil|floor|rad|abs|sqrt|modf|asin|min|mod|fmod|log10|"+
+            "atan2|exp|sin|atan|getupvalue|debug|sethook|getmetatable|"+
+            "gethook|setmetatable|setlocal|traceback|setfenv|getinfo|"+
+            "setupvalue|getlocal|getregistry|getfenv|setn|insert|getn|"+
+            "foreachi|maxn|foreach|concat|sort|remove|resume|yield|"+
+            "status|wrap|create|running|"+
+            "__add|__sub|__mod|__unm|__concat|__lt|__index|__call|__gc|__metatable|"+
+             "__mul|__div|__pow|__len|__eq|__le|__newindex|__tostring|__mode|__tonumber"
+        );
 
-        "sub|upper|len|gfind|rep|find|match|char|dump|gmatch|"+
-        "reverse|byte|format|gsub|lower|preload|loadlib|loaded|"+
-        "loaders|cpath|config|path|seeall|exit|setlocale|date|"+
-        "getenv|difftime|remove|time|clock|tmpname|rename|execute|"+
-        "lines|write|close|flush|open|output|type|read|stderr|"+
-        "stdin|input|stdout|popen|tmpfile|log|max|acos|huge|"+
-        "ldexp|pi|cos|tanh|pow|deg|tan|cosh|sinh|random|randomseed|"+
-        "frexp|ceil|floor|rad|abs|sqrt|modf|asin|min|mod|fmod|log10|"+
-        "atan2|exp|sin|atan|getupvalue|debug|sethook|getmetatable|"+
-        "gethook|setmetatable|setlocal|traceback|setfenv|getinfo|"+
-        "setupvalue|getlocal|getregistry|getfenv|setn|insert|getn|"+
-        "foreachi|maxn|foreach|concat|sort|remove|resume|yield|"+
-        "status|wrap|create|running|"+
-        "__add|__sub|__mod|__unm|__concat|__lt|__index|__call|__gc|__metatable|"+
-         "__mul|__div|__pow|__len|__eq|__le|__newindex|__tostring|__mode|__tonumber"
-    );
+        const stdLibaries = ("string|package|os|io|math|debug|table|coroutine");
 
-    var stdLibaries = ("string|package|os|io|math|debug|table|coroutine");
+        const deprecatedIn5152 = ("setn|foreach|foreachi|gcinfo|log10|maxn");
 
-    var deprecatedIn5152 = ("setn|foreach|foreachi|gcinfo|log10|maxn");
+        const keywordMapper = this.createKeywordMapper({
+            "keyword": keywords,
+            "support.function": functions,
+            "keyword.deprecated": deprecatedIn5152,
+            "constant.library": stdLibaries,
+            "constant.language": builtinConstants,
+            "variable.language": "self"
+        }, "identifier");
 
-    var keywordMapper = this.createKeywordMapper({
-        "keyword": keywords,
-        "support.function": functions,
-        "keyword.deprecated": deprecatedIn5152,
-        "constant.library": stdLibaries,
-        "constant.language": builtinConstants,
-        "variable.language": "self"
-    }, "identifier");
+        const decimalInteger = "(?:(?:[1-9]\\d*)|(?:0))";
+        const hexInteger = "(?:0[xX][\\dA-Fa-f]+)";
+        const integer = `(?:${decimalInteger}|${hexInteger})`;
 
-    var decimalInteger = "(?:(?:[1-9]\\d*)|(?:0))";
-    var hexInteger = "(?:0[xX][\\dA-Fa-f]+)";
-    var integer = "(?:" + decimalInteger + "|" + hexInteger + ")";
+        const fraction = "(?:\\.\\d+)";
+        const intPart = "(?:\\d+)";
+        const pointFloat = `(?:(?:${intPart}?${fraction})|(?:${intPart}\\.))`;
+        const floatNumber = `(?:${pointFloat})`;
 
-    var fraction = "(?:\\.\\d+)";
-    var intPart = "(?:\\d+)";
-    var pointFloat = "(?:(?:" + intPart + "?" + fraction + ")|(?:" + intPart + "\\.))";
-    var floatNumber = "(?:" + pointFloat + ")";
-
-    this.$rules = {
-        "start" : [{
-            stateName: "bracketedComment",
-            onMatch : function(value, currentState, stack){
-                stack.unshift(this.next, value.length - 2, currentState);
-                return "comment";
+        this.$rules = {
+            "start" : [{
+                stateName: "bracketedComment",
+                onMatch(value, currentState, stack) {
+                    stack.unshift(this.next, value.length - 2, currentState);
+                    return "comment";
+                },
+                regex : /\-\-\[=*\[/,
+                next  : [
+                    {
+                        onMatch(value, currentState, stack) {
+                            if (value.length == stack[1]) {
+                                stack.shift();
+                                stack.shift();
+                                this.next = stack.shift();
+                            } else {
+                                this.next = "";
+                            }
+                            return "comment";
+                        },
+                        regex : /\]=*\]/,
+                        next  : "start"
+                    }, {
+                        defaultToken : "comment"
+                    }
+                ]
             },
-            regex : /\-\-\[=*\[/,
-            next  : [
-                {
-                    onMatch : function(value, currentState, stack) {
-                        if (value.length == stack[1]) {
-                            stack.shift();
-                            stack.shift();
-                            this.next = stack.shift();
-                        } else {
-                            this.next = "";
-                        }
-                        return "comment";
-                    },
-                    regex : /\]=*\]/,
-                    next  : "start"
-                }, {
-                    defaultToken : "comment"
-                }
-            ]
-        },
 
-        {
-            token : "comment",
-            regex : "\\-\\-.*$"
-        },
-        {
-            stateName: "bracketedString",
-            onMatch : function(value, currentState, stack){
-                stack.unshift(this.next, value.length, currentState);
-                return "comment";
+            {
+                token : "comment",
+                regex : "\\-\\-.*$"
             },
-            regex : /\[=*\[/,
-            next  : [
-                {
-                    onMatch : function(value, currentState, stack) {
-                        if (value.length == stack[1]) {
-                            stack.shift();
-                            stack.shift();
-                            this.next = stack.shift();
-                        } else {
-                            this.next = "";
-                        }
-                        return "comment";
-                    },
-                    
-                    regex : /\]=*\]/,
-                    next  : "start"
-                }, {
-                    defaultToken : "comment"
-                }
-            ]
-        },
-        {
-            token : "string",           // " string
-            regex : '"(?:[^\\\\]|\\\\.)*?"'
-        }, {
-            token : "string",           // ' string
-            regex : "'(?:[^\\\\]|\\\\.)*?'"
-        }, {
-            token : "constant.numeric", // float
-            regex : floatNumber
-        }, {
-            token : "constant.numeric", // integer
-            regex : integer + "\\b"
-        }, {
-            token : keywordMapper,
-            regex : "[a-zA-Z_$][a-zA-Z0-9_$]*\\b"
-        }, {
-            token : "keyword.operator",
-            regex : "\\+|\\-|\\*|\\/|%|\\#|\\^|~|<|>|<=|=>|==|~=|=|\\:|\\.\\.\\.|\\.\\."
-        }, {
-            token : "paren.lparen",
-            regex : "[\\[\\(\\{]"
-        }, {
-            token : "paren.rparen",
-            regex : "[\\]\\)\\}]"
-        }, {
-            token : "text",
-            regex : "\\s+|\\w+"
-        } ]
+            {
+                stateName: "bracketedString",
+                onMatch(value, currentState, stack) {
+                    stack.unshift(this.next, value.length, currentState);
+                    return "comment";
+                },
+                regex : /\[=*\[/,
+                next  : [
+                    {
+                        onMatch(value, currentState, stack) {
+                            if (value.length == stack[1]) {
+                                stack.shift();
+                                stack.shift();
+                                this.next = stack.shift();
+                            } else {
+                                this.next = "";
+                            }
+                            return "comment";
+                        },
+                        
+                        regex : /\]=*\]/,
+                        next  : "start"
+                    }, {
+                        defaultToken : "comment"
+                    }
+                ]
+            },
+            {
+                token : "string",           // " string
+                regex : '"(?:[^\\\\]|\\\\.)*?"'
+            }, {
+                token : "string",           // ' string
+                regex : "'(?:[^\\\\]|\\\\.)*?'"
+            }, {
+                token : "constant.numeric", // float
+                regex : floatNumber
+            }, {
+                token : "constant.numeric", // integer
+                regex : `${integer}\\b`
+            }, {
+                token : keywordMapper,
+                regex : "[a-zA-Z_$][a-zA-Z0-9_$]*\\b"
+            }, {
+                token : "keyword.operator",
+                regex : "\\+|\\-|\\*|\\/|%|\\#|\\^|~|<|>|<=|=>|==|~=|=|\\:|\\.\\.\\.|\\.\\."
+            }, {
+                token : "paren.lparen",
+                regex : "[\\[\\(\\{]"
+            }, {
+                token : "paren.rparen",
+                regex : "[\\]\\)\\}]"
+            }, {
+                token : "text",
+                regex : "\\s+|\\w+"
+            } ]
+        };
+        
+        this.normalizeRules();
     };
-    
-    this.normalizeRules();
-}
 
-oop.inherits(LuaHighlightRules, TextHighlightRules);
+    oop.inherits(LuaHighlightRules, TextHighlightRules);
 
-exports.LuaHighlightRules = LuaHighlightRules;
+    exports.LuaHighlightRules = LuaHighlightRules;
 });
 
-ace.define("ace/mode/folding/lua",["require","exports","module","ace/lib/oop","ace/mode/folding/fold_mode","ace/range","ace/token_iterator"], function(require, exports, module) {
-"use strict";
-
-var oop = require("../../lib/oop");
-var BaseFoldMode = require("./fold_mode").FoldMode;
-var Range = require("../../range").Range;
-var TokenIterator = require("../../token_iterator").TokenIterator;
+ace.define("ace/mode/folding/lua",["require","exports","module","ace/lib/oop","ace/mode/folding/fold_mode","ace/range","ace/token_iterator"], (require, exports, module) => {
+    const oop = require("../../lib/oop");
+    const BaseFoldMode = require("./fold_mode").FoldMode;
+    const Range = require("../../range").Range;
+    const TokenIterator = require("../../token_iterator").TokenIterator;
 
 
-var FoldMode = exports.FoldMode = function() {};
+    const FoldMode = exports.FoldMode = () => {};
 
-oop.inherits(FoldMode, BaseFoldMode);
+    oop.inherits(FoldMode, BaseFoldMode);
 
-(function() {
+    (function() {
 
-    this.foldingStartMarker = /\b(function|then|do|repeat)\b|{\s*$|(\[=*\[)/;
-    this.foldingStopMarker = /\bend\b|^\s*}|\]=*\]/;
+        this.foldingStartMarker = /\b(function|then|do|repeat)\b|{\s*$|(\[=*\[)/;
+        this.foldingStopMarker = /\bend\b|^\s*}|\]=*\]/;
 
-    this.getFoldWidget = function(session, foldStyle, row) {
-        var line = session.getLine(row);
-        var isStart = this.foldingStartMarker.test(line);
-        var isEnd = this.foldingStopMarker.test(line);
+        this.getFoldWidget = function(session, foldStyle, row) {
+            const line = session.getLine(row);
+            const isStart = this.foldingStartMarker.test(line);
+            const isEnd = this.foldingStopMarker.test(line);
 
-        if (isStart && !isEnd) {
-            var match = line.match(this.foldingStartMarker);
-            if (match[1] == "then" && /\belseif\b/.test(line))
-                return;
-            if (match[1]) {
-                if (session.getTokenAt(row, match.index + 1).type === "keyword")
+            if (isStart && !isEnd) {
+                var match = line.match(this.foldingStartMarker);
+                if (match[1] == "then" && /\belseif\b/.test(line))
+                    return;
+                if (match[1]) {
+                    if (session.getTokenAt(row, match.index + 1).type === "keyword")
+                        return "start";
+                } else if (match[2]) {
+                    var type = session.bgTokenizer.getState(row) || "";
+                    if (type[0] == "bracketedComment" || type[0] == "bracketedString")
+                        return "start";
+                } else {
                     return "start";
-            } else if (match[2]) {
-                var type = session.bgTokenizer.getState(row) || "";
-                if (type[0] == "bracketedComment" || type[0] == "bracketedString")
-                    return "start";
-            } else {
-                return "start";
+                }
             }
-        }
-        if (foldStyle != "markbeginend" || !isEnd || isStart && isEnd)
-            return "";
+            if (foldStyle != "markbeginend" || !isEnd || isStart && isEnd)
+                return "";
 
-        var match = line.match(this.foldingStopMarker);
-        if (match[0] === "end") {
-            if (session.getTokenAt(row, match.index + 1).type === "keyword")
-                return "end";
-        } else if (match[0][0] === "]") {
-            var type = session.bgTokenizer.getState(row - 1) || "";
-            if (type[0] == "bracketedComment" || type[0] == "bracketedString")
-                return "end";
-        } else
-            return "end";
-    };
-
-    this.getFoldWidgetRange = function(session, foldStyle, row) {
-        var line = session.doc.getLine(row);
-        var match = this.foldingStartMarker.exec(line);
-        if (match) {
-            if (match[1])
-                return this.luaBlock(session, row, match.index + 1);
-
-            if (match[2])
-                return session.getCommentFoldRange(row, match.index + 1);
-
-            return this.openingBracketBlock(session, "{", row, match.index);
-        }
-
-        var match = this.foldingStopMarker.exec(line);
-        if (match) {
+            var match = line.match(this.foldingStopMarker);
             if (match[0] === "end") {
                 if (session.getTokenAt(row, match.index + 1).type === "keyword")
-                    return this.luaBlock(session, row, match.index + 1);
-            }
-
-            if (match[0][0] === "]")
-                return session.getCommentFoldRange(row, match.index + 1);
-
-            return this.closingBracketBlock(session, "}", row, match.index + match[0].length);
-        }
-    };
-
-    this.luaBlock = function(session, row, column) {
-        var stream = new TokenIterator(session, row, column);
-        var indentKeywords = {
-            "function": 1,
-            "do": 1,
-            "then": 1,
-            "elseif": -1,
-            "end": -1,
-            "repeat": 1,
-            "until": -1
+                    return "end";
+            } else if (match[0][0] === "]") {
+                var type = session.bgTokenizer.getState(row - 1) || "";
+                if (type[0] == "bracketedComment" || type[0] == "bracketedString")
+                    return "end";
+            } else
+                return "end";
         };
 
-        var token = stream.getCurrentToken();
-        if (!token || token.type != "keyword")
-            return;
+        this.getFoldWidgetRange = function(session, foldStyle, row) {
+            const line = session.doc.getLine(row);
+            var match = this.foldingStartMarker.exec(line);
+            if (match) {
+                if (match[1])
+                    return this.luaBlock(session, row, match.index + 1);
 
-        var val = token.value;
-        var stack = [val];
-        var dir = indentKeywords[val];
+                if (match[2])
+                    return session.getCommentFoldRange(row, match.index + 1);
 
-        if (!dir)
-            return;
-
-        var startColumn = dir === -1 ? stream.getCurrentTokenColumn() : session.getLine(row).length;
-        var startRow = row;
-
-        stream.step = dir === -1 ? stream.stepBackward : stream.stepForward;
-        while(token = stream.step()) {
-            if (token.type !== "keyword")
-                continue;
-            var level = dir * indentKeywords[token.value];
-
-            if (level > 0) {
-                stack.unshift(token.value);
-            } else if (level <= 0) {
-                stack.shift();
-                if (!stack.length && token.value != "elseif")
-                    break;
-                if (level === 0)
-                    stack.unshift(token.value);
+                return this.openingBracketBlock(session, "{", row, match.index);
             }
-        }
 
-        var row = stream.getCurrentTokenRow();
-        if (dir === -1)
-            return new Range(row, session.getLine(row).length, startRow, startColumn);
-        else
-            return new Range(startRow, startColumn, row, stream.getCurrentTokenColumn());
-    };
+            var match = this.foldingStopMarker.exec(line);
+            if (match) {
+                if (match[0] === "end") {
+                    if (session.getTokenAt(row, match.index + 1).type === "keyword")
+                        return this.luaBlock(session, row, match.index + 1);
+                }
 
-}).call(FoldMode.prototype);
+                if (match[0][0] === "]")
+                    return session.getCommentFoldRange(row, match.index + 1);
 
+                return this.closingBracketBlock(session, "}", row, match.index + match[0].length);
+            }
+        };
+
+        this.luaBlock = (session, row, column) => {
+            const stream = new TokenIterator(session, row, column);
+            const indentKeywords = {
+                "function": 1,
+                "do": 1,
+                "then": 1,
+                "elseif": -1,
+                "end": -1,
+                "repeat": 1,
+                "until": -1
+            };
+
+            let token = stream.getCurrentToken();
+            if (!token || token.type != "keyword")
+                return;
+
+            const val = token.value;
+            const stack = [val];
+            const dir = indentKeywords[val];
+
+            if (!dir)
+                return;
+
+            const startColumn = dir === -1 ? stream.getCurrentTokenColumn() : session.getLine(row).length;
+            const startRow = row;
+
+            stream.step = dir === -1 ? stream.stepBackward : stream.stepForward;
+            while(token = stream.step()) {
+                if (token.type !== "keyword")
+                    continue;
+                const level = dir * indentKeywords[token.value];
+
+                if (level > 0) {
+                    stack.unshift(token.value);
+                } else if (level <= 0) {
+                    stack.shift();
+                    if (!stack.length && token.value != "elseif")
+                        break;
+                    if (level === 0)
+                        stack.unshift(token.value);
+                }
+            }
+
+            var row = stream.getCurrentTokenRow();
+            if (dir === -1)
+                return new Range(row, session.getLine(row).length, startRow, startColumn);
+            else
+                return new Range(startRow, startColumn, row, stream.getCurrentTokenColumn());
+        };
+
+    }).call(FoldMode.prototype);
 });
 
-ace.define("ace/mode/lua",["require","exports","module","ace/lib/oop","ace/mode/text","ace/mode/lua_highlight_rules","ace/mode/folding/lua","ace/range","ace/worker/worker_client"], function(require, exports, module) {
-"use strict";
+ace.define("ace/mode/lua",["require","exports","module","ace/lib/oop","ace/mode/text","ace/mode/lua_highlight_rules","ace/mode/folding/lua","ace/range","ace/worker/worker_client"], (require, exports, module) => {
+    const oop = require("../lib/oop");
+    const TextMode = require("./text").Mode;
+    const LuaHighlightRules = require("./lua_highlight_rules").LuaHighlightRules;
+    const LuaFoldMode = require("./folding/lua").FoldMode;
+    const Range = require("../range").Range;
+    const WorkerClient = require("../worker/worker_client").WorkerClient;
 
-var oop = require("../lib/oop");
-var TextMode = require("./text").Mode;
-var LuaHighlightRules = require("./lua_highlight_rules").LuaHighlightRules;
-var LuaFoldMode = require("./folding/lua").FoldMode;
-var Range = require("../range").Range;
-var WorkerClient = require("../worker/worker_client").WorkerClient;
-
-var Mode = function() {
-    this.HighlightRules = LuaHighlightRules;
-    
-    this.foldingRules = new LuaFoldMode();
-};
-oop.inherits(Mode, TextMode);
-
-(function() {
-   
-    this.lineCommentStart = "--";
-    this.blockComment = {start: "--[", end: "]--"};
-    
-    var indentKeywords = {
-        "function": 1,
-        "then": 1,
-        "do": 1,
-        "else": 1,
-        "elseif": 1,
-        "repeat": 1,
-        "end": -1,
-        "until": -1
+    const Mode = function() {
+        this.HighlightRules = LuaHighlightRules;
+        
+        this.foldingRules = new LuaFoldMode();
     };
-    var outdentKeywords = [
-        "else",
-        "elseif",
-        "end",
-        "until"
-    ];
+    oop.inherits(Mode, TextMode);
 
-    function getNetIndentLevel(tokens) {
-        var level = 0;
-        for (var i = 0; i < tokens.length; i++) {
-            var token = tokens[i];
-            if (token.type == "keyword") {
-                if (token.value in indentKeywords) {
-                    level += indentKeywords[token.value];
+    (function() {
+       
+        this.lineCommentStart = "--";
+        this.blockComment = {start: "--[", end: "]--"};
+        
+        const indentKeywords = {
+            "function": 1,
+            "then": 1,
+            "do": 1,
+            "else": 1,
+            "elseif": 1,
+            "repeat": 1,
+            "end": -1,
+            "until": -1
+        };
+        const outdentKeywords = [
+            "else",
+            "elseif",
+            "end",
+            "until"
+        ];
+
+        function getNetIndentLevel(tokens) {
+            let level = 0;
+
+            for (const token of tokens) {
+                if (token.type == "keyword") {
+                    if (token.value in indentKeywords) {
+                        level += indentKeywords[token.value];
+                    }
+                } else if (token.type == "paren.lparen") {
+                    level += token.value.length;
+                } else if (token.type == "paren.rparen") {
+                    level -= token.value.length;
                 }
-            } else if (token.type == "paren.lparen") {
-                level += token.value.length;
-            } else if (token.type == "paren.rparen") {
-                level -= token.value.length;
+            }
+
+            if (level < 0) {
+                return -1;
+            } else if (level > 0) {
+                return 1;
+            } else {
+                return 0;
             }
         }
-        if (level < 0) {
-            return -1;
-        } else if (level > 0) {
-            return 1;
-        } else {
-            return 0;
-        }
-    }
 
-    this.getNextLineIndent = function(state, line, tab) {
-        var indent = this.$getIndent(line);
-        var level = 0;
+        this.getNextLineIndent = function(state, line, tab) {
+            const indent = this.$getIndent(line);
+            let level = 0;
 
-        var tokenizedLine = this.getTokenizer().getLineTokens(line, state);
-        var tokens = tokenizedLine.tokens;
+            const tokenizedLine = this.getTokenizer().getLineTokens(line, state);
+            const tokens = tokenizedLine.tokens;
 
-        if (state == "start") {
-            level = getNetIndentLevel(tokens);
-        }
-        if (level > 0) {
-            return indent + tab;
-        } else if (level < 0 && indent.substr(indent.length - tab.length) == tab) {
-            if (!this.checkOutdent(state, line, "\n")) {
-                return indent.substr(0, indent.length - tab.length);
+            if (state == "start") {
+                level = getNetIndentLevel(tokens);
             }
-        }
-        return indent;
-    };
+            if (level > 0) {
+                return indent + tab;
+            } else if (level < 0 && indent.substr(indent.length - tab.length) == tab) {
+                if (!this.checkOutdent(state, line, "\n")) {
+                    return indent.substr(0, indent.length - tab.length);
+                }
+            }
+            return indent;
+        };
 
-    this.checkOutdent = function(state, line, input) {
-        if (input != "\n" && input != "\r" && input != "\r\n")
-            return false;
+        this.checkOutdent = function(state, line, input) {
+            if (input != "\n" && input != "\r" && input != "\r\n")
+                return false;
 
-        if (line.match(/^\s*[\)\}\]]$/))
-            return true;
+            if (line.match(/^\s*[\)\}\]]$/))
+                return true;
 
-        var tokens = this.getTokenizer().getLineTokens(line.trim(), state).tokens;
+            const tokens = this.getTokenizer().getLineTokens(line.trim(), state).tokens;
 
-        if (!tokens || !tokens.length)
-            return false;
+            if (!tokens || !tokens.length)
+                return false;
 
-        return (tokens[0].type == "keyword" && outdentKeywords.indexOf(tokens[0].value) != -1);
-    };
+            return (tokens[0].type == "keyword" && outdentKeywords.includes(tokens[0].value));
+        };
 
-    this.autoOutdent = function(state, session, row) {
-        var prevLine = session.getLine(row - 1);
-        var prevIndent = this.$getIndent(prevLine).length;
-        var prevTokens = this.getTokenizer().getLineTokens(prevLine, "start").tokens;
-        var tabLength = session.getTabString().length;
-        var expectedIndent = prevIndent + tabLength * getNetIndentLevel(prevTokens);
-        var curIndent = this.$getIndent(session.getLine(row)).length;
-        if (curIndent < expectedIndent) {
-            return;
-        }
-        session.outdentRows(new Range(row, 0, row + 2, 0));
-    };
+        this.autoOutdent = function(state, session, row) {
+            const prevLine = session.getLine(row - 1);
+            const prevIndent = this.$getIndent(prevLine).length;
+            const prevTokens = this.getTokenizer().getLineTokens(prevLine, "start").tokens;
+            const tabLength = session.getTabString().length;
+            const expectedIndent = prevIndent + tabLength * getNetIndentLevel(prevTokens);
+            const curIndent = this.$getIndent(session.getLine(row)).length;
+            if (curIndent < expectedIndent) {
+                return;
+            }
+            session.outdentRows(new Range(row, 0, row + 2, 0));
+        };
 
-    this.createWorker = function(session) {
-        var worker = new WorkerClient(["ace"], "ace/mode/lua_worker", "Worker");
-        worker.attachToDocument(session.getDocument());
-        
-        worker.on("annotate", function(e) {
-            session.setAnnotations(e.data);
-        });
-        
-        worker.on("terminate", function() {
-            session.clearAnnotations();
-        });
-        
-        return worker;
-    };
+        this.createWorker = session => {
+            const worker = new WorkerClient(["ace"], "ace/mode/lua_worker", "Worker");
+            worker.attachToDocument(session.getDocument());
+            
+            worker.on("annotate", e => {
+                session.setAnnotations(e.data);
+            });
+            
+            worker.on("terminate", () => {
+                session.clearAnnotations();
+            });
+            
+            return worker;
+        };
 
-    this.$id = "ace/mode/lua";
-}).call(Mode.prototype);
+        this.$id = "ace/mode/lua";
+    }).call(Mode.prototype);
 
-exports.Mode = Mode;
+    exports.Mode = Mode;
 });

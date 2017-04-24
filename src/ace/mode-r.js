@@ -1,99 +1,96 @@
-ace.define("ace/mode/tex_highlight_rules",["require","exports","module","ace/lib/oop","ace/lib/lang","ace/mode/text_highlight_rules"], function(require, exports, module) {
-"use strict";
+ace.define("ace/mode/tex_highlight_rules",["require","exports","module","ace/lib/oop","ace/lib/lang","ace/mode/text_highlight_rules"], (require, exports, module) => {
+   const oop = require("../lib/oop");
+   const lang = require("../lib/lang");
+   const TextHighlightRules = require("./text_highlight_rules").TextHighlightRules;
 
-var oop = require("../lib/oop");
-var lang = require("../lib/lang");
-var TextHighlightRules = require("./text_highlight_rules").TextHighlightRules;
+   const TexHighlightRules = function(textClass) {
 
-var TexHighlightRules = function(textClass) {
+       if (!textClass)
+           textClass = "text";
 
-    if (!textClass)
-        textClass = "text";
+       this.$rules = {
+           "start" : [
+               {
+                   token : "comment",
+                   regex : "%.*$"
+               }, {
+                   token : textClass, // non-command
+                   regex : "\\\\[$&%#\\{\\}]"
+               }, {
+                   token : "keyword", // command
+                   regex : "\\\\(?:documentclass|usepackage|newcounter|setcounter|addtocounter|value|arabic|stepcounter|newenvironment|renewenvironment|ref|vref|eqref|pageref|label|cite[a-zA-Z]*|tag|begin|end|bibitem)\\b",
+                  next : "nospell"
+               }, {
+                   token : "keyword", // command
+                   regex : "\\\\(?:[a-zA-Z0-9]+|[^a-zA-Z0-9])"
+               }, {
+                  token : "paren.keyword.operator",
+                   regex : "[[({]"
+               }, {
+                  token : "paren.keyword.operator",
+                   regex : "[\\])}]"
+               }, {
+                   token : textClass,
+                   regex : "\\s+"
+               }
+           ],
+           "nospell" : [
+              {
+                  token : "comment",
+                  regex : "%.*$",
+                  next : "start"
+              }, {
+                  token : `nospell.${textClass}`, // non-command
+                  regex : "\\\\[$&%#\\{\\}]"
+              }, {
+                  token : "keyword", // command
+                  regex : "\\\\(?:documentclass|usepackage|newcounter|setcounter|addtocounter|value|arabic|stepcounter|newenvironment|renewenvironment|ref|vref|eqref|pageref|label|cite[a-zA-Z]*|tag|begin|end|bibitem)\\b"
+              }, {
+                  token : "keyword", // command
+                  regex : "\\\\(?:[a-zA-Z0-9]+|[^a-zA-Z0-9])",
+                  next : "start"
+              }, {
+                  token : "paren.keyword.operator",
+                  regex : "[[({]"
+              }, {
+                  token : "paren.keyword.operator",
+                  regex : "[\\])]"
+              }, {
+                  token : "paren.keyword.operator",
+                  regex : "}",
+                  next : "start"
+              }, {
+                  token : `nospell.${textClass}`,
+                  regex : "\\s+"
+              }, {
+                  token : `nospell.${textClass}`,
+                  regex : "\\w+"
+              }
+           ]
+       };
+   };
 
-    this.$rules = {
-        "start" : [
-            {
-                token : "comment",
-                regex : "%.*$"
-            }, {
-                token : textClass, // non-command
-                regex : "\\\\[$&%#\\{\\}]"
-            }, {
-                token : "keyword", // command
-                regex : "\\\\(?:documentclass|usepackage|newcounter|setcounter|addtocounter|value|arabic|stepcounter|newenvironment|renewenvironment|ref|vref|eqref|pageref|label|cite[a-zA-Z]*|tag|begin|end|bibitem)\\b",
-               next : "nospell"
-            }, {
-                token : "keyword", // command
-                regex : "\\\\(?:[a-zA-Z0-9]+|[^a-zA-Z0-9])"
-            }, {
-               token : "paren.keyword.operator",
-                regex : "[[({]"
-            }, {
-               token : "paren.keyword.operator",
-                regex : "[\\])}]"
-            }, {
-                token : textClass,
-                regex : "\\s+"
-            }
-        ],
-        "nospell" : [
-           {
-               token : "comment",
-               regex : "%.*$",
-               next : "start"
-           }, {
-               token : "nospell." + textClass, // non-command
-               regex : "\\\\[$&%#\\{\\}]"
-           }, {
-               token : "keyword", // command
-               regex : "\\\\(?:documentclass|usepackage|newcounter|setcounter|addtocounter|value|arabic|stepcounter|newenvironment|renewenvironment|ref|vref|eqref|pageref|label|cite[a-zA-Z]*|tag|begin|end|bibitem)\\b"
-           }, {
-               token : "keyword", // command
-               regex : "\\\\(?:[a-zA-Z0-9]+|[^a-zA-Z0-9])",
-               next : "start"
-           }, {
-               token : "paren.keyword.operator",
-               regex : "[[({]"
-           }, {
-               token : "paren.keyword.operator",
-               regex : "[\\])]"
-           }, {
-               token : "paren.keyword.operator",
-               regex : "}",
-               next : "start"
-           }, {
-               token : "nospell." + textClass,
-               regex : "\\s+"
-           }, {
-               token : "nospell." + textClass,
-               regex : "\\w+"
-           }
-        ]
-    };
-};
+   oop.inherits(TexHighlightRules, TextHighlightRules);
 
-oop.inherits(TexHighlightRules, TextHighlightRules);
-
-exports.TexHighlightRules = TexHighlightRules;
+   exports.TexHighlightRules = TexHighlightRules;
 });
 
-ace.define("ace/mode/r_highlight_rules",["require","exports","module","ace/lib/oop","ace/lib/lang","ace/mode/text_highlight_rules","ace/mode/tex_highlight_rules"], function(require, exports, module)
-{
+ace.define("ace/mode/r_highlight_rules",["require","exports","module","ace/lib/oop","ace/lib/lang","ace/mode/text_highlight_rules","ace/mode/tex_highlight_rules"], (require, exports, module) => {
 
-   var oop = require("../lib/oop");
-   var lang = require("../lib/lang");
-   var TextHighlightRules = require("./text_highlight_rules").TextHighlightRules;
-   var TexHighlightRules = require("./tex_highlight_rules").TexHighlightRules;
+   const oop = require("../lib/oop");
+   const lang = require("../lib/lang");
+   const TextHighlightRules = require("./text_highlight_rules").TextHighlightRules;
+   const TexHighlightRules = require("./tex_highlight_rules").TexHighlightRules;
 
-   var RHighlightRules = function()
+   const RHighlightRules = function()
    {
 
-      var keywords = lang.arrayToMap(
+      const keywords = lang.arrayToMap(
             ("function|if|in|break|next|repeat|else|for|return|switch|while|try|tryCatch|stop|warning|require|library|attach|detach|source|setMethod|setGeneric|setGroupGeneric|setClass")
                   .split("|")
             );
 
-      var buildinConstants = lang.arrayToMap(
+      const buildinConstants = lang.arrayToMap(
             ("NULL|NA|TRUE|FALSE|T|F|Inf|NaN|NA_integer_|NA_real_|NA_character_|" +
              "NA_complex_").split("|")
             );
@@ -148,7 +145,7 @@ ace.define("ace/mode/r_highlight_rules",["require","exports","module","ace/lib/o
                regex : "`.*?`"
             },
             {
-               onMatch : function(value) {
+               onMatch(value) {
                   if (keywords[value])
                      return "keyword";
                   else if (buildinConstants[value])
@@ -205,8 +202,8 @@ ace.define("ace/mode/r_highlight_rules",["require","exports","module","ace/lib/o
          ]
       };
 
-      var rdRules = new TexHighlightRules("comment").getRules();
-      for (var i = 0; i < rdRules["start"].length; i++) {
+      const rdRules = new TexHighlightRules("comment").getRules();
+      for (let i = 0; i < rdRules["start"].length; i++) {
          rdRules["start"][i].token += ".virtual-comment";
       }
 
@@ -235,58 +232,52 @@ ace.define("ace/mode/r_highlight_rules",["require","exports","module","ace/lib/o
    exports.RHighlightRules = RHighlightRules;
 });
 
-ace.define("ace/mode/matching_brace_outdent",["require","exports","module","ace/range"], function(require, exports, module) {
-"use strict";
+ace.define("ace/mode/matching_brace_outdent",["require","exports","module","ace/range"], (require, exports, module) => {
+   const Range = require("../range").Range;
 
-var Range = require("../range").Range;
+   const MatchingBraceOutdent = () => {};
 
-var MatchingBraceOutdent = function() {};
+   (function() {
 
-(function() {
+       this.checkOutdent = (line, input) => {
+           if (! /^\s+$/.test(line))
+               return false;
 
-    this.checkOutdent = function(line, input) {
-        if (! /^\s+$/.test(line))
-            return false;
+           return /^\s*\}/.test(input);
+       };
 
-        return /^\s*\}/.test(input);
-    };
+       this.autoOutdent = function(doc, row) {
+           const line = doc.getLine(row);
+           const match = line.match(/^(\s*\})/);
 
-    this.autoOutdent = function(doc, row) {
-        var line = doc.getLine(row);
-        var match = line.match(/^(\s*\})/);
+           if (!match) return 0;
 
-        if (!match) return 0;
+           const column = match[1].length;
+           const openBracePos = doc.findMatchingBracket({row, column});
 
-        var column = match[1].length;
-        var openBracePos = doc.findMatchingBracket({row: row, column: column});
+           if (!openBracePos || openBracePos.row == row) return 0;
 
-        if (!openBracePos || openBracePos.row == row) return 0;
+           const indent = this.$getIndent(doc.getLine(openBracePos.row));
+           doc.replace(new Range(row, 0, row, column-1), indent);
+       };
 
-        var indent = this.$getIndent(doc.getLine(openBracePos.row));
-        doc.replace(new Range(row, 0, row, column-1), indent);
-    };
+       this.$getIndent = line => line.match(/^\s*/)[0];
 
-    this.$getIndent = function(line) {
-        return line.match(/^\s*/)[0];
-    };
+   }).call(MatchingBraceOutdent.prototype);
 
-}).call(MatchingBraceOutdent.prototype);
-
-exports.MatchingBraceOutdent = MatchingBraceOutdent;
+   exports.MatchingBraceOutdent = MatchingBraceOutdent;
 });
 
-ace.define("ace/mode/r",["require","exports","module","ace/range","ace/lib/oop","ace/mode/text","ace/mode/text_highlight_rules","ace/mode/r_highlight_rules","ace/mode/matching_brace_outdent","ace/unicode"], function(require, exports, module) {
-   "use strict";
+ace.define("ace/mode/r",["require","exports","module","ace/range","ace/lib/oop","ace/mode/text","ace/mode/text_highlight_rules","ace/mode/r_highlight_rules","ace/mode/matching_brace_outdent","ace/unicode"], (require, exports, module) => {
+   const Range = require("../range").Range;
+   const oop = require("../lib/oop");
+   const TextMode = require("./text").Mode;
+   const TextHighlightRules = require("./text_highlight_rules").TextHighlightRules;
+   const RHighlightRules = require("./r_highlight_rules").RHighlightRules;
+   const MatchingBraceOutdent = require("./matching_brace_outdent").MatchingBraceOutdent;
+   const unicode = require("../unicode");
 
-   var Range = require("../range").Range;
-   var oop = require("../lib/oop");
-   var TextMode = require("./text").Mode;
-   var TextHighlightRules = require("./text_highlight_rules").TextHighlightRules;
-   var RHighlightRules = require("./r_highlight_rules").RHighlightRules;
-   var MatchingBraceOutdent = require("./matching_brace_outdent").MatchingBraceOutdent;
-   var unicode = require("../unicode");
-
-   var Mode = function()
+   const Mode = function()
    {
       this.HighlightRules = RHighlightRules;
       this.$outdent = new MatchingBraceOutdent();

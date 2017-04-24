@@ -1,59 +1,61 @@
-ace.define("ace/mode/matching_brace_outdent",["require","exports","module","ace/range"], function(require, exports, module) {
-"use strict";
+ace.define("ace/mode/matching_brace_outdent",["require","exports","module","ace/range"], (require, exports, module) => {
+  const Range = require("../range").Range;
 
-var Range = require("../range").Range;
+  const MatchingBraceOutdent = () => {};
 
-var MatchingBraceOutdent = function() {};
+  (function() {
 
-(function() {
+      this.checkOutdent = (line, input) => {
+          if (! /^\s+$/.test(line))
+              return false;
 
-    this.checkOutdent = function(line, input) {
-        if (! /^\s+$/.test(line))
-            return false;
+          return /^\s*\}/.test(input);
+      };
 
-        return /^\s*\}/.test(input);
-    };
+      this.autoOutdent = function(doc, row) {
+          const line = doc.getLine(row);
+          const match = line.match(/^(\s*\})/);
 
-    this.autoOutdent = function(doc, row) {
-        var line = doc.getLine(row);
-        var match = line.match(/^(\s*\})/);
+          if (!match) return 0;
 
-        if (!match) return 0;
+          const column = match[1].length;
+          const openBracePos = doc.findMatchingBracket({row, column});
 
-        var column = match[1].length;
-        var openBracePos = doc.findMatchingBracket({row: row, column: column});
+          if (!openBracePos || openBracePos.row == row) return 0;
 
-        if (!openBracePos || openBracePos.row == row) return 0;
+          const indent = this.$getIndent(doc.getLine(openBracePos.row));
+          doc.replace(new Range(row, 0, row, column-1), indent);
+      };
 
-        var indent = this.$getIndent(doc.getLine(openBracePos.row));
-        doc.replace(new Range(row, 0, row, column-1), indent);
-    };
+      this.$getIndent = line => line.match(/^\s*/)[0];
 
-    this.$getIndent = function(line) {
-        return line.match(/^\s*/)[0];
-    };
+  }).call(MatchingBraceOutdent.prototype);
 
-}).call(MatchingBraceOutdent.prototype);
-
-exports.MatchingBraceOutdent = MatchingBraceOutdent;
+  exports.MatchingBraceOutdent = MatchingBraceOutdent;
 });
 
-ace.define("ace/mode/livescript",["require","exports","module","ace/tokenizer","ace/mode/matching_brace_outdent","ace/mode/text"], function(require, exports, module){
-  var identifier, LiveScriptMode, keywordend, stringfill;
+ace.define("ace/mode/livescript",["require","exports","module","ace/tokenizer","ace/mode/matching_brace_outdent","ace/mode/text"], (require, exports, module) => {
+  let identifier;
+  let LiveScriptMode;
+  let keywordend;
+  let stringfill;
   identifier = '(?![\\d\\s])[$\\w\\xAA-\\uFFDC](?:(?!\\s)[$\\w\\xAA-\\uFFDC]|-[A-Za-z])*';
-  exports.Mode = LiveScriptMode = (function(superclass){
-    var indenter, prototype = extend$((import$(LiveScriptMode, superclass).displayName = 'LiveScriptMode', LiveScriptMode), superclass).prototype, constructor = LiveScriptMode;
+  exports.Mode = LiveScriptMode = ((superclass => {
+    let indenter;
+    const prototype = extend$((import$(LiveScriptMode, superclass).displayName = 'LiveScriptMode', LiveScriptMode), superclass).prototype;
+    const constructor = LiveScriptMode;
     function LiveScriptMode(){
-      var that;
-      this.$tokenizer = new (require('../tokenizer')).Tokenizer(LiveScriptMode.Rules);
+      let that;
+      this.$tokenizer = new (require('../tokenizer').Tokenizer)(LiveScriptMode.Rules);
       if (that = require('../mode/matching_brace_outdent')) {
         this.$outdent = new that.MatchingBraceOutdent;
       }
       this.$id = "ace/mode/livescript";
     }
-    indenter = RegExp('(?:[({[=:]|[-~]>|\\b(?:e(?:lse|xport)|d(?:o|efault)|t(?:ry|hen)|finally|import(?:\\s*all)?|const|var|let|new|catch(?:\\s*' + identifier + ')?))\\s*$');
+    indenter = RegExp(`(?:[({[=:]|[-~]>|\\b(?:e(?:lse|xport)|d(?:o|efault)|t(?:ry|hen)|finally|import(?:\\s*all)?|const|var|let|new|catch(?:\\s*${identifier})?))\\s*$`);
     prototype.getNextLineIndent = function(state, line, tab){
-      var indent, tokens;
+      let indent;
+      let tokens;
       indent = this.$getIndent(line);
       tokens = this.$tokenizer.getLineTokens(line, state).tokens;
       if (!(tokens.length && tokens[tokens.length - 1].type === 'comment')) {
@@ -66,15 +68,15 @@ ace.define("ace/mode/livescript",["require","exports","module","ace/tokenizer","
     prototype.lineCommentStart = "#";
     prototype.blockComment = {start: "###", end: "###"};
     prototype.checkOutdent = function(state, line, input){
-      var ref$;
+      let ref$;
       return (ref$ = this.$outdent) != null ? ref$.checkOutdent(line, input) : void 8;
     };
     prototype.autoOutdent = function(state, doc, row){
-      var ref$;
+      let ref$;
       return (ref$ = this.$outdent) != null ? ref$.autoOutdent(doc, row) : void 8;
     };
     return LiveScriptMode;
-  }(require('../mode/text').Mode));
+  })(require('../mode/text').Mode));
   keywordend = '(?![$\\w]|-[A-Za-z]|\\s*:(?![:=]))';
   stringfill = {
     defaultToken: 'string'
@@ -83,25 +85,25 @@ ace.define("ace/mode/livescript",["require","exports","module","ace/tokenizer","
     start: [
       {
         token: 'keyword',
-        regex: '(?:t(?:h(?:is|row|en)|ry|ypeof!?)|c(?:on(?:tinue|st)|a(?:se|tch)|lass)|i(?:n(?:stanceof)?|mp(?:ort(?:\\s+all)?|lements)|[fs])|d(?:e(?:fault|lete|bugger)|o)|f(?:or(?:\\s+own)?|inally|unction)|s(?:uper|witch)|e(?:lse|x(?:tends|port)|val)|a(?:nd|rguments)|n(?:ew|ot)|un(?:less|til)|w(?:hile|ith)|o[fr]|return|break|let|var|loop)' + keywordend
+        regex: `(?:t(?:h(?:is|row|en)|ry|ypeof!?)|c(?:on(?:tinue|st)|a(?:se|tch)|lass)|i(?:n(?:stanceof)?|mp(?:ort(?:\\s+all)?|lements)|[fs])|d(?:e(?:fault|lete|bugger)|o)|f(?:or(?:\\s+own)?|inally|unction)|s(?:uper|witch)|e(?:lse|x(?:tends|port)|val)|a(?:nd|rguments)|n(?:ew|ot)|un(?:less|til)|w(?:hile|ith)|o[fr]|return|break|let|var|loop)${keywordend}`
       }, {
         token: 'constant.language',
-        regex: '(?:true|false|yes|no|on|off|null|void|undefined)' + keywordend
+        regex: `(?:true|false|yes|no|on|off|null|void|undefined)${keywordend}`
       }, {
         token: 'invalid.illegal',
-        regex: '(?:p(?:ackage|r(?:ivate|otected)|ublic)|i(?:mplements|nterface)|enum|static|yield)' + keywordend
+        regex: `(?:p(?:ackage|r(?:ivate|otected)|ublic)|i(?:mplements|nterface)|enum|static|yield)${keywordend}`
       }, {
         token: 'language.support.class',
-        regex: '(?:R(?:e(?:gExp|ferenceError)|angeError)|S(?:tring|yntaxError)|E(?:rror|valError)|Array|Boolean|Date|Function|Number|Object|TypeError|URIError)' + keywordend
+        regex: `(?:R(?:e(?:gExp|ferenceError)|angeError)|S(?:tring|yntaxError)|E(?:rror|valError)|Array|Boolean|Date|Function|Number|Object|TypeError|URIError)${keywordend}`
       }, {
         token: 'language.support.function',
-        regex: '(?:is(?:NaN|Finite)|parse(?:Int|Float)|Math|JSON|(?:en|de)codeURI(?:Component)?)' + keywordend
+        regex: `(?:is(?:NaN|Finite)|parse(?:Int|Float)|Math|JSON|(?:en|de)codeURI(?:Component)?)${keywordend}`
       }, {
         token: 'variable.language',
-        regex: '(?:t(?:hat|il|o)|f(?:rom|allthrough)|it|by|e)' + keywordend
+        regex: `(?:t(?:hat|il|o)|f(?:rom|allthrough)|it|by|e)${keywordend}`
       }, {
         token: 'identifier',
-        regex: identifier + '\\s*:(?![:=])'
+        regex: `${identifier}\\s*:(?![:=])`
       }, {
         token: 'variable',
         regex: identifier
@@ -257,15 +259,15 @@ ace.define("ace/mode/livescript",["require","exports","module","ace/tokenizer","
       }, stringfill
     ]
   };
-function extend$(sub, sup){
-  function fun(){} fun.prototype = (sub.superclass = sup).prototype;
-  (sub.prototype = new fun).constructor = sub;
-  if (typeof sup.extended == 'function') sup.extended(sub);
-  return sub;
-}
-function import$(obj, src){
-  var own = {}.hasOwnProperty;
-  for (var key in src) if (own.call(src, key)) obj[key] = src[key];
-  return obj;
-}
+  function extend$(sub, sup){
+    function fun(){} fun.prototype = (sub.superclass = sup).prototype;
+    (sub.prototype = new fun).constructor = sub;
+    if (typeof sup.extended == 'function') sup.extended(sub);
+    return sub;
+  }
+  function import$(obj, src){
+    const own = {}.hasOwnProperty;
+    for (const key in src) if (own.call(src, key)) obj[key] = src[key];
+    return obj;
+  }
 });

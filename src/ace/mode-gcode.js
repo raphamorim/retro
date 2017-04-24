@@ -1,23 +1,21 @@
-ace.define("ace/mode/gcode_highlight_rules",["require","exports","module","ace/lib/oop","ace/mode/text_highlight_rules"], function(require, exports, module) {
-    "use strict";
+ace.define("ace/mode/gcode_highlight_rules",["require","exports","module","ace/lib/oop","ace/mode/text_highlight_rules"], (require, exports, module) => {
+    const oop = require("../lib/oop");
+    const TextHighlightRules = require("./text_highlight_rules").TextHighlightRules;
 
-    var oop = require("../lib/oop");
-    var TextHighlightRules = require("./text_highlight_rules").TextHighlightRules;
+    const GcodeHighlightRules = function() {
 
-    var GcodeHighlightRules = function() {
-
-        var keywords = (
+        const keywords = (
             "IF|DO|WHILE|ENDWHILE|CALL|ENDIF|SUB|ENDSUB|GOTO|REPEAT|ENDREPEAT|CALL"
             );
 
-        var builtinConstants = (
+        const builtinConstants = (
             "PI"
             );
 
-        var builtinFunctions = (
+        const builtinFunctions = (
             "ATAN|ABS|ACOS|ASIN|SIN|COS|EXP|FIX|FUP|ROUND|LN|TAN"
             );
-        var keywordMapper = this.createKeywordMapper({
+        const keywordMapper = this.createKeywordMapper({
             "support.function": builtinFunctions,
             "keyword": keywords,
             "constant.language": builtinConstants
@@ -63,15 +61,13 @@ ace.define("ace/mode/gcode_highlight_rules",["require","exports","module","ace/l
     exports.GcodeHighlightRules = GcodeHighlightRules;
 });
 
-ace.define("ace/mode/gcode",["require","exports","module","ace/lib/oop","ace/mode/text","ace/mode/gcode_highlight_rules","ace/range"], function(require, exports, module) {
-    "use strict";
+ace.define("ace/mode/gcode",["require","exports","module","ace/lib/oop","ace/mode/text","ace/mode/gcode_highlight_rules","ace/range"], (require, exports, module) => {
+    const oop = require("../lib/oop");
+    const TextMode = require("./text").Mode;
+    const GcodeHighlightRules = require("./gcode_highlight_rules").GcodeHighlightRules;
+    const Range = require("../range").Range;
 
-    var oop = require("../lib/oop");
-    var TextMode = require("./text").Mode;
-    var GcodeHighlightRules = require("./gcode_highlight_rules").GcodeHighlightRules;
-    var Range = require("../range").Range;
-
-    var Mode = function() {
+    const Mode = function() {
         this.HighlightRules = GcodeHighlightRules;
     };
     oop.inherits(Mode, TextMode);
@@ -81,5 +77,4 @@ ace.define("ace/mode/gcode",["require","exports","module","ace/lib/oop","ace/mod
     }).call(Mode.prototype);
 
     exports.Mode = Mode;
-
 });
