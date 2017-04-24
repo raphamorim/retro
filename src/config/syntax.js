@@ -91,6 +91,9 @@ const syntaxes = {
   },
   'go': {
     mode: 'go'
+  },
+  'exs': {
+    mode: 'elixir'
   }
 }
 
