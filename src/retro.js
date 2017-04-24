@@ -25,17 +25,17 @@ import {
 } from 'js-beautify'
 
 function Retro() {
-  const editor = document.getElementById('editor'),
-    editorFile = document.getElementById('editor-file'),
-    editorMode = document.getElementById('editor-mode'),
-    editorSyntax = document.getElementById('editor-syntax')
+  const editor = document.getElementById('editor');
+  const editorFile = document.getElementById('editor-file');
+  const editorMode = document.getElementById('editor-mode');
+  const editorSyntax = document.getElementById('editor-syntax');
 
   ace.require('ace/ext/language_tools')
   ace.require('ace/ext/emmet')
   const code = ace.edit('editor')
 
   code.setKeyboardHandler('ace/keyboard/vim')
-    // code.setShowInvisibles(true)
+  // code.setShowInvisibles(true)
   code.setTheme('ace/theme/retro')
   code.setOptions({
     showPrintMargin: false,
@@ -113,8 +113,8 @@ function Retro() {
     }
   })
 
-  code.on('changeStatus', function() {
-    var mode = code.keyBinding.getStatusText(code)
+  code.on('changeStatus', () => {
+    let mode = code.keyBinding.getStatusText(code);
     unfocusTabs()
 
     if (!mode || mode.length < 2) {
@@ -130,8 +130,8 @@ function Retro() {
     }
   })
 
-  this.setTabs = function(file, asActive) {
-    var tab = document.createElement('div')
+  this.setTabs = (file, asActive) => {
+    const tab = document.createElement('div');
     tab.classList.add('tabs-item')
     if (asActive) {
       tab.classList.add('active')
@@ -142,8 +142,8 @@ function Retro() {
     tabs.appendChild(tab)
   }
 
-  this.updateFile = function(file, forcedUpdate = false) {
-    tron.readStream(file).then(function(tronData) {
+  this.updateFile = (file, forcedUpdate = false) => {
+    tron.readStream(file).then(tronData => {
       if (tronData === code.getValue())
         return
 
@@ -171,13 +171,13 @@ function Retro() {
 
       const syntax = filepath.pop()
       editorSyntax.textContent = syntax
-      var current = syntaxes[syntax]
+      let current = syntaxes[syntax];
       if (!current)
         current = {
           mode: 'text'
         }
 
-      code.getSession().setMode('ace/mode/' + current.mode)
+      code.getSession().setMode(`ace/mode/${current.mode}`)
       if (current.mode === 'html') {
         code.setOption('enableEmmet', true)
       }
@@ -192,7 +192,7 @@ function Retro() {
 
     setCurrentFile = setCurrentFile.bind(this)
 
-    tron.readStream(file).then(function(tronData) {
+    tron.readStream(file).then(tronData => {
       code.getSession().setValue(tronData)
       inputSyntax(file)
       setCurrentFile(file)
