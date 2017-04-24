@@ -1,5 +1,19 @@
 .DS_Store
 dist
-node_modules
 ~/
+
+# Logs
+logs
 *.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Dependency directories
+node_modules/
+
+# npm cache directory
+.npm
+
+# eslint cache
+.eslintcache
