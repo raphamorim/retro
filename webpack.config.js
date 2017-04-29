@@ -1,11 +1,11 @@
-import webpack from 'webpack';
+const webpack = require('webpack')
 const nodeEnv = process.env.NODE_ENV || 'development'
 const isProd = nodeEnv === 'production'
 
-export default {
+module.exports = {
   target: 'electron',
   devtool: isProd ? 'hidden-source-map' : 'cheap-eval-source-map',
-  context: `${__dirname}/src`,
+  context: __dirname + '/src',
   module: {
     loaders: [{
       test: /.js?$/,
@@ -20,7 +20,7 @@ export default {
     './index.js'
   ],
   output: {
-    path: `${__dirname}/dist`,
+    path: __dirname + '/dist',
     filename: 'retro.js'
   },
   plugins: [
@@ -36,4 +36,4 @@ export default {
       minimize: true
     })
   ]
-};
+}
