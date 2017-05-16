@@ -38,7 +38,7 @@ class Data {
 
   get() {
     const self = this
-		
+
     return new Promise((resolve) => {
       data.get('retro').then((val) => {
         self.value = val
