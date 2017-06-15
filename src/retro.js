@@ -196,13 +196,17 @@ function Retro() {
       code.getSession().setValue(tronData)
       inputSyntax(file)
       setCurrentFile(file)
-      const files = tron.listFiles(tron.folderPath(file))
-      if (files.length) {
-        config.cachedFiles = config.cachedFiles.concat(files)
-      }
     }).then(() => {
       setTimeout(() => {
         loader.off()
+        if (!config.cachedFiles.length) {
+          window.requestIdleCallback(() => {
+            const files = tron.listFiles(tron.folderPath(file))
+            if (files.length) {
+              config.cachedFiles = config.cachedFiles.concat(files)
+            }
+          })
+        }
       }, 500)
     })
   }

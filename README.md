@@ -26,12 +26,8 @@ The goal of the project is to create a extensible/hackable experience for VIM us
 
 Nowadays our focus will be specifically about speed, stability, experience and productivity.
 
-## Credits
+## About
 
 Authored by Raphael Amorim - [@raphamundi](https://twitter.com/raphamundi)
-
-Special thanks to the following people:
-
-- [Afonso Pacifer](https://github.com/afonsopacifer) for his working around some components.
 
 License: [MIT](LICENSE)
