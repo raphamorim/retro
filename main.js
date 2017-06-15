@@ -11,9 +11,7 @@ let mainWindow
 
 function createWindow() {
   mainWindow = new BrowserWindow({
-    width: 1200,
-    height: 600,
-    minWidth: 400,
+    minWidth: 600,
     minHeight: 400,
     resizable: true,
     movable: true,

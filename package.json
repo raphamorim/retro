@@ -14,7 +14,10 @@
   },
   "repository": "https://github.com/raphamorim/retro",
   "keywords": [
-  	"retro", "vim", "editor", "core"
+    "retro",
+    "vim",
+    "editor",
+    "core"
   ],
   "license": "MIT",
   "devDependencies": {
