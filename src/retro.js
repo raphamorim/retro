@@ -35,7 +35,7 @@ function Retro() {
   const code = ace.edit('editor')
 
   code.setKeyboardHandler('ace/keyboard/vim')
-  // code.setShowInvisibles(true)
+    // code.setShowInvisibles(true)
   code.setTheme('ace/theme/retro')
   code.setOptions({
     showPrintMargin: false,

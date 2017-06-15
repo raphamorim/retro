@@ -1,5 +1,18 @@
 .DS_Store
 dist
-node_modules
+
+# electron build
 ~/
+
+# Logs
+logs
 *.log
+
+# dependency directories
+node_modules
+
+# npm cache directory
+.npm
+
+# eslint cache
+.eslintcache
