@@ -6,10 +6,10 @@
   "scripts": {
     "start": "./node_modules/electron/cli.js main.js",
     "build": "NODE_ENV='production' ./node_modules/webpack/bin/webpack.js .",
-    "dev": "./node_modules/.bin/webpack . -w",
-    "pack:osx": "./node_modules/electron-packager/cli.js ./ Retro --plataform=darwin --version=1.4.1 --out=~/Desktop --overwrite --icon=./assets/images/logo-128.icns",
-    "pack:all": "./node_modules/electron-packager/cli.js ./ Retro --all --version=1.4.1 --out=~/Desktop --overwrite --icon=./assets/images/logo-128.icns",
-    "lint": "./node_modules/.bin/eslint --ext .js src/",
+    "dev": "$(npm bin)/webpack . -w",
+    "pack:osx": "./node_modules/electron-packager/cli.js ./ Retro --plataform=darwin --out=~/Desktop --overwrite --icon=./assets/images/logo-128.icns",
+    "pack:all": "./node_modules/electron-packager/cli.js ./ Retro --all --out=~/Desktop --overwrite --icon=./assets/images/logo-128.icns",
+    "lint": "$(npm bin)/eslint --ext .js src/",
     "test": "npm run lint"
   },
   "repository": "https://github.com/raphamorim/retro",
@@ -22,18 +22,22 @@
   "license": "MIT",
   "devDependencies": {
     "babel-eslint": "^7.1.1",
-    "electron-packager": "^8.2.0",
-    "eslint": "3.13.0"
+    "electron-packager": "^8.7.1",
+    "env-paths": "^1.0.0",
+    "eslint": "^3.13.0",
+    "locate-path": "^2.0.0",
+    "process-nextick-args": "^1.0.7",
+    "universalify": "^0.1.0",
+    "util-deprecate": "^1.0.2"
   },
   "dependencies": {
     "babel-core": "^6.21.0",
     "babel-loader": "^6.2.10",
     "babel-preset-es2015": "^6.3.13",
     "electron": "^1.6.11",
-    "electron-prebuilt": "^1.4.12",
     "electron-settings": "McPo/electron-settings#release-dist",
     "fs.notify": "0.0.4",
-    "fuse.js": "2.6.0",
+    "fuse.js": "^2.6.0",
     "js-beautify": "1.6.4",
     "webpack": "^2.2.0-rc.0"
   }
