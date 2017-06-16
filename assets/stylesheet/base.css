@@ -1,236 +1,270 @@
 body {
-	background: #14191f;
-	color: #ADB0A2;
+  background: #14191f;
+  color: #ADB0A2;
 }
 
 .retro {
-	font-size: 14pt;
-	font-family: Monaco, Inconsolata, Consolas, Courier, monospace !important;
-	line-height: 18pt !important;
-	letter-spacing: 0.3pt;
-	display: none;
+  font-size: 14pt;
+  font-family: Monaco, Inconsolata, Consolas, Courier, monospace !important;
+  line-height: 18pt !important;
+  letter-spacing: 0.3pt;
+  display: none;
 }
 
 .retro .topbar {
-	position: fixed;
-	top: 0;
-	left: 0;
-	z-index: 999;
-	width: 100%;
-	background: #17181a;
-	height: 28pt;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 999;
+  width: 100%;
+  background: #17181a;
+  height: 28pt;
+  -webkit-app-region: drag;
 }
 
 .retro .tabs {
-	position: fixed;
-	height: 20pt;
-	background: #17181a;
-	z-index: 998;
-	width: 100%;
-	top: 18pt;
-	height: 15pt;
-	overflow: hidden;
-	left: 0;
-	padding: 5pt 0pt;
-	display: flex;
-	justify-content: flex-start;
-	transition: all 400ms ease;
+  position: fixed;
+  height: 20pt;
+  background: #17181a;
+  z-index: 998;
+  width: 100%;
+  top: 18pt;
+  height: 15pt;
+  overflow: hidden;
+  left: 0;
+  padding: 5pt 0pt;
+  display: flex;
+  justify-content: flex-start;
+  transition: all 400ms ease;
 }
 
 .retro .tabs.unfocus {
-	top: 0pt;
+  top: 0pt;
 }
 
 .retro .tabs>.tabs-item {
-	font-family: 'gamegirl';
-	font-size: 8pt;
-	width: 15%;
-	overflow-x: hidden;
-	white-space: nowrap;
-	overflow: hidden;
-	text-overflow: ellipsis;
-	text-align: center;
+  font-family: 'gamegirl';
+  font-size: 8pt;
+  width: 15%;
+  overflow-x: hidden;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: center;
 }
 
 .retro .tabs>.tabs-item.active::before {
-	content: '*';
+  content: '*';
 }
 
 .retro .tabs>.tabs-item.active {
-	color: #24C6E0;
+  color: #24C6E0;
 }
 
 .retro .main {
-	margin-top: 40pt;
+  margin-top: 40pt;
 }
 
 .retro .text {
-	position: relative;
-	display: inline-block;
-	line-height: 20pt;
-	font-size: 14pt;
-	color: white;
-	min-width: 180px;
-	word-break: break-all;
+  position: relative;
+  display: inline-block;
+  line-height: 20pt;
+  font-size: 14pt;
+  color: white;
+  min-width: 180px;
+  word-break: break-all;
 }
 
 .retro footer {
-	position: fixed;
-	display: flex;
-	bottom: 0;
-	height: 25pt;
-	width: 100%;	/*background: #202224;*/
-	background: #17181a;	/*color: #555;*/
-	color: #999;
-	letter-spacing: 0.05em;
-	z-index: 2;
+  position: fixed;
+  display: flex;
+  bottom: 0;
+  height: 25pt;
+  width: 100%;  /*background: #202224;*/
+  background: #17181a;  /*color: #555;*/
+  color: #999;
+  letter-spacing: 0.05em;
+  z-index: 2;
 }
 
 .retro footer #editor-mode {
-	font-family: 'Bit-Wonder';
-	padding: 3pt 0 0 15pt;
-	font-size: 8pt;
+  font-family: 'Bit-Wonder';
+  padding: 3pt 0 0 15pt;
+  font-size: 8pt;
 }
 
 .retro footer #editor-mode.insert {
-	color: #24C6E0;
+  color: #24C6E0;
 }
 
 .retro footer #editor-mode.visual {
-	color: #f57157;
+  color: #f57157;
 }
 
 .retro footer #editor-mode.normal {
-	color: #999;
+  color: #999;
 }
 
 .retro footer #editor-file {
-	font-family: 'Bit-Wonder';
-	padding: 3pt 0 0 15pt;
-	font-size: 8pt;
-	max-width: 135pt;
-	overflow-x: hidden;
-	white-space: nowrap;
-	overflow: hidden;
-	text-overflow: ellipsis;
+  font-family: 'Bit-Wonder';
+  padding: 3pt 0 0 15pt;
+  font-size: 8pt;
+  max-width: 135pt;
+  overflow-x: hidden;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .retro footer #editor-syntax {
-	font-family: 'Bit-Wonder';
-	padding: 3pt 0 0 15pt;
-	font-size: 8pt;
+  font-family: 'Bit-Wonder';
+  padding: 3pt 0 0 15pt;
+  font-size: 8pt;
 }
 
 #editor {
-	position: absolute;
-	top: 0;
-	right: 0;
-	bottom: 0;
-	left: 0;
-	z-index: 1;
-	padding: 10px 20px;	/*background: #202224;*/
-	background: #14191f;
-	margin-top: 45pt;
-	margin-bottom: 30pt;
-	height: auto;
-	z-index: 1;
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 1;
+  padding: 10px 20px; /*background: #202224;*/
+  background: #14191f;
+  margin-top: 45pt;
+  margin-bottom: 30pt;
+  height: auto;
+  z-index: 1;
 }
 
 .loader {
-	height: 2px;
-	position: absolute;
-	bottom: 0;
-	width: 100%;
-	display: none;
-	opacity: 0;
-	transition: all 500ms ease;
-	overflow: hidden;
-	background-color: transparent;
+  height: 2px;
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  display: none;
+  opacity: 0;
+  transition: all 500ms ease;
+  overflow: hidden;
+  background-color: transparent;
 }
 
 .loader:before {
-	display: block;
-	position: absolute;
-	content: '';
-	left: -200px;
-	width: 200px;
-	height: 4px;
-	background-color: #24C6E0;
-	animation: loading 2s ease-in infinite;
+  display: block;
+  position: absolute;
+  content: '';
+  left: -200px;
+  width: 200px;
+  height: 4px;
+  background-color: #24C6E0;
+  animation: loading 2s ease-in infinite;
 }
 
 .loader.on {
-	display: block;
-	opacity: 1;
+  display: block;
+  opacity: 1;
 }
 
 @keyframes loading {
-	from {
-		left: -200px;
-		width: 0%;
-	}
+  from {
+    left: -200px;
+    width: 0%;
+  }
 
-	50% {
-		width: 30%;
-	}
+  50% {
+    width: 30%;
+  }
 
-	70% {
-		width: 70%;
-	}
+  70% {
+    width: 70%;
+  }
 
-	80% {
-		left: 50%;
-	}
+  80% {
+    left: 50%;
+  }
 
-	95% {
-		left: 120%;
-	}
+  95% {
+    left: 120%;
+  }
 
-	to {
-		left: 100%;
-	}
+  to {
+    left: 100%;
+  }
 
+}
+
+#shell {
+  position: fixed;
+  background: #17181A;
+  content: '';
+  overflow: scroll;
+  white-space: pre;
+  color: #FFF;
+  line-height: 1.4em;
+  letter-spacing: 0.08em;
+  width: 100%;
+  height: 60vh;
+  border-bottom: 3px dotted #202224;
+  z-index: 99999;
+  padding: 1.2em;
+  padding-top: 1em;
+  top: 20;
+  left: 0;
+  font-family: 'Inconsolata', monospace;
+  opacity: 0;
+  display: none;
+  transition: all 300ms ease;
+}
+
+#shell.on {
+  opacity: 1;
+  display: block;
+}
+
+#shell p.close {
+  color: #24C6E0;
+  cursor: pointer;
 }
 
 .presentation {
-	display: none;
+  display: none;
 }
 
 .presentation .title {
-	position: absolute;
-	top: 80px;
-	left: 0;
-	text-align: center;
-	width: 100%;
-	font-family: 'tron';
-	color: #14191f;
-	-webkit-text-stroke: 1px #24C6E0;
-	font-size: 30pt;
+  position: absolute;
+  top: 80px;
+  left: 0;
+  text-align: center;
+  width: 100%;
+  font-family: 'tron';
+  color: #14191f;
+  -webkit-text-stroke: 1px #24C6E0;
+  font-size: 30pt;
 }
 
 .presentation .hint {
-	position: absolute;
-	left: 0;
-	width: 100%;
-	text-align: center;
-	color: #24C6E0;
-	bottom: 18pt;
-	font-family: 'gamegirl', helvetica, arial;
-	letter-spacing: 0.2em;
-	animation: blink-animation 2s steps(5, start) infinite;
-	-webkit-animation: blink-animation 2s steps(5, start) infinite;
+  position: absolute;
+  left: 0;
+  width: 100%;
+  text-align: center;
+  color: #24C6E0;
+  bottom: 18pt;
+  font-family: 'gamegirl', helvetica, arial;
+  letter-spacing: 0.2em;
+  animation: blink-animation 2s steps(5, start) infinite;
+  -webkit-animation: blink-animation 2s steps(5, start) infinite;
 }
 
 @keyframes blink-animation {
-	to {
-		visibility: hidden;
-	}
+  to {
+    visibility: hidden;
+  }
 
 }
 
 @-webkit-keyframes blink-animation {
-	to {
-		visibility: hidden;
-	}
+  to {
+    visibility: hidden;
+  }
 
 }

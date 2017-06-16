@@ -19,6 +19,7 @@ function createWindow() {
     //macOnly
     titleBarStyle: 'hidden-inset',
     title: 'Retro',
+    backgroundColor: '#17181A',
     // we want to go frameless on windows and linux
     frame: process.platform === 'darwin',
     transparent: true,
