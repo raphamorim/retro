@@ -8,12 +8,12 @@ const { spawn } = require('child_process')
 class Shell {
   exec(command) {
     command = command.substr(1)
-    console.debug(`[DEBUG]: command: ${command}`)
+    console.debug(`[ DEBUG ]: command: ${command}`)
 
     const inputs = command.trim().split(' ')
     const mainInput = inputs.shift()
-    console.log(`[DEBUG]: inputs: ${inputs}`, inputs)
-    console.log(`[DEBUG]: mainInput: ${mainInput}`)
+    console.log(`[ DEBUG ]: inputs: ${inputs}`, inputs)
+    console.log(`[ DEBUG ]: mainInput: ${mainInput}`)
     const commandSpawn = spawn(mainInput, inputs)
 
     const shellElement = document.querySelector('#shell')
@@ -21,39 +21,39 @@ class Shell {
     shellElement.classList.add('on')
 
     commandSpawn.stdout.on('data', (data) => {
-      const p = document.createElement('p')
-      p.textContent = data
-      shellElement.appendChild(p)
+      const pNode = document.createElement('p')
+      pNode.textContent = data
+      shellElement.appendChild(pNode)
     })
 
     commandSpawn.stderr.on('data', (data) => {
-      const p = document.createElement('p')
-      p.textContent = data
-      shellElement.appendChild(p)
+      const pNode = document.createElement('p')
+      pNode.textContent = data
+      shellElement.appendChild(pNode)
     })
 
     commandSpawn.on('close', (code) => {
-      const keyPressHandler = (e) => {
-        var key = e.which || e.keyCode
-        if (key === 13) {
+      const keyPressHandler = (ev) => {
+        var key = ev.which || ev.keyCode
+        if (key === 13 && shellElement.classList.contains('on')) {
           shellElement.classList.remove('on')
           document.removeEventListener('keypress', keyPressHandler)
         }
       }
 
-      const clickHandler = (e) => {
+      const clickHandler = (ev) => {
         shellElement.classList.remove('on')
-        e.target.removeEventListener('click', clickHandler)
-        e.preventDefault()
+        ev.target.removeEventListener('click', clickHandler)
+        ev.preventDefault()
       }
 
-      const p = document.createElement('p')
-      p.textContent = 'Press ENTER or CLICK HERE to continue'
-      p.classList.add('close')
-      p.addEventListener('click', clickHandler)
+      const pNode = document.createElement('p')
+      pNode.textContent = 'Press ENTER or CLICK HERE to continue'
+      pNode.classList.add('close')
+      pNode.addEventListener('click', clickHandler)
 
       document.addEventListener('keypress', keyPressHandler)
-      shellElement.appendChild(p)
+      shellElement.appendChild(pNode)
     })
   }
 }

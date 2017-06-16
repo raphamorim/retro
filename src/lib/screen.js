@@ -13,11 +13,11 @@ export const notifications = new Notify()
 export function openFiles() {
   app.dialog.showOpenDialog(app.getCurrentWindow(), {
     filters: [
-      { name: 'All Files', extensions: ['*'] },
-      { name: 'Images', extensions: ['jpg', 'png', 'gif'] },
-      { name: 'Movies', extensions: ['mkv', 'avi', 'mp4'] }
+      { name: 'All Files', extensions: [ '*' ] },
+      { name: 'Images', extensions: [ 'jpg', 'png', 'gif' ] },
+      { name: 'Movies', extensions: [ 'mkv', 'avi', 'mp4' ] }
     ],
-    properties: ['openFile']
+    properties: [ 'openFile' ]
   }, (fileNames) => {
     if (fileNames && fileNames.length) {
       loader.on()

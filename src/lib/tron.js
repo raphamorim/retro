@@ -117,7 +117,7 @@ function Tron(encoding) {
         filelist = filelist || []
         var promises = []
 
-        for (var i = files.length - 1; i >= 0; i--) {
+        for (let i = files.length - 1; i >= 0; i--) {
           const file = files[i]
           if (fs.statSync(path.join(dir, file)).isDirectory()) {
             promises.push(listFiles(path.join(dir, file), filelist))
@@ -133,12 +133,14 @@ function Tron(encoding) {
             return false
           else if (file.path.indexOf('node_modules') > -1)
             return false
+          else if (file.path.indexOf('.DS_Store') > -1)
+            return false
 
           return file
         })
 
-        return Promise.all(promises).then(function(results) {
-          for (var i = results.length - 1; i >= 0; i--) {
+        return Promise.all(promises).then((results) => {
+          for (let i = results.length - 1; i >= 0; i--) {
             filelist = filelist.concat(results[i])
           }
           resolve(filelist)
@@ -155,6 +157,7 @@ function Tron(encoding) {
   this.readStream = readStream
   this.writeSync = writeSync
   this.listFiles = listFiles
+  this.listFilesAsync = listFilesAsync
   this.writeStream = writeStream
   this.folderPath = folderPath
   this.upsert = upsert

@@ -198,16 +198,18 @@ function Retro() {
       setCurrentFile(file)
     }).then(() => {
       setTimeout(() => {
-        loader.off()
-        if (!config.cachedFiles.length) {
-          window.requestIdleCallback(() => {
-            const files = tron.listFiles(tron.folderPath(file))
-            if (files.length) {
-              config.cachedFiles = config.cachedFiles.concat(files)
-            }
-          })
+        if (config.cachedFiles.length) {
+          return loader.off()
         }
-      }, 500)
+
+        window.requestIdleCallback(() => {
+          const files = tron.listFiles(tron.folderPath(file))
+          if (files.length) {
+            config.cachedFiles = config.cachedFiles.concat(files)
+          }
+          loader.off()
+        })
+      }, 1000)
     })
   }
 
