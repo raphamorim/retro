@@ -2,17 +2,29 @@ const syntaxes = {
   'js': {
     mode: 'javascript'
   },
+  'jsx': {
+    mode: 'javascript'
+  },
+  'java': {
+    mode: 'java'
+  },
   'html': {
     mode: 'html'
   },
   'ejs': {
     mode: 'html'
   },
+  'jade': {
+    mode: 'jade'
+  },
+  'pug': {
+    mode: 'jade'
+  },
   'css': {
     mode: 'css'
   },
   'json': {
-    mode: 'javascript'
+    mode: 'json'
   },
   'md': {
     mode: 'markdown',
@@ -68,6 +80,9 @@ const syntaxes = {
   'sc': {
     mode: 'scala'
   },
+  'rs': {
+    mode: 'rust'
+  },
   'kt': {
     mode: 'kotlin'
   },
@@ -89,9 +104,24 @@ const syntaxes = {
   'less': {
     mode: 'less'
   },
+  'scss': {
+    mode: 'sass'
+  },
   'go': {
     mode: 'go'
-  }
+  },
+  'sql': {
+    mode: 'sql'
+  },
+  'exs': {
+    mode: 'elixir'
+  },
+  'yml': {
+    mode: 'yaml'
+  },
+  'php': {
+    mode: 'php'
+  },
 }
 
 export default syntaxes
