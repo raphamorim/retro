@@ -1,6 +1,6 @@
 {
   "name": "retro",
-  "version": "0.1.0",
+  "version": "0.1.0-beta",
   "description": "A Vim Based Editor for the 30th Century",
   "main": "main.js",
   "scripts": {

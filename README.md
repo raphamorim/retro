@@ -20,7 +20,7 @@ Retro is a project that seeks to aggressively rethink Vim in order to:
 - Full Extensible'n Hackable Editor (allow to change interfaces brutally)
 	- Improve extensibility with a new plugin architecture
 
-## Our Goal
+## Objective
 
 The goal of the project is to create a extensible/hackable experience for VIM users, built on open web standards.
 

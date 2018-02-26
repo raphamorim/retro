@@ -79,6 +79,7 @@ body {
   position: fixed;
   display: flex;
   bottom: 0;
+  left: 0;
   height: 25pt;
   width: 100%;  /*background: #202224;*/
   background: #17181a;  /*color: #555;*/
