@@ -42,7 +42,6 @@ test:
 
 setup_upgrade: clean
 	npm install
-	npm shrinkwrap
 
 install_node: setup_nvm
 	bash -c "source ~/.nvm/nvm.sh && nvm install 6.9.4 && nvm use 6.9.4"
