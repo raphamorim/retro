@@ -4,7 +4,7 @@ import config from './config'
 import { presentation, container, modalSearch, modalItems, modal } from './config/selectors'
 import { displayEditor, displayPresentation } from './lib/screen'
 import keys from './lib/keys'
-import Fuse from 'Fuse.js'
+import Fuse from 'fuse.js'
 
 // DEBUG
 import { notifications } from './lib/screen'
