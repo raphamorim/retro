@@ -27,6 +27,6 @@ Nowadays our focus will be specifically about speed, stability, experience and p
 
 ## About
 
-Authored by Raphael Amorim - [@raphamundi](https://twitter.com/raphamundi)
+Authored by Raphael Amorim - [@raphamorims](https://twitter.com/raphamorims)
 
 License: [MIT](LICENSE)
