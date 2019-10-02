@@ -1,0 +1,122 @@
+@font-face {
+    font-family: 'tron';
+    font-style: normal;
+    font-weight: 400;
+    src: url("./tron.woff2") format("woff2");
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2212, U+2215, U+E0FF, U+EFFD, U+F000;
+}
+body {
+    background: #14191F;
+    background-size: .12em 100%;
+    font-family: 'OpenSans', helvetica;
+    padding: 0;
+    margin: 0;
+}
+.presentation {
+    background: #14191F;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 30%;
+}
+
+.showcase {
+    position: absolute;
+    left: 30%;
+    overflow: hidden;
+}
+
+.showcase img {
+    width: 130%;
+}
+
+.text--line {
+    font-size: .5em;
+}
+.retro-logo {
+    position: relative;
+    z-index: 999;
+    margin: 0 auto;
+    width: 130%;
+    text-align: left;
+}
+svg {
+    position: relative;
+    width: 70%;
+    height: 70%;
+}
+.text-copy {
+    font: 7em/1 'tron';
+    fill: none;
+    stroke: white;
+    stroke-dasharray: 7% 28%;
+    stroke-width: 3px;
+    -webkit-animation: stroke-offset 1.5s 1 linear;
+    animation: stroke-offset 1.5s 1 linear;
+}
+.text-copy:nth-child(1) {
+    stroke: #24C6E0;
+    stroke-dashoffset: 7%;
+}
+.text-copy:nth-child(2) {
+    stroke: #D61C59;
+    stroke-dashoffset: 14%;
+}
+.text-copy:nth-child(3) {
+    stroke: #24C6E0;
+    stroke-dashoffset: 21%;
+}
+.text-copy:nth-child(4) {
+    stroke: #EFEAC5;
+    stroke-dashoffset: 28%;
+}
+.text-copy:nth-child(5) {
+    stroke: #24C6E0;
+    stroke-dashoffset: 35%;
+}
+@-webkit-keyframes stroke-offset {
+    50% {
+        stroke-dashoffset: 35%;
+        stroke-dasharray: 0 87.5%;
+    }
+}
+@keyframes stroke-offset {
+    50% {
+        stroke-dashoffset: 35%;
+        stroke-dasharray: 0 87.5%;
+    }
+}
+
+.description {
+    color: #FFF;
+    font-size: 16px;
+    padding: 0 0 5px 30px;
+}
+
+#beta-testers {
+    font-size: 18px;
+    color: #FFF;
+}
+
+#beta-testers .button {
+    color: #24C6E0;
+    position: relative;
+    text-decoration: none;
+    padding: 5px 30px;
+    cursor: pointer;
+    z-index: 99;
+}
+
+#beta-testers .button:hover {
+    color: #FFF;
+}
+
+@media (max-width: 920px) {
+    .showcase {
+        display: none;
+    }
+
+    .presentation {
+        width: 100%;
+    }
+}
